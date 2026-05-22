@@ -1,0 +1,76 @@
+{
+  "title": "ENGIPILOT — Supervision Chantiers BTP",
+  "uid": "engipilot-main",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "tags": ["engipilot","btp","kpi"],
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Chantiers actifs",
+      "gridPos": {"h":4,"w":3,"x":0,"y":0},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+      "targets": [{"expr": "engipilot_chantiers_actifs_total", "legendFormat": "Chantiers"}]
+    },
+    {
+      "id": 2, "type": "stat", "title": "SPI Moyen",
+      "gridPos": {"h":4,"w":3,"x":3,"y":0},
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [
+        {"color":"red","value":0}, {"color":"yellow","value":0.80}, {"color":"green","value":0.95}
+      ]}}},
+      "targets": [{"expr": "avg(engipilot_spi_current)", "legendFormat": "SPI"}]
+    },
+    {
+      "id": 3, "type": "stat", "title": "CPI Moyen",
+      "gridPos": {"h":4,"w":3,"x":6,"y":0},
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [
+        {"color":"red","value":0}, {"color":"yellow","value":0.85}, {"color":"green","value":0.95}
+      ]}}},
+      "targets": [{"expr": "avg(engipilot_cpi_current)", "legendFormat": "CPI"}]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Alertes critiques",
+      "gridPos": {"h":4,"w":3,"x":9,"y":0},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [
+        {"color":"green","value":0}, {"color":"yellow","value":1}, {"color":"red","value":3}
+      ]}}},
+      "targets": [{"expr": "engipilot_alertes_critiques_total", "legendFormat": "Alertes"}]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Évolution SPI par chantier",
+      "gridPos": {"h":8,"w":12,"x":0,"y":4},
+      "targets": [{"expr": "engipilot_spi_current", "legendFormat": "{{chantier}}"}]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Budget consommé vs prévu (M MAD)",
+      "gridPos": {"h":8,"w":12,"x":12,"y":4},
+      "targets": [
+        {"expr": "engipilot_budget_reel_total / 1000000", "legendFormat": "Réel"},
+        {"expr": "engipilot_budget_prevu_total / 1000000", "legendFormat": "Prévu"}
+      ]
+    },
+    {
+      "id": 7, "type": "gauge", "title": "Avancement moyen global",
+      "gridPos": {"h":6,"w":6,"x":0,"y":12},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "minVizValue": 0, "maxVizValue": 100},
+      "fieldConfig": {"defaults": {"unit": "percent"}},
+      "targets": [{"expr": "avg(engipilot_avancement_physique)", "legendFormat": "Avancement"}]
+    },
+    {
+      "id": 8, "type": "bargauge", "title": "NC ouvertes par priorité",
+      "gridPos": {"h":6,"w":6,"x":6,"y":12},
+      "targets": [{"expr": "engipilot_nc_ouvertes_total", "legendFormat": "{{priorite}}"}]
+    },
+    {
+      "id": 9, "type": "stat", "title": "TF HSE",
+      "gridPos": {"h":4,"w":3,"x":12,"y":12},
+      "targets": [{"expr": "engipilot_taux_frequence_hse", "legendFormat": "TF"}]
+    },
+    {
+      "id": 10, "type": "logs", "title": "Alertes IA récentes",
+      "gridPos": {"h":6,"w":12,"x":0,"y":18},
+      "options": {"showLabels": true},
+      "targets": [{"expr": "{job=\"engipilot-backend\"} |= \"ALERTE\""}]
+    }
+  ]
+}

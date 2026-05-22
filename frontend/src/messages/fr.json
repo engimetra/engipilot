@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "sections": {
+      "principal": "Principal",
+      "suivi": "Suivi",
+      "ia": "Intelligence IA",
+      "equipe": "Équipe",
+      "admin": "Admin"
+    },
+    "dashboard": "Dashboard",
+    "chantiers": "Chantiers",
+    "kanban": "Kanban",
+    "planning": "Planning",
+    "rapports": "Rapports",
+    "analytics": "Analytics",
+    "hse": "HSE",
+    "qualite": "Qualité",
+    "facturation": "Facturation",
+    "approvisionnement": "Approvisionnement",
+    "documents": "Documents",
+    "alertesIa": "Alertes IA",
+    "chatCopilot": "Chat Copilot",
+    "equipes": "Équipes",
+    "notifications": "Notifications",
+    "onboarding": "Onboarding",
+    "parametres": "Paramètres",
+    "adminPage": "Admin",
+    "search": "Rechercher...",
+    "logout": "Déconnexion"
+  },
+  "topbar": {
+    "search": "Rechercher...",
+    "new": "Nouveau",
+    "online": "En ligne",
+    "notifications": "Notifications",
+    "markAllRead": "Tout lire",
+    "viewAll": "Voir toutes les notifications",
+    "logout": "Déconnexion",
+    "home": "Retour à la page d'accueil"
+  },
+  "lang": {
+    "fr": "Français",
+    "ar": "العربية",
+    "en": "English"
+  }
+}

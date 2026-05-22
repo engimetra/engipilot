@@ -1,0 +1,1026 @@
+// ═══════════════════════════════════════════════════════════════
+//  ENGIPILOT — Prisma Schema
+//  SaaS BTP Platform · PostgreSQL · Next.js App Router
+//  Production-ready · Multi-tenant · Enterprise
+// ═══════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum Plan {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum ProjectType {
+  CONSTRUCTION
+  RENOVATION
+  INFRASTRUCTURE
+  INDUSTRIAL
+  RESIDENTIAL
+  COMMERCIAL
+  OTHER
+}
+
+enum SiteStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CLOSED
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  BLOCKED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WorkerCategory {
+  PERMANENT
+  TEMPORARY
+  SUBCONTRACTOR
+  INTERN
+}
+
+enum WorkerStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+  HOLIDAY
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  REPAIR
+  OUT_OF_SERVICE
+  RETIRED
+}
+
+enum BudgetType {
+  GENERAL
+  LABOR
+  MATERIALS
+  EQUIPMENT
+  SUBCONTRACTORS
+  OVERHEAD
+  CONTINGENCY
+}
+
+enum BudgetStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  OVERSPENT
+  CLOSED
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+enum DocumentType {
+  PLAN
+  CONTRACT
+  REPORT
+  PHOTO
+  VIDEO
+  NC_REPORT
+  PV_MEETING
+  HSE_DOCUMENT
+  PERMIT
+  INVOICE
+  OTHER
+}
+
+enum IncidentType {
+  ACCIDENT
+  NEAR_MISS
+  NON_CONFORMITY
+  OBSERVATION
+  ENVIRONMENTAL
+  PROPERTY_DAMAGE
+}
+
+enum Severity {
+  NEGLIGIBLE
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  ACTION_PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum AiMode {
+  CHAT
+  PV_GENERATOR
+  RAPPORT_SYNTHESIZER
+  RISK_ANALYZER
+  PLANNER
+}
+
+enum AlertLevel {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertType {
+  DELAY_RISK
+  BUDGET_OVERRUN
+  SPI_CRITICAL
+  CPI_CRITICAL
+  RESOURCE_SHORTAGE
+  HSE_RISK
+  MATERIAL_ISSUE
+  SCHEDULE_DELAY
+  NC_BLOCKAGE
+  ABSENTEEISM
+  CUSTOM
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  AI_ALERT
+  SYSTEM
+}
+
+enum ReportType {
+  DAILY_PROGRESS
+  WEEKLY_SUMMARY
+  MONTHLY_KPI
+  INCIDENT_REPORT
+  EVM_ANALYSIS
+  CUSTOM
+}
+
+// ─────────────────────────────────────────────────────────────
+//  AUTHENTIFICATION & ACCÈS
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  avatar       String?
+  phone        String?
+  status       UserStatus @default(ACTIVE)
+  emailVerified Boolean   @default(false)
+  lastLoginAt  DateTime?
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  // Relations
+  projectMembers  ProjectMember[]
+  assignedTasks   Task[]            @relation("TaskAssignee")
+  createdTasks    Task[]            @relation("TaskCreator")
+  attendance      Attendance[]
+  aiConversations AiConversation[]
+  aiMemories      AiMemory[]
+  notifications   Notification[]
+  activityLogs    ActivityLog[]
+  uploadedDocuments Document[]
+  reports         Report[]
+  sessions        UserSession[]
+
+  @@index([email])
+  @@index([companyId])
+  @@index([roleId])
+  @@map("users")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("user_sessions")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  action      String
+  resource    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@unique([action, resource])
+  @@index([resource])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  grantedAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ENTREPRISES (Multi-tenant SaaS)
+// ─────────────────────────────────────────────────────────────
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  siret       String?  @unique
+  address     String?
+  city        String?
+  country     String   @default("MA")
+  phone       String?
+  email       String?
+  website     String?
+  logoUrl     String?
+  plan        Plan     @default(STARTER)
+  isActive    Boolean  @default(true)
+  trialEndsAt DateTime?
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Limites SaaS par plan
+  maxProjects Int @default(5)
+  maxUsers    Int @default(10)
+  maxStorage  Int @default(5000) // MB
+
+  // Relations
+  users    User[]
+  projects Project[]
+
+  @@index([slug])
+  @@map("companies")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PROJETS BTP
+// ─────────────────────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  reference   String        @unique
+  description String?
+  status      ProjectStatus @default(DRAFT)
+  type        ProjectType   @default(CONSTRUCTION)
+  coverImage  String?
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime
+  actualEndDate DateTime?
+
+  // Budget EVM
+  budgetInitial  Decimal  @db.Decimal(15, 2)
+  budgetActual   Decimal  @db.Decimal(15, 2) @default(0)
+
+  // Indicateurs EVM (calculés)
+  bcwp     Decimal?  @db.Decimal(15, 2)  // Budgeted Cost of Work Performed
+  acwp     Decimal?  @db.Decimal(15, 2)  // Actual Cost of Work Performed
+  bcws     Decimal?  @db.Decimal(15, 2)  // Budgeted Cost of Work Scheduled
+  spi      Decimal?  @db.Decimal(5, 4)   // Schedule Performance Index
+  cpi      Decimal?  @db.Decimal(5, 4)   // Cost Performance Index
+  eac      Decimal?  @db.Decimal(15, 2)  // Estimate At Completion
+  vac      Decimal?  @db.Decimal(15, 2)  // Variance At Completion
+  progress Decimal   @db.Decimal(5, 2)   @default(0)
+
+  // Localisation
+  latitude  Decimal?  @db.Decimal(10, 8)
+  longitude Decimal?  @db.Decimal(11, 8)
+  address   String?
+  city      String?
+  country   String    @default("MA")
+
+  // Client
+  clientName    String?
+  clientContact String?
+  clientEmail   String?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  // Relations
+  members       ProjectMember[]
+  sites         ConstructionSite[]
+  tasks         Task[]
+  schedules     Schedule[]
+  budgets       Budget[]
+  expenses      Expense[]
+  documents     Document[]
+  incidents     Incident[]
+  aiAlerts      AiAlert[]
+  analytics     Analytic[]
+  notifications Notification[]
+  reports       Report[]
+  workers       Worker[]
+  materials     Material[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([reference])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id       String   @id @default(cuid())
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+
+  projectId String
+  userId    String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CHANTIERS
+// ─────────────────────────────────────────────────────────────
+
+model ConstructionSite {
+  id          String     @id @default(cuid())
+  name        String
+  reference   String?
+  description String?
+  status      SiteStatus @default(ACTIVE)
+
+  address   String?
+  city      String?
+  latitude  Decimal?  @db.Decimal(10, 8)
+  longitude Decimal?  @db.Decimal(11, 8)
+
+  startDate DateTime?
+  endDate   DateTime?
+  areaSqm   Decimal?  @db.Decimal(10, 2)
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Relations
+  tasks      Task[]
+  workers    Worker[]
+  equipment  Equipment[]
+  incidents  Incident[]
+  attendance Attendance[]
+
+  @@index([projectId])
+  @@index([status])
+  @@map("construction_sites")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PLANIFICATION — TÂCHES
+// ─────────────────────────────────────────────────────────────
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  tags        String[]   @default([])
+
+  // Planning
+  startDate      DateTime?
+  endDate        DateTime?
+  completedAt    DateTime?
+  progress       Decimal   @db.Decimal(5, 2) @default(0)
+  estimatedHours Decimal?  @db.Decimal(8, 2)
+  actualHours    Decimal?  @db.Decimal(8, 2)
+
+  // Kanban position
+  columnOrder Int @default(0)
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId  String
+  siteId     String?
+  assigneeId String?
+  creatorId  String?
+  parentId   String?
+
+  project  Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site     ConstructionSite? @relation(fields: [siteId], references: [id])
+  assignee User?             @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator  User?             @relation("TaskCreator", fields: [creatorId], references: [id])
+  parent   Task?             @relation("Subtasks", fields: [parentId], references: [id])
+  subtasks Task[]            @relation("Subtasks")
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@map("tasks")
+}
+
+model Schedule {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  type        String  @default("GANTT")
+  data        Json    // données Gantt/planning sérialisées
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("schedules")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RESSOURCES HUMAINES
+// ─────────────────────────────────────────────────────────────
+
+model Worker {
+  id          String         @id @default(cuid())
+  firstName   String
+  lastName    String
+  cin         String?        @unique
+  phone       String?
+  email       String?
+  specialty   String?
+  category    WorkerCategory @default(PERMANENT)
+  status      WorkerStatus   @default(ACTIVE)
+  hourlyRate  Decimal?       @db.Decimal(8, 2)
+  hireDate    DateTime?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId String?
+  siteId    String?
+  project   Project?          @relation(fields: [projectId], references: [id])
+  site      ConstructionSite? @relation(fields: [siteId], references: [id])
+
+  attendance Attendance[]
+
+  @@index([projectId])
+  @@index([siteId])
+  @@index([status])
+  @@map("workers")
+}
+
+model Attendance {
+  id          String           @id @default(cuid())
+  date        DateTime         @db.Date
+  checkIn     DateTime?
+  checkOut    DateTime?
+  hoursWorked Decimal?         @db.Decimal(5, 2)
+  status      AttendanceStatus @default(PRESENT)
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workerId String
+  siteId   String
+  userId   String
+
+  worker Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  site   ConstructionSite @relation(fields: [siteId], references: [id])
+  user   User             @relation(fields: [userId], references: [id])
+
+  @@unique([workerId, date])
+  @@index([siteId])
+  @@index([date])
+  @@map("attendance")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  MATÉRIELS & ÉQUIPEMENTS
+// ─────────────────────────────────────────────────────────────
+
+model Equipment {
+  id           String          @id @default(cuid())
+  name         String
+  reference    String?         @unique
+  type         String
+  brand        String?
+  model        String?
+  serialNumber String?
+  status       EquipmentStatus @default(AVAILABLE)
+
+  purchaseDate  DateTime?
+  purchasePrice Decimal?       @db.Decimal(12, 2)
+  dailyRate     Decimal?       @db.Decimal(8, 2)
+
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  maintenanceNotes String?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  siteId String?
+  site   ConstructionSite? @relation(fields: [siteId], references: [id])
+
+  @@index([siteId])
+  @@index([status])
+  @@map("equipment")
+}
+
+model Material {
+  id          String  @id @default(cuid())
+  name        String
+  reference   String? @unique
+  description String?
+  unit        String  @default("UNIT")
+
+  quantityStock    Decimal @db.Decimal(10, 2) @default(0)
+  quantityMinAlert Decimal @db.Decimal(10, 2) @default(0)
+  unitPrice        Decimal @db.Decimal(10, 2) @default(0)
+
+  supplier  String?
+  category  String?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@map("materials")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  FINANCE
+// ─────────────────────────────────────────────────────────────
+
+model Budget {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        BudgetType   @default(GENERAL)
+  status      BudgetStatus @default(DRAFT)
+
+  amountPlanned Decimal @db.Decimal(15, 2)
+  amountActual  Decimal @db.Decimal(15, 2) @default(0)
+  amountReserved Decimal @db.Decimal(15, 2) @default(0)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  approvedBy String?
+  approvedAt DateTime?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+
+  @@index([projectId])
+  @@index([status])
+  @@map("budgets")
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  amount      Decimal       @db.Decimal(12, 2)
+  category    String
+  status      ExpenseStatus @default(PENDING)
+  date        DateTime      @db.Date
+
+  receiptUrl String?
+  invoiceRef String?
+  vendorName String?
+
+  approvedBy String?
+  approvedAt DateTime?
+  rejectedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  budgetId  String?
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  budget  Budget?  @relation(fields: [budgetId], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@index([date])
+  @@map("expenses")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DOCUMENTS
+// ─────────────────────────────────────────────────────────────
+
+model Document {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        DocumentType @default(OTHER)
+  mimeType    String?
+  size        Int?         // bytes
+  url         String
+  version     String       @default("1.0")
+  checksum    String?      // SHA256 pour intégrité
+
+  isPublic  Boolean   @default(false)
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId    String?
+  uploadedById String
+
+  project    Project? @relation(fields: [projectId], references: [id])
+  uploadedBy User     @relation(fields: [uploadedById], references: [id])
+
+  @@index([projectId])
+  @@index([type])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  HSE / SÉCURITÉ
+// ─────────────────────────────────────────────────────────────
+
+model Incident {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  type        IncidentType   @default(ACCIDENT)
+  severity    Severity       @default(MEDIUM)
+  status      IncidentStatus @default(OPEN)
+
+  date     DateTime
+  location String?
+
+  injuredCount       Int    @default(0)
+  lostDays           Int    @default(0)
+  reportedBy         String?
+  investigatedBy     String?
+  rootCause          String?
+  correctiveActions  String?
+  preventiveMeasures String?
+
+  closedAt  DateTime?
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projectId String
+  siteId    String?
+
+  project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site    ConstructionSite? @relation(fields: [siteId], references: [id])
+
+  @@index([projectId])
+  @@index([severity])
+  @@index([status])
+  @@index([date])
+  @@map("incidents")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  INTELLIGENCE IA
+// ─────────────────────────────────────────────────────────────
+
+model AiConversation {
+  id        String  @id @default(cuid())
+  mode      AiMode  @default(CHAT)
+  title     String?
+  model     String  @default("gpt-4o-mini")
+  tokenUsed Int     @default(0)
+
+  metadata  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  projectId String?
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id         String  @id @default(cuid())
+  role       String  // user | assistant | system
+  content    String
+  confidence Int?    // 0–100
+  warning    String?
+  sources    String[] @default([])
+  tokenCount Int?
+
+  createdAt DateTime @default(now())
+
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("ai_messages")
+}
+
+model AiMemory {
+  id       String @id @default(cuid())
+  key      String
+  value    String
+  context  String?
+  ttl      Int?   // secondes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@map("ai_memories")
+}
+
+model AiAlert {
+  id         String    @id @default(cuid())
+  type       AlertType @default(CUSTOM)
+  level      AlertLevel @default(MEDIUM)
+  message    String
+  value      String?
+  confidence Int        @default(75)
+
+  isRead     Boolean   @default(false)
+  isResolved Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+
+  metadata  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([level])
+  @@index([isResolved])
+  @@map("ai_alerts")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ANALYTICS
+// ─────────────────────────────────────────────────────────────
+
+model Analytic {
+  id     String @id @default(cuid())
+  period String // DAILY | WEEKLY | MONTHLY | QUARTERLY
+  date   DateTime @db.Date
+
+  // EVM
+  spi      Decimal? @db.Decimal(5, 4)
+  cpi      Decimal? @db.Decimal(5, 4)
+  eac      Decimal? @db.Decimal(15, 2)
+  vac      Decimal? @db.Decimal(15, 2)
+  sv       Decimal? @db.Decimal(15, 2)  // Schedule Variance
+  cv       Decimal? @db.Decimal(15, 2)  // Cost Variance
+  progress Decimal? @db.Decimal(5, 2)
+
+  // HSE KPIs
+  tfRate    Decimal? @db.Decimal(8, 4)  // Taux de Fréquence
+  tgRate    Decimal? @db.Decimal(8, 4)  // Taux de Gravité
+  incidents Int      @default(0)
+
+  // Workforce
+  workforceCount Int?
+  absencePct     Decimal? @db.Decimal(5, 2)
+
+  // Qualité
+  ncCount        Int  @default(0)
+  ncResolved     Int  @default(0)
+
+  // Snapshot raw
+  rawData Json?
+
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, period, date])
+  @@index([projectId])
+  @@index([date])
+  @@map("analytics")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RAPPORTS
+// ─────────────────────────────────────────────────────────────
+
+model Report {
+  id          String     @id @default(cuid())
+  title       String
+  type        ReportType @default(DAILY_PROGRESS)
+  content     String     // Markdown ou HTML
+  summary     String?
+  period      String?    // "2025-W22" | "2025-05"
+  generatedBy String     @default("MANUAL") // MANUAL | AI
+
+  url String? // PDF exporté
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  authorId  String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([projectId])
+  @@index([type])
+  @@map("reports")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SYSTÈME
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id      String           @id @default(cuid())
+  title   String
+  message String
+  type    NotificationType @default(INFO)
+  link    String?
+  isRead  Boolean          @default(false)
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  userId    String
+  projectId String?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id         String  @id @default(cuid())
+  action     String
+  resource   String
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

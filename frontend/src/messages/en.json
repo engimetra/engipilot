@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "sections": {
+      "principal": "Main",
+      "suivi": "Tracking",
+      "ia": "AI Intelligence",
+      "equipe": "Team",
+      "admin": "Admin"
+    },
+    "dashboard": "Dashboard",
+    "chantiers": "Sites",
+    "kanban": "Kanban",
+    "planning": "Planning",
+    "rapports": "Reports",
+    "analytics": "Analytics",
+    "hse": "HSE",
+    "qualite": "Quality",
+    "facturation": "Billing",
+    "approvisionnement": "Procurement",
+    "documents": "Documents",
+    "alertesIa": "AI Alerts",
+    "chatCopilot": "Chat Copilot",
+    "equipes": "Teams",
+    "notifications": "Notifications",
+    "onboarding": "Onboarding",
+    "parametres": "Settings",
+    "adminPage": "Admin",
+    "search": "Search...",
+    "logout": "Logout"
+  },
+  "topbar": {
+    "search": "Search...",
+    "new": "New",
+    "online": "Online",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "viewAll": "View all notifications",
+    "logout": "Logout",
+    "home": "Back to home"
+  },
+  "lang": {
+    "fr": "Français",
+    "ar": "العربية",
+    "en": "English"
+  }
+}

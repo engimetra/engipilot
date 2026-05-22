@@ -1,0 +1,91 @@
+# ENGIPILOT — Auth API Tests
+# Outil : VSCode REST Client (extension humao.rest-client)
+# Usage  : cliquer "Send Request" au-dessus de chaque ###
+
+@baseUrl = http://localhost:8080/api/v1
+@contentType = application/json
+
+### ─── 1. REGISTER — créer compte + organisation ───────────────────────────
+# Attendu : 201 Created + { token, tokenType, user }
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@engipilot.ma",
+  "password": "Engipilot2024!",
+  "fullName": "Admin ENGIPILOT",
+  "organisationName": "BTP Maroc SA"
+}
+
+### ─── 2. LOGIN — credentials valides ───────────────────────────────────────
+# Attendu : 200 OK + { token, tokenType: "Bearer", user: { role: "ADMIN" } }
+# @name loginOK
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@engipilot.ma",
+  "password": "Engipilot2024!"
+}
+
+### ─── 3. Stocker le token (REST Client capture la réponse du §2) ────────────
+@token = {{loginOK.response.body.token}}
+
+### ─── 4. GET /me — profil utilisateur connecté ─────────────────────────────
+# Attendu : 200 OK + entité User complète
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### ─── 5. LOGIN — mot de passe incorrect (OWASP A07) ────────────────────────
+# Attendu : 401 Unauthorized + message "Email ou mot de passe incorrect"
+# NE doit PAS révéler si l'email existe
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@engipilot.ma",
+  "password": "mauvaisMotDePasse"
+}
+
+### ─── 6. LOGIN — email inexistant (OWASP A07) ───────────────────────────────
+# Attendu : 401 — même message que §5 (pas de différence observable)
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "inconnu@test.ma",
+  "password": "nimportequoi"
+}
+
+### ─── 7. REGISTER — email déjà utilisé ────────────────────────────────────
+# Attendu : 409 Conflict + message "Cet email est déjà utilisé"
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@engipilot.ma",
+  "password": "autrepass123",
+  "fullName": "Doublon",
+  "organisationName": "Org Doublon"
+}
+
+### ─── 8. REGISTER — validation Bean (mot de passe trop court) ───────────────
+# Attendu : 400 Bad Request + détail de validation
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "nouveau@engipilot.ma",
+  "password": "court",
+  "fullName": "Test Valid",
+  "organisationName": "Org Test"
+}
+
+### ─── 9. GET /me — sans token ──────────────────────────────────────────────
+# Attendu : 401 Unauthorized
+GET {{baseUrl}}/auth/me
+
+### ─── 10. Swagger UI ───────────────────────────────────────────────────────
+# Ouvrir dans le navigateur :
+# http://localhost:8080/swagger-ui.html
+# http://localhost:8080/actuator/health

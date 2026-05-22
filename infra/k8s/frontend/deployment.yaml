@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engipilot-frontend
+  namespace: engipilot
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: engipilot-frontend } }
+  template:
+    metadata: { labels: { app: engipilot-frontend } }
+    spec:
+      containers:
+        - name: frontend
+          image: engipilot/frontend:latest
+          ports: [{ containerPort: 3000 }]
+          env:
+            - { name: NEXT_PUBLIC_API_URL, value: "https://api.engipilot.ma/api/v1" }
+          resources:
+            requests: { memory: "256Mi", cpu: "100m" }
+            limits: { memory: "512Mi", cpu: "500m" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: frontend-service, namespace: engipilot }
+spec:
+  selector: { app: engipilot-frontend }
+  ports: [{ port: 3000, targetPort: 3000 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: engipilot-ingress
+  namespace: engipilot
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: engipilot.ma
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: frontend-service, port: { number: 3000 } } }
+    - host: api.engipilot.ma
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: backend-service, port: { number: 8080 } } }

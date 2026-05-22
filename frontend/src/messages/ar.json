@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "sections": {
+      "principal": "الرئيسية",
+      "suivi": "المتابعة",
+      "ia": "الذكاء الاصطناعي",
+      "equipe": "الفريق",
+      "admin": "الإدارة"
+    },
+    "dashboard": "لوحة التحكم",
+    "chantiers": "المواقع",
+    "kanban": "كانبان",
+    "planning": "التخطيط",
+    "rapports": "التقارير",
+    "analytics": "التحليلات",
+    "hse": "الصحة والسلامة",
+    "qualite": "الجودة",
+    "facturation": "الفوترة",
+    "approvisionnement": "التموين",
+    "documents": "الوثائق",
+    "alertesIa": "تنبيهات الذكاء",
+    "chatCopilot": "المساعد الذكي",
+    "equipes": "الفرق",
+    "notifications": "الإشعارات",
+    "onboarding": "الإعداد الأولي",
+    "parametres": "الإعدادات",
+    "adminPage": "الإدارة",
+    "search": "بحث...",
+    "logout": "تسجيل الخروج"
+  },
+  "topbar": {
+    "search": "بحث...",
+    "new": "جديد",
+    "online": "متصل",
+    "notifications": "الإشعارات",
+    "markAllRead": "قراءة الكل",
+    "viewAll": "عرض جميع الإشعارات",
+    "logout": "تسجيل الخروج",
+    "home": "العودة للصفحة الرئيسية"
+  },
+  "lang": {
+    "fr": "Français",
+    "ar": "العربية",
+    "en": "English"
+  }
+}

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engipilot-backend
+  namespace: engipilot
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: engipilot-backend } }
+  template:
+    metadata: { labels: { app: engipilot-backend } }
+    spec:
+      containers:
+        - name: backend
+          image: engipilot/backend:latest
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: SPRING_PROFILES_ACTIVE, value: prod }
+            - { name: SPRING_DATASOURCE_URL, value: "jdbc:postgresql://postgres:5432/engipilot" }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: engipilot-secrets, key: POSTGRES_PASSWORD } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: engipilot-secrets, key: JWT_SECRET } }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+          resources:
+            requests: { memory: "512Mi", cpu: "250m" }
+            limits: { memory: "1Gi", cpu: "1000m" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: backend-service, namespace: engipilot }
+spec:
+  selector: { app: engipilot-backend }
+  ports: [{ port: 8080, targetPort: 8080 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: backend-hpa, namespace: engipilot }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: engipilot-backend }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - { type: Resource, resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } } }

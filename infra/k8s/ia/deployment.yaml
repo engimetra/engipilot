@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engipilot-ia
+  namespace: engipilot
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: engipilot-ia } }
+  template:
+    metadata: { labels: { app: engipilot-ia } }
+    spec:
+      containers:
+        - name: ia
+          image: engipilot/ia:latest
+          ports: [{ containerPort: 8001 }]
+          env:
+            - { name: DATABASE_URL, value: "postgresql://admin:$(POSTGRES_PASSWORD)@postgres:5432/engipilot" }
+          volumeMounts:
+            - { name: models, mountPath: /app/models }
+          resources:
+            requests: { memory: "512Mi", cpu: "250m" }
+            limits: { memory: "2Gi", cpu: "2000m" }
+      volumes:
+        - name: models
+          persistentVolumeClaim: { claimName: ia-models-pvc }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: ia-service, namespace: engipilot }
+spec:
+  selector: { app: engipilot-ia }
+  ports: [{ port: 8001, targetPort: 8001 }]

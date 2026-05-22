@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENGIPILOT — Portail développement</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #635BFF;
+      --primary-d: #4f46e5;
+      --green:     #00c875;
+      --orange:    #ff9900;
+      --red:       #e2445c;
+      --bg:        #f5f6f8;
+      --card:      #ffffff;
+      --text:      #1a1a2e;
+      --muted:     #6e7280;
+      --border:    #e5e7eb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      padding: 40px 32px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(99,91,255,.25) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 30%, rgba(0,200,117,.12) 0%, transparent 50%);
+    }
+    .logo {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+    .logo-icon {
+      width: 52px; height: 52px;
+      background: var(--primary);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 24px rgba(99,91,255,.5);
+    }
+    .logo-text { font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -1px; }
+    .logo-sub  { font-size: .85rem; color: rgba(255,255,255,.55); letter-spacing: 3px; text-transform: uppercase; position: relative; }
+
+    .badge {
+      display: inline-block;
+      background: rgba(99,91,255,.25);
+      border: 1px solid rgba(99,91,255,.5);
+      color: #a5b4fc;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: .75rem;
+      letter-spacing: 1px;
+      margin-top: 14px;
+      position: relative;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.10); transform: translateY(-2px); }
+
+    .card-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+    }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .card-title { font-size: 1rem; font-weight: 700; }
+    .card-desc  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+    .icon-purple { background: rgba(99,91,255,.12); }
+    .icon-green  { background: rgba(0,200,117,.12); }
+    .icon-orange { background: rgba(255,153,0,.12); }
+    .icon-blue   { background: rgba(56,189,248,.12); }
+    .icon-red    { background: rgba(226,68,92,.12); }
+    .icon-gray   { background: rgba(110,114,128,.12); }
+
+    /* ── Links list ── */
+    .link-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .link-list a {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background .15s, border-color .15s;
+    }
+    .link-list a:hover { background: #f9f9ff; border-color: var(--primary); color: var(--primary); }
+    .link-list a .url  { font-size: .75rem; color: var(--muted); font-weight: 400; }
+    .link-list a .arrow { opacity: .4; font-size: .75rem; }
+    .link-list a:hover .arrow { opacity: 1; }
+
+    /* ── Credentials ── */
+    .cred-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .875rem;
+    }
+    .cred-row:last-child { border-bottom: none; }
+    .cred-label { color: var(--muted); font-size: .78rem; }
+    .cred-value {
+      font-family: "Courier New", monospace;
+      font-size: .82rem;
+      background: #f5f5ff;
+      border: 1px solid #e0dfff;
+      border-radius: 6px;
+      padding: 3px 8px;
+      color: var(--primary-d);
+      cursor: pointer;
+      user-select: all;
+    }
+    .cred-value:hover { background: #ebebff; }
+
+    /* ── Stack pills ── */
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #f5f6f8; border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: .78rem; font-weight: 500; color: var(--text);
+    }
+    .pill.purple { background: rgba(99,91,255,.08); border-color: rgba(99,91,255,.2); color: var(--primary); }
+    .pill.green  { background: rgba(0,200,117,.08); border-color: rgba(0,200,117,.25); color: #059669; }
+    .pill.orange { background: rgba(255,153,0,.08); border-color: rgba(255,153,0,.25); color: #b45309; }
+    .pill.blue   { background: rgba(56,189,248,.08); border-color: rgba(56,189,248,.25); color: #0284c7; }
+
+    /* ── Status dot ── */
+    .status { display: flex; align-items: center; gap: 6px; font-size: .8rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot.green  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+    .dot.orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .dot.gray   { background: #9ca3af; }
+
+    /* ── Commands ── */
+    .cmd-block {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 10px;
+      font-family: "Courier New", monospace;
+      font-size: .78rem;
+      line-height: 1.8;
+      color: #94a3b8;
+    }
+    .cmd-block .c-green  { color: #4ade80; }
+    .cmd-block .c-yellow { color: #fde68a; }
+    .cmd-block .c-blue   { color: #7dd3fc; }
+    .cmd-block .c-gray   { color: #64748b; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: .78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    /* ── Wide card ── */
+    .full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏗</div>
+    <span class="logo-text">ENGIPILOT</span>
+  </div>
+  <p class="logo-sub">SaaS BTP — Plateforme de gestion de projets</p>
+  <div class="badge">v2.0 — Mode développement</div>
+</header>
+
+<!-- ════════ GRID ════════ -->
+<div class="grid">
+
+  <!-- Frontend -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-purple">⚛</div>
+      <div>
+        <div class="card-title">Frontend Next.js</div>
+        <div class="card-desc">Application principale</div>
+      </div>
+    </div>
+    <ul class="link-list">
+      <li>
+        <a href="http://localhost:3002" target="_blank">
+          <span>Accueil / Login <span class="url">localhost:3002</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/dashboard" target="_blank">
+          <span>Dashboard <span class="url">localhost:3002/dashboard</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/kanban" target="_blank">
+          <span>Kanban <span class="url">localhost:3002/kanban</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/analytics" target="_blank">
+          <span>Analytics EVM <span class="url">localhost:3002/analytics</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/planning" target="_blank">
+          <span>Planning Gantt <span class="url">localhost:3002/planning</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/hse" target="_blank">
+          <span>HSE / Sécurité <span class="url">localhost:3002/hse</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- API Health -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-green">🔌</div>
+      <div>
+        <div class="card-title">API Routes Next.js</div>
+        <div class="card-desc">Endpoints & health checks</div>
+      </div>
+    </div>
+    <ul class="link-list">
+      <li>
+        <a href="http://localhost:3002/api/db" target="_blank">
+          <span>DB Health Check <span class="url">/api/db</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/api/chat" target="_blank">
+          <span>Chat IA Status <span class="url">/api/chat</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:3002/api/intelligence" target="_blank">
+          <span>Intelligence IA <span class="url">/api/intelligence</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+    </ul>
+    <div style="margin-top:14px;">
+      <div class="status"><span class="dot green"></span> Frontend actif sur port 3002</div>
+      <div class="status" style="margin-top:6px;"><span class="dot orange"></span> PostgreSQL — à configurer</div>
+      <div class="status" style="margin-top:6px;"><span class="dot gray"></span> OpenAI — clé non configurée</div>
+    </div>
+  </div>
+
+  <!-- Credentials -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-orange">🔑</div>
+      <div>
+        <div class="card-title">Identifiants de démo</div>
+        <div class="card-desc">Cliquer pour sélectionner</div>
+      </div>
+    </div>
+    <div class="cred-row">
+      <span class="cred-label">Email</span>
+      <span class="cred-value">admin@engipilot.ma</span>
+    </div>
+    <div class="cred-row">
+      <span class="cred-label">Mot de passe</span>
+      <span class="cred-value">Engipilot2024!</span>
+    </div>
+    <div class="cred-row">
+      <span class="cred-label">Rôle</span>
+      <span class="cred-value">SUPER_ADMIN</span>
+    </div>
+    <div class="cred-row">
+      <span class="cred-label">Entreprise</span>
+      <span class="cred-value">Engipilot Demo SARL</span>
+    </div>
+    <div class="cred-row">
+      <span class="cred-label">Backend Node</span>
+      <span class="cred-value">admin@engipilot.ma / engipilot2024</span>
+    </div>
+  </div>
+
+  <!-- Backend Java -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-blue">☕</div>
+      <div>
+        <div class="card-title">Backend Java Spring Boot</div>
+        <div class="card-desc">API principale — port 8080</div>
+      </div>
+    </div>
+    <ul class="link-list">
+      <li>
+        <a href="http://localhost:8080/api/health" target="_blank">
+          <span>Health Check <span class="url">localhost:8080/api/health</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:8080/swagger-ui.html" target="_blank">
+          <span>Swagger UI <span class="url">localhost:8080/swagger-ui.html</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:8080/api/v1/auth/login" target="_blank">
+          <span>Auth Login <span class="url">/api/v1/auth/login</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Backend Node -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-green">🟩</div>
+      <div>
+        <div class="card-title">Backend Node.js / Express</div>
+        <div class="card-desc">API REST — port 4000</div>
+      </div>
+    </div>
+    <ul class="link-list">
+      <li>
+        <a href="http://localhost:4000/api/v1/health" target="_blank">
+          <span>Health Check <span class="url">localhost:4000/api/v1/health</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:4000/api/v1/auth/login" target="_blank">
+          <span>Auth Login <span class="url">/api/v1/auth/login</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:4000/api/v1/projects" target="_blank">
+          <span>Projets <span class="url">/api/v1/projects</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="http://localhost:4000/api/v1/analytics" target="_blank">
+          <span>Analytics EVM <span class="url">/api/v1/analytics</span></span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Commandes démarrage -->
+  <div class="card full">
+    <div class="card-header">
+      <div class="card-icon icon-gray">⚡</div>
+      <div>
+        <div class="card-title">Commandes de démarrage</div>
+        <div class="card-desc">À lancer dans un terminal depuis le dossier racine</div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:14px;">
+      <div>
+        <div style="font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">Frontend</div>
+        <div class="cmd-block">
+          <span class="c-gray"># Terminal 1</span><br>
+          <span class="c-blue">cd</span> frontend<br>
+          <span class="c-green">pnpm</span> dev<br>
+          <span class="c-gray"># → http://localhost:3002</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">Backend Node.js</div>
+        <div class="cmd-block">
+          <span class="c-gray"># Terminal 2</span><br>
+          <span class="c-blue">cd</span> backend-node<br>
+          <span class="c-green">pnpm</span> install<br>
+          <span class="c-green">pnpm</span> dev<br>
+          <span class="c-gray"># → http://localhost:4000</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">Backend Java</div>
+        <div class="cmd-block">
+          <span class="c-gray"># Terminal 3</span><br>
+          <span class="c-blue">cd</span> backend<br>
+          <span class="c-green">./mvnw</span> spring-boot:run<br>
+          <span class="c-gray"># → http://localhost:8080</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">Base de données</div>
+        <div class="cmd-block">
+          <span class="c-gray"># Depuis frontend/</span><br>
+          <span class="c-green">pnpm</span> db:migrate<br>
+          <span class="c-green">pnpm</span> db:seed<br>
+          <span class="c-green">pnpm</span> db:studio<br>
+          <span class="c-gray"># → Prisma Studio :5555</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stack -->
+  <div class="card full">
+    <div class="card-header">
+      <div class="card-icon icon-purple">🛠</div>
+      <div>
+        <div class="card-title">Stack technique</div>
+        <div class="card-desc">Technologies utilisées dans ENGIPILOT v2</div>
+      </div>
+    </div>
+    <div class="pills">
+      <span class="pill purple">Next.js 15</span>
+      <span class="pill purple">TypeScript</span>
+      <span class="pill purple">Tailwind CSS</span>
+      <span class="pill purple">Zustand</span>
+      <span class="pill blue">Prisma 7</span>
+      <span class="pill blue">PostgreSQL</span>
+      <span class="pill blue">@prisma/adapter-pg</span>
+      <span class="pill green">Node.js Express</span>
+      <span class="pill green">MySQL (backend-node)</span>
+      <span class="pill green">bcryptjs + JWT</span>
+      <span class="pill orange">Spring Boot</span>
+      <span class="pill orange">Java 17</span>
+      <span class="pill orange">Maven</span>
+      <span class="pill">dnd-kit (Kanban)</span>
+      <span class="pill">Recharts (Analytics)</span>
+      <span class="pill">Lucide Icons</span>
+      <span class="pill">OpenAI GPT-4o-mini</span>
+      <span class="pill">pnpm</span>
+      <span class="pill">Vitest</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════ FOOTER ════════ -->
+<footer>
+  ENGIPILOT v2.0 — SaaS BTP &nbsp;·&nbsp; Projet PFE &nbsp;·&nbsp;
+  Fichier ouvert localement — aucun serveur requis
+</footer>
+
+</body>
+</html>

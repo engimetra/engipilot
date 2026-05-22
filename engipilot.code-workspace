@@ -1,0 +1,103 @@
+{
+  "folders": [
+    { "name": "🏗️ ENGIPILOT (Racine)", "path": "." },
+    { "name": "⚛️ Frontend (Next.js 15)", "path": "frontend" },
+    { "name": "☕ Backend (Spring Boot 3.5)", "path": "backend" },
+    { "name": "🤖 IA Service (Python 3.11)", "path": "ia" },
+    { "name": "🗄️ SQL & Migrations", "path": "sql" },
+    { "name": "📊 Monitoring", "path": "monitoring" }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.autoSave": "onFocusChange",
+    "[java]": {
+      "editor.tabSize": 4,
+      "editor.defaultFormatter": "redhat.java"
+    },
+    "[python]": {
+      "editor.tabSize": 4,
+      "editor.defaultFormatter": "ms-python.python"
+    },
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "python.defaultInterpreterPath": "${workspaceFolder:🤖 IA Service (Python 3.11)}/.venv/bin/python",
+    "tailwindCSS.experimental.classRegex": [
+      ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+    ],
+    "typescript.preferences.importModuleSpecifier": "non-relative"
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "▶ Backend Spring Boot (dev)",
+        "type": "java",
+        "request": "launch",
+        "mainClass": "com.engipilot.EngipilotApplication",
+        "projectName": "engipilot-backend",
+        "env": {
+          "SPRING_PROFILES_ACTIVE": "dev",
+          "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/engipilot",
+          "SPRING_DATASOURCE_USERNAME": "admin",
+          "SPRING_DATASOURCE_PASSWORD": "engipilot_dev",
+          "JWT_SECRET": "dev_secret_key_minimum_32_chars_change_me!",
+          "REDIS_HOST": "localhost",
+          "REDIS_PASSWORD": "engipilot_redis",
+          "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092"
+        }
+      },
+      {
+        "name": "▶ Frontend Next.js (dev)",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "pnpm",
+        "runtimeArgs": ["dev"],
+        "cwd": "${workspaceFolder:⚛️ Frontend (Next.js 15)}",
+        "env": {
+          "NEXT_PUBLIC_API_URL": "http://localhost:8080/api/v1",
+          "NEXT_PUBLIC_IA_URL": "http://localhost:8001"
+        }
+      },
+      {
+        "name": "▶ IA Service (dev)",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": ["src.api.main:app", "--reload", "--port", "8001"],
+        "cwd": "${workspaceFolder:🤖 IA Service (Python 3.11)}",
+        "justMyCode": true
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🐳 Démarrer ENGIPILOT (docker compose)",
+        "type": "shell",
+        "command": "make dev",
+        "group": "build",
+        "presentation": { "reveal": "always", "panel": "new" }
+      },
+      {
+        "label": "🌱 Charger données de démo",
+        "type": "shell",
+        "command": "make db-seed",
+        "group": "build"
+      },
+      {
+        "label": "🤖 Entraîner les modèles ML",
+        "type": "shell",
+        "command": "make train-ia",
+        "group": "build"
+      },
+      {
+        "label": "🧪 Tous les tests",
+        "type": "shell",
+        "command": "make test-all",
+        "group": "test"
+      }
+    ]
+  }
+}

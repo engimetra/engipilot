@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "EngiPilot",
+    "slug": "engipilot",
+    "version": "1.0.0",
+    "scheme": "engipilot",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#635BFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ma.engipilot.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#635BFF"
+      },
+      "package": "ma.engipilot.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ]
+  }
+}

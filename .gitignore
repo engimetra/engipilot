@@ -1,0 +1,53 @@
+# Env
+.env
+.env.local
+.env.production
+.env.development
+mobile/.env
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.turbo/
+
+# Mobile (Expo / React Native)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+mobile/.metro-health-check*
+
+# Java
+backend/target/
+*.class
+*.jar
+
+# Python
+ia/__pycache__/
+ia/.venv/
+ia/**/__pycache__/
+*.pyc
+*.egg-info/
+ia/models/*.joblib
+ia/models/*.pkl
+!ia/models/.gitkeep
+
+# SQL backups
+backup_*.sql
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/settings.json
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
