@@ -7,6 +7,7 @@ import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.RapportJournalierRepository;
 import com.engipilot.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -17,9 +18,10 @@ public class RapportService {
 
     private final RapportJournalierRepository rapportRepository;
 
-    public List<RapportResponse> listerParProjet(UUID projetId) {
-        return rapportRepository.findAllByProjetIdOrderByDateRapportDesc(projetId)
-            .stream().map(this::toResponse).toList();
+    public Page<RapportResponse> listerParProjet(UUID projetId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dateRapport").descending());
+        return rapportRepository.findAllByProjetIdOrderByDateRapportDesc(projetId, pageable)
+            .map(this::toResponse);
     }
 
     @Transactional

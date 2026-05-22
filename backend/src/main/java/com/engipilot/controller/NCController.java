@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -21,9 +22,12 @@ public class NCController {
     private final NCService ncService;
 
     @GetMapping
-    @Operation(summary = "Liste les NC d'un projet")
-    public ResponseEntity<List<NCResponse>> lister(@PathVariable UUID projetId) {
-        return ResponseEntity.ok(ncService.listerParProjet(projetId));
+    @Operation(summary = "Liste les NC d'un projet (paginé)")
+    public ResponseEntity<Page<NCResponse>> lister(
+        @PathVariable UUID projetId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ncService.listerParProjet(projetId, page, size));
     }
 
     @PostMapping

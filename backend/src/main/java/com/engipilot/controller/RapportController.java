@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -20,9 +21,12 @@ public class RapportController {
     private final RapportService rapportService;
 
     @GetMapping
-    @Operation(summary = "Liste les rapports d'un projet")
-    public ResponseEntity<List<RapportResponse>> lister(@PathVariable UUID projetId) {
-        return ResponseEntity.ok(rapportService.listerParProjet(projetId));
+    @Operation(summary = "Liste les rapports d'un projet (paginé)")
+    public ResponseEntity<Page<RapportResponse>> lister(
+        @PathVariable UUID projetId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(rapportService.listerParProjet(projetId, page, size));
     }
 
     @PostMapping

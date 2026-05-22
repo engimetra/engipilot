@@ -6,6 +6,7 @@ import com.engipilot.dto.response.TacheResponse;
 import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.TacheRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -17,9 +18,10 @@ public class TacheService {
 
     private final TacheRepository tacheRepository;
 
-    public List<TacheResponse> listerParProjet(UUID projetId) {
-        return tacheRepository.findAllByProjetIdOrderByCreatedAtDesc(projetId)
-            .stream().map(this::toResponse).toList();
+    public Page<TacheResponse> listerParProjet(UUID projetId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return tacheRepository.findAllByProjetIdOrderByCreatedAtDesc(projetId, pageable)
+            .map(this::toResponse);
     }
 
     @Transactional

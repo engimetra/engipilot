@@ -9,6 +9,7 @@ import com.engipilot.repository.IncidentHSERepository;
 import com.engipilot.repository.ProjetRepository;
 import com.engipilot.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -20,9 +21,10 @@ public class HSEService {
     private final IncidentHSERepository incidentRepository;
     private final ProjetRepository      projetRepository;
 
-    public List<IncidentResponse> listerParProjet(UUID projetId) {
-        return incidentRepository.findAllByProjetIdOrderByDateIncidentDesc(projetId)
-            .stream().map(this::toResponse).toList();
+    public Page<IncidentResponse> listerParProjet(UUID projetId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dateIncident").descending());
+        return incidentRepository.findAllByProjetIdOrderByDateIncidentDesc(projetId, pageable)
+            .map(this::toResponse);
     }
 
     @Transactional

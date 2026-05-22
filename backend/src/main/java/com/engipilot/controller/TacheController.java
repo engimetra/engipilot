@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -21,9 +22,12 @@ public class TacheController {
     private final TacheService tacheService;
 
     @GetMapping
-    @Operation(summary = "Liste les tâches d'un projet")
-    public ResponseEntity<List<TacheResponse>> lister(@PathVariable UUID projetId) {
-        return ResponseEntity.ok(tacheService.listerParProjet(projetId));
+    @Operation(summary = "Liste les tâches d'un projet (paginé)")
+    public ResponseEntity<Page<TacheResponse>> lister(
+        @PathVariable UUID projetId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "50") int size) {
+        return ResponseEntity.ok(tacheService.listerParProjet(projetId, page, size));
     }
 
     @PostMapping

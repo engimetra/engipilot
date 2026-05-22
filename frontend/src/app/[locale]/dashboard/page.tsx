@@ -178,10 +178,32 @@ export default function DashboardPage() {
 
   const [evmProjectId, setEvmProjectId] = useState<string | null>(null)
 
-  const { data, isLoading, refetch } = useQuery<DashboardData>({
+  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn:  fetchDashboard,
   })
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-danger/10 flex items-center justify-center">
+          <RefreshCw className="w-6 h-6 text-danger" />
+        </div>
+        <div>
+          <p className="font-bold text-foreground">Impossible de charger le dashboard</p>
+          <p className="text-sm text-muted-fg mt-1">
+            {error instanceof Error ? error.message : "Erreur de connexion au serveur"}
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-primary-hover transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" /> Réessayer
+        </button>
+      </div>
+    )
+  }
 
   const modules        = buildModules(data)
   const projects       = data?.projects ?? []

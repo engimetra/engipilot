@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware"
 import type { Projet, Utilisateur } from "@/types"
 import { hasPermission, hasAnyPermission } from "@/lib/rbac"
 import type { Permission } from "@/lib/rbac"
+import { clearAuthToken } from "@/lib/api"
 
 interface AppState {
   user:          Utilisateur | null
@@ -34,9 +35,8 @@ export const useStore = create<AppState>()(
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
 
       logout: () => {
+        clearAuthToken()
         if (typeof window !== "undefined") {
-          localStorage.removeItem("engipilot_token")
-          // Clear the session cookie used by middleware
           document.cookie = "engipilot_session=; path=/; max-age=0; SameSite=Lax"
         }
         set({ user: null, projetActif: null })

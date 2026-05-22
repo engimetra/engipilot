@@ -7,6 +7,7 @@ import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.NonConformiteRepository;
 import com.engipilot.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -17,9 +18,10 @@ public class NCService {
 
     private final NonConformiteRepository ncRepository;
 
-    public List<NCResponse> listerParProjet(UUID projetId) {
-        return ncRepository.findAllByProjetIdOrderByCreatedAtDesc(projetId)
-            .stream().map(this::toResponse).toList();
+    public Page<NCResponse> listerParProjet(UUID projetId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ncRepository.findAllByProjetIdOrderByCreatedAtDesc(projetId, pageable)
+            .map(this::toResponse);
     }
 
     @Transactional

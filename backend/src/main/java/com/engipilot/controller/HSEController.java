@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 import java.util.UUID;
 
 @RestController
@@ -23,9 +23,12 @@ public class HSEController {
     private final HSEService hseService;
 
     @GetMapping("/incidents")
-    @Operation(summary = "Liste les incidents HSE d'un projet")
-    public ResponseEntity<List<IncidentResponse>> lister(@PathVariable UUID projetId) {
-        return ResponseEntity.ok(hseService.listerParProjet(projetId));
+    @Operation(summary = "Liste les incidents HSE d'un projet (paginé)")
+    public ResponseEntity<Page<IncidentResponse>> lister(
+            @PathVariable UUID projetId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(hseService.listerParProjet(projetId, page, size));
     }
 
     @PostMapping("/incidents")
