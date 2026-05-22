@@ -1,0 +1,29 @@
+# Surcharges profil PROD — activé par SPRING_PROFILES_ACTIVE=prod
+# Ces valeurs écrasent application.yml uniquement en production.
+
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        generate_statistics: false
+
+  flyway:
+    out-of-order: false   # Interdit les migrations hors séquence en prod
+
+logging:
+  level:
+    com.engipilot:                  INFO
+    org.springframework.security:   WARN
+    org.springframework.web:        WARN
+    org.hibernate.SQL:              OFF
+    com.zaxxer.hikari:              WARN
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized   # Détails health uniquement pour les admins
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,flyway,caches

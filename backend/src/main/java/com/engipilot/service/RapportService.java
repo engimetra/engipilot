@@ -5,7 +5,7 @@ import com.engipilot.dto.request.RapportCreateRequest;
 import com.engipilot.dto.response.RapportResponse;
 import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.RapportJournalierRepository;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;

@@ -13,16 +13,23 @@ services:
       POSTGRES_DB:       ${POSTGRES_DB:-engipilot}
       POSTGRES_USER:     ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-engipilot_dev}
+      APP_DB_USER:       ${APP_DB_USER:-engipilot_app}
+      APP_DB_PASSWORD:   ${APP_DB_PASSWORD:-engipilot_app_dev}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/01_create_app_user.sh:/docker-entrypoint-initdb.d/01_create_app_user.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d engipilot"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     security_opt:
       - no-new-privileges:true             # ← Sécurité : pas d'escalade de privilèges
 
@@ -43,6 +50,10 @@ services:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-engipilot_redis}", "ping"]
       interval: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     security_opt:
       - no-new-privileges:true
 
@@ -56,6 +67,16 @@ services:
     volumes:
       - zk_data:/var/lib/zookeeper/data
       - zk_log:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     security_opt:
       - no-new-privileges:true
 
@@ -64,7 +85,7 @@ services:
     container_name: engipilot-kafka
     restart: unless-stopped
     depends_on:
-      - zookeeper
+      zookeeper: { condition: service_healthy }
     ports:
       - "9092:9092"
     environment:
@@ -83,6 +104,10 @@ services:
       interval: 30s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   minio:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z  # ← Version épinglée, pas :latest
@@ -101,6 +126,10 @@ services:
       test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     security_opt:
       - no-new-privileges:true
 
@@ -120,8 +149,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL:          jdbc:postgresql://postgres:5432/engipilot
-      SPRING_DATASOURCE_USERNAME:     ${POSTGRES_USER:-admin}
-      SPRING_DATASOURCE_PASSWORD:     ${POSTGRES_PASSWORD:-engipilot_dev}
+      APP_DB_USER:                    ${APP_DB_USER:-engipilot_app}
+      APP_DB_PASSWORD:                ${APP_DB_PASSWORD:-engipilot_app_dev}
+      POSTGRES_USER:                  ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD:              ${POSTGRES_PASSWORD:-engipilot_dev}
       SPRING_DATA_REDIS_HOST:         redis
       SPRING_DATA_REDIS_PASSWORD:     ${REDIS_PASSWORD:-engipilot_redis}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -133,6 +164,10 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
     security_opt:
       - no-new-privileges:true
     read_only: false
@@ -144,7 +179,9 @@ services:
     image: engipilot/ia:latest
     container_name: engipilot-ia
     restart: unless-stopped
-    depends_on: [postgres, kafka]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka:    { condition: service_healthy }
     ports:
       - "8001:8001"
     environment:
@@ -156,6 +193,13 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     security_opt:
       - no-new-privileges:true
 
@@ -166,7 +210,8 @@ services:
     image: engipilot/frontend:latest
     container_name: engipilot-frontend
     restart: unless-stopped
-    depends_on: [backend]
+    depends_on:
+      backend: { condition: service_healthy }
     ports:
       - "3000:3000"
     environment:
@@ -176,6 +221,16 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
     volumes:
       - ./frontend/src:/app/src:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health 2>/dev/null || wget -qO- http://localhost:3000 2>/dev/null | grep -q '<html' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     security_opt:
       - no-new-privileges:true
 
@@ -187,7 +242,19 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on: [frontend, backend]
+    depends_on:
+      frontend: { condition: service_healthy }
+      backend:  { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/api/v1/actuator/health 2>/dev/null || wget -qO- http://localhost 2>/dev/null | grep -q '<html' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     security_opt:
       - no-new-privileges:true
 
@@ -203,6 +270,16 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=30d'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     security_opt:
       - no-new-privileges:true
 
@@ -219,6 +296,16 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     security_opt:
       - no-new-privileges:true
 

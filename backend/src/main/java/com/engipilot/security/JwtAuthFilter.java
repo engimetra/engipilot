@@ -1,6 +1,5 @@
-package com.engipilot.config;
+package com.engipilot.security;
 
-import com.engipilot.util.EngipilotUserDetails;
 import com.engipilot.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -47,13 +46,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String role  = claims.get("role", String.class);
 
         var userDetails = new EngipilotUserDetails(userId, email, "", role, orgId);
-        var auth = new UsernamePasswordAuthenticationToken(
-            userId.toString(), null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-        auth.setDetails(userDetails);
-        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
-
         var authToken = new UsernamePasswordAuthenticationToken(
             userId.toString(), null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
         chain.doFilter(req, res);

@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url:      ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/engipilot}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    username: ${APP_DB_USER:engipilot_app}       # Utilisateur DML uniquement (pas d'accès DDL)
+    password: ${APP_DB_PASSWORD:engipilot_app_dev}
     hikari:
       maximum-pool-size:    30        # 20 → 30 pour absorber les pics de trafic
       minimum-idle:         10        # 5  → 10 connexions toujours prêtes
@@ -36,7 +36,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    baseline-version: 1
     validate-on-migrate: true
+    user:     ${POSTGRES_USER:admin}        # Utilisateur DDL pour les migrations
+    password: ${POSTGRES_PASSWORD:engipilot_dev}
 
   data:
     redis:

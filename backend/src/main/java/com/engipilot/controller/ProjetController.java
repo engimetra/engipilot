@@ -5,7 +5,7 @@ import com.engipilot.dto.response.EVMResponse;
 import com.engipilot.dto.response.ProjetResponse;
 import com.engipilot.service.KPIService;
 import com.engipilot.service.ProjetService;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

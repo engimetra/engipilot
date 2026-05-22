@@ -1,7 +1,7 @@
 package com.engipilot.controller;
 
 import com.engipilot.service.MinioService;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -5,7 +5,7 @@ import com.engipilot.dto.request.ProjetCreateRequest;
 import com.engipilot.dto.response.ProjetResponse;
 import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.ProjetRepository;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;

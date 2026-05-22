@@ -1,4 +1,4 @@
-package com.engipilot.util;
+package com.engipilot.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,7 +24,7 @@ public class SecurityUtils {
         var auth = getAuth();
         if (auth == null) return null;
         return auth.getAuthorities().stream()
-            .findFirst().map(a -> a.getAuthority().replace("ROLE_","")).orElse(null);
+            .findFirst().map(a -> a.getAuthority().replace("ROLE_", "")).orElse(null);
     }
 
     private static Authentication getAuth() {

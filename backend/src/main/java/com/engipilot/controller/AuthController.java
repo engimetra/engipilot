@@ -4,7 +4,7 @@ import com.engipilot.dto.request.LoginRequest;
 import com.engipilot.dto.request.RegisterRequest;
 import com.engipilot.dto.response.AuthResponse;
 import com.engipilot.service.AuthService;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

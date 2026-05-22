@@ -2,7 +2,7 @@ package com.engipilot.controller;
 
 import com.engipilot.dto.response.EVMResponse;
 import com.engipilot.service.KPIService;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

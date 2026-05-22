@@ -7,7 +7,7 @@ import com.engipilot.dto.response.IncidentResponse;
 import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.IncidentHSERepository;
 import com.engipilot.repository.ProjetRepository;
-import com.engipilot.util.SecurityUtils;
+import com.engipilot.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;

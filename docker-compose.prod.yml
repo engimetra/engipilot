@@ -14,6 +14,8 @@ services:
       POSTGRES_DB:       ${POSTGRES_DB:-engipilot}
       POSTGRES_USER:     ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DB_USER:       ${APP_DB_USER:-engipilot_app}
+      APP_DB_PASSWORD:   ${APP_DB_PASSWORD}
     command: >
       postgres
       -c shared_buffers=64MB
@@ -23,6 +25,7 @@ services:
       -c max_connections=50
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/01_create_app_user.sh:/docker-entrypoint-initdb.d/01_create_app_user.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-engipilot}"]
       interval: 10s
@@ -139,8 +142,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL:          jdbc:postgresql://postgres:5432/${POSTGRES_DB:-engipilot}
-      SPRING_DATASOURCE_USERNAME:     ${POSTGRES_USER:-admin}
-      SPRING_DATASOURCE_PASSWORD:     ${POSTGRES_PASSWORD}
+      APP_DB_USER:                    ${APP_DB_USER:-engipilot_app}
+      APP_DB_PASSWORD:                ${APP_DB_PASSWORD}
+      POSTGRES_USER:                  ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD:              ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST:         redis
       SPRING_DATA_REDIS_PASSWORD:     ${REDIS_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -216,10 +221,63 @@ services:
       - certbot_webroot:/var/www/certbot:ro
       - certbot_certs:/etc/letsencrypt:ro
     depends_on: [frontend, backend]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/api/v1/actuator/health 2>/dev/null | grep -q UP || wget -qO- http://localhost 2>/dev/null | grep -q '<html' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:
           memory: 32M
+    security_opt:
+      - no-new-privileges:true
+
+  # ── Renouvellement automatique Let's Encrypt (O7) ────────────────
+  certbot:
+    image: certbot/certbot:v3.0.1
+    container_name: engipilot-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h & wait $${!};
+             done"
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+
+  # ── Backup automatique PostgreSQL (D3) ──────────────────────────
+  pgbackup:
+    image: prodrigestivill/postgres-backup-local:17-alpine
+    container_name: engipilot-pgbackup
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      POSTGRES_HOST:     postgres
+      POSTGRES_DB:       ${POSTGRES_DB:-engipilot}
+      POSTGRES_USER:     ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE:          "@daily"     # Sauvegarde quotidienne à minuit UTC
+      BACKUP_KEEP_DAYS:  7            # 7 sauvegardes journalières
+      BACKUP_KEEP_WEEKS: 4            # 4 sauvegardes hebdomadaires
+      BACKUP_KEEP_MONTHS: 6           # 6 sauvegardes mensuelles
+      HEALTHCHECK_PORT:  8080
+    volumes:
+      - pgbackup_data:/backups
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     security_opt:
       - no-new-privileges:true
 
@@ -272,6 +330,7 @@ volumes:
   kafka_data:
   minio_data:
   ia_models:
+  pgbackup_data:
   prometheus_data:
   grafana_data:
   certbot_webroot:

@@ -1,9 +1,17 @@
-# Env
+# Env — fichiers à ne jamais commiter
 .env
 .env.local
 .env.production
 .env.development
+.env.staging
+.env.test
+**/.env
+**/.env.local
+**/.env.*.local
 mobile/.env
+backend/.env
+backend/.env.*
+# .env.example est intentionnellement commité comme template de référence
 
 # Next.js
 frontend/.next/

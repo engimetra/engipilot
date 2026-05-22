@@ -27,9 +27,11 @@ jobs:
       postgres:
         image: postgres:17.2-alpine3.21       # ← Version épinglée
         env:
-          POSTGRES_DB:       engipilot_test
-          POSTGRES_USER:     admin
-          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB:        engipilot_test
+          POSTGRES_USER:      admin
+          POSTGRES_PASSWORD:  test_password
+          APP_DB_USER:        engipilot_app
+          APP_DB_PASSWORD:    test_app_password
         options: >-
           --health-cmd "pg_isready -U admin -d engipilot_test"
           --health-interval 10s
@@ -47,14 +49,26 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Créer l'utilisateur applicatif engipilot_app (D4)
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U admin -d engipilot_test -c \
+            "DO \$\$ BEGIN
+               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'engipilot_app') THEN
+                 CREATE ROLE engipilot_app WITH LOGIN PASSWORD 'test_app_password' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+               END IF;
+             END \$\$;"
+
       - name: Lancer les tests Java
         working-directory: backend
         run: ./mvnw test -q
         env:
-          SPRING_DATASOURCE_URL:      jdbc:postgresql://localhost:5432/engipilot_test
-          SPRING_DATASOURCE_USERNAME: admin
-          SPRING_DATASOURCE_PASSWORD: test_password
-          JWT_SECRET:                 test_secret_key_minimum_32_characters_here!
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/engipilot_test
+          # D4: utilisateur applicatif DML pour le datasource, admin pour Flyway
+          APP_DB_USER:           engipilot_app
+          APP_DB_PASSWORD:       test_app_password
+          POSTGRES_USER:         admin
+          POSTGRES_PASSWORD:     test_password
+          JWT_SECRET:            test_secret_key_minimum_32_characters_here!
           SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9099  # Kafka absent en test
 
       - name: Rapport de couverture JaCoCo
@@ -163,7 +177,7 @@ jobs:
 
       # ── Scan Trivy — Image Backend ───────────────────────────
       - name: Scan Trivy — Backend
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
           format: 'sarif'
@@ -181,7 +195,7 @@ jobs:
 
       # ── Scan Trivy — Image IA ─────────────────────────────────
       - name: Scan Trivy — IA Service
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.IMAGE_PREFIX }}/ia:${{ github.sha }}
           format: 'sarif'
@@ -199,7 +213,7 @@ jobs:
 
       # ── Scan Trivy — Image Frontend ───────────────────────────
       - name: Scan Trivy — Frontend
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
           format: 'sarif'
@@ -217,7 +231,7 @@ jobs:
 
       # ── Scan également le code source ────────────────────────
       - name: Scan Trivy — Fichiers de configuration
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'config'
           scan-ref: '.'
