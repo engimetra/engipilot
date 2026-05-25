@@ -53,12 +53,10 @@ public class MsProjectController {
                     ? task.getPercentageComplete().intValue() : 0);
 
                 if (task.getStart() != null) {
-                    t.put("startDate", task.getStart().toInstant()
-                        .atZone(ZoneId.systemDefault()).toLocalDate().toString());
+                    t.put("startDate", task.getStart().toLocalDate().toString());
                 }
                 if (task.getFinish() != null) {
-                    t.put("endDate", task.getFinish().toInstant()
-                        .atZone(ZoneId.systemDefault()).toLocalDate().toString());
+                    t.put("endDate", task.getFinish().toLocalDate().toString());
                 }
                 if (task.getDuration() != null) {
                     t.put("durationDays", (int) task.getDuration().getDuration());

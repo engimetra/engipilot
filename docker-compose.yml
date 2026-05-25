@@ -31,7 +31,7 @@ services:
         limits:
           memory: 512M
     security_opt:
-      - no-new-privileges:true             # ← Sécurité : pas d'escalade de privilèges
+      - no-new-privileges:true
 
   redis:
     image: redis:7.4.2-alpine3.21          # ← Version précise
@@ -47,8 +47,9 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-engipilot_redis}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-engipilot_redis} ping"]
       interval: 10s
+      timeout: 5s
       retries: 3
     deploy:
       resources:
@@ -68,7 +69,7 @@ services:
       - zk_data:/var/lib/zookeeper/data
       - zk_log:/var/lib/zookeeper/log
     healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      test: ["CMD-SHELL", "echo srvr | nc -w 2 localhost 2181 | grep -q Mode"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -102,12 +103,15 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
       interval: 30s
+      timeout: 10s
       retries: 5
       start_period: 30s
     deploy:
       resources:
         limits:
           memory: 512M
+    security_opt:
+      - no-new-privileges:true
 
   minio:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z  # ← Version épinglée, pas :latest
@@ -123,8 +127,9 @@ services:
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live 2>/dev/null || exit 1"]
       interval: 30s
+      timeout: 5s
       retries: 3
     deploy:
       resources:
@@ -142,8 +147,9 @@ services:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
       kafka:    { condition: service_healthy }
+      minio:    { condition: service_healthy }
     ports:
-      - "8080:8080"
+      - "8082:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL:          jdbc:postgresql://postgres:5432/engipilot
@@ -161,6 +167,8 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
+      timeout: 10s
+      retries: 3
       start_period: 60s
     deploy:
       resources:
@@ -168,7 +176,6 @@ services:
           memory: 768M
     security_opt:
       - no-new-privileges:true
-    read_only: false
 
   ia-service:
     build:
@@ -181,7 +188,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      DATABASE_URL:            postgresql+asyncpg://admin:${POSTGRES_PASSWORD:-engipilot_dev}@postgres:5432/engipilot
+      DATABASE_URL:            postgresql+asyncpg://${APP_DB_USER:-engipilot_app}:${APP_DB_PASSWORD:-engipilot_app_dev}@postgres:5432/engipilot
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       IA_DEBUG:                "false"
     volumes:
@@ -212,6 +219,13 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL:     http://localhost:8082/api/v1
+      NEXT_PUBLIC_IA_URL:      http://localhost:8001
+      NEXT_PUBLIC_WS_URL:      ws://localhost:8082/ws
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./frontend/src:/app/src:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000 2>/dev/null | grep -q '<html' || exit 1"]
       interval: 30s
