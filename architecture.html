@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Architecture ENGIPILOT</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+    .diagram-container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 1100px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+    .btn-download {
+      margin-top: 32px;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-download:hover { background: #7dd3fc; }
+    .mermaid { width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>ENGIPILOT</h1>
+  <p class="subtitle">Architecture technique complète — Projet de Fin d'Études</p>
+
+  <div class="diagram-container">
+    <div class="mermaid">
+graph TB
+    USER(["👤 Utilisateur\nNavigateur / Mobile"])
+    HOST["🌐 Hostinger\nRegistrar engipilot.ma"]
+    DO_DNS["🔗 DigitalOcean DNS\nns1 / ns2 / ns3\nA → 209.38.231.154"]
+
+    USER --> HOST
+    HOST -->|"Délégation DNS"| DO_DNS
+
+    subgraph DROPLET["☁️ DigitalOcean Droplet — ubuntu-s-2vcpu-2gb-fra1 — IP: 209.38.231.154"]
+
+        NGINX["⚙️ NGINX\nReverse Proxy\n:80 / :443 — SSL Let's Encrypt"]
+
+        subgraph APPS["📦 Applications"]
+            FRONT["🖥️ Frontend\nNext.js + TypeScript\nTailwind CSS — :3000"]
+            BACK["☕ Backend Java\nSpring Boot + JWT\nFlyway — :8080"]
+            NODE["🟩 Backend Node\nExpress + Prisma\nTypeScript — :3001"]
+            IA["🤖 Service IA\nFastAPI Python\nML Models — :8001"]
+        end
+
+        subgraph DATA["🗄️ Données"]
+            PG[("🐘 PostgreSQL 17\n:5432")]
+            REDIS[("⚡ Redis 7\nCache + Sessions\n:6379")]
+            MINIO[("📁 MinIO\nDocuments + Plans\n:9000")]
+        end
+
+        subgraph MSG["📨 Messaging"]
+            KAFKA["📨 Apache Kafka\n:9092"]
+            ZK["🦒 Zookeeper\n:2181"]
+        end
+
+        subgraph MONITOR["📊 Monitoring"]
+            PROM["📈 Prometheus\n:9090"]
+            GRAF["📊 Grafana\n:3001"]
+            BACKUP["💾 pgBackup\nSauvegarde auto"]
+        end
+
+        NGINX --> FRONT
+        NGINX --> BACK
+        NGINX --> IA
+
+        FRONT <-->|"API REST"| BACK
+        FRONT <-->|"API REST"| NODE
+        BACK --> PG
+        BACK --> REDIS
+        BACK --> MINIO
+        NODE --> PG
+        BACK <-->|"Events async"| KAFKA
+        IA <-->|"Events async"| KAFKA
+        KAFKA --- ZK
+        BACK -->|"métriques"| PROM
+        IA -->|"métriques"| PROM
+        PROM --> GRAF
+        PG --> BACKUP
+    end
+
+    subgraph CICD["🔄 CI/CD"]
+        GH["🐙 GitHub\nSource Code"] -->|"GitHub Actions"| GHCR["📦 GHCR\nDocker Registry"]
+        GHCR -->|"Deploy"| NGINX
+    end
+
+    subgraph MOBILE["📱 Mobile"]
+        RN["📱 React Native\nExpo"]
+    end
+
+    DO_DNS --> NGINX
+    RN <-->|"API REST HTTPS"| NGINX
+
+    style DROPLET fill:#1e3a5f,stroke:#38bdf8,color:#e2e8f0
+    style APPS fill:#1a2e4a,stroke:#3b82f6,color:#e2e8f0
+    style DATA fill:#1a3a2a,stroke:#22c55e,color:#e2e8f0
+    style MSG fill:#3a2a1a,stroke:#f97316,color:#e2e8f0
+    style MONITOR fill:#2a1a3a,stroke:#a855f7,color:#e2e8f0
+    style CICD fill:#1a1a3a,stroke:#6366f1,color:#e2e8f0
+    style MOBILE fill:#2a1a1a,stroke:#ef4444,color:#e2e8f0
+    </div>
+  </div>
+
+  <button class="btn-download" onclick="downloadSVG()">⬇️ Télécharger en SVG</button>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1e3a5f',
+        primaryTextColor: '#e2e8f0',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1a2e4a',
+        tertiaryColor: '#0f172a',
+        background: '#1e293b',
+        mainBkg: '#1e3a5f',
+        nodeBorder: '#38bdf8',
+        clusterBkg: '#1e293b',
+        titleColor: '#38bdf8',
+        edgeLabelBackground: '#1e293b',
+        fontFamily: 'Segoe UI, sans-serif',
+        fontSize: '14px'
+      }
+    });
+
+    function downloadSVG() {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('Diagram not ready yet');
+      const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'architecture-engipilot.svg';
+      a.click();
+    }
+  </script>
+</body>
+</html>

@@ -136,8 +136,6 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    image: engipilot/backend:latest
     container_name: engipilot-backend
     restart: unless-stopped
     depends_on:
@@ -175,8 +173,6 @@ services:
   ia-service:
     build:
       context: ./ia
-      dockerfile: Dockerfile
-    image: engipilot/ia:latest
     container_name: engipilot-ia
     restart: unless-stopped
     depends_on:
@@ -206,33 +202,22 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    image: engipilot/frontend:latest
+      dockerfile: ./Dockerfile.dev
+    image: engipilot/frontend:local
+    pull_policy: never
     container_name: engipilot-frontend
     restart: unless-stopped
     depends_on:
-      backend: { condition: service_healthy }
+      backend:
+        condition: service_healthy
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL:     http://localhost:8080/api/v1
-      NEXT_PUBLIC_IA_URL:      http://localhost:8001
-      NEXT_PUBLIC_WS_URL:      ws://localhost:8080/ws
-      NEXT_TELEMETRY_DISABLED: "1"
-    volumes:
-      - ./frontend/src:/app/src:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health 2>/dev/null || wget -qO- http://localhost:3000 2>/dev/null | grep -q '<html' || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 2>/dev/null | grep -q '<html' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    security_opt:
-      - no-new-privileges:true
 
   nginx:
     image: nginx:1.27.3-alpine3.20          # ← Version précise
