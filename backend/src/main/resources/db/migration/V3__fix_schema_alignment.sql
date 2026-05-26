@@ -1,15 +1,24 @@
 -- V3__fix_schema_alignment.sql
 -- Aligne le schéma Flyway avec les entités JPA :
---   1. Renomme "users" → "utilisateurs" (User.java est mappé sur "utilisateurs")
+--   1. Renomme "users" → "utilisateurs" uniquement si utilisateurs n'existe pas encore
 --   2. Ajoute last_login manquant dans utilisateurs
 --   3. Ajoute trial_expires_at manquant dans organisations
 
--- 1. Renommer la table users → utilisateurs
-ALTER TABLE IF EXISTS users RENAME TO utilisateurs;
-
--- Recréer les index avec les nouveaux noms
-ALTER INDEX IF EXISTS idx_users_email RENAME TO idx_utilisateurs_email;
-ALTER INDEX IF EXISTS idx_users_org   RENAME TO idx_utilisateurs_org;
+-- 1. Renommer users → utilisateurs seulement si la cible n'existe pas déjà
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'users'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'utilisateurs'
+    ) THEN
+        ALTER TABLE users RENAME TO utilisateurs;
+        ALTER INDEX IF EXISTS idx_users_email RENAME TO idx_utilisateurs_email;
+        ALTER INDEX IF EXISTS idx_users_org   RENAME TO idx_utilisateurs_org;
+    END IF;
+END $$;
 
 -- 2. Ajouter last_login (absent du V2, présent dans User.java)
 ALTER TABLE utilisateurs
