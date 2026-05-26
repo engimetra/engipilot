@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Page;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -36,10 +37,11 @@ public class HSEController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Déclarer un incident HSE")
     public ResponseEntity<IncidentResponse> declarer(
-        @PathVariable UUID projetId,
-        @Valid @RequestBody IncidentCreateRequest req) {
+            @PathVariable UUID projetId,
+            @Valid @RequestBody IncidentCreateRequest req) {
 
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(hseService.declarer(projetId, req));
     }
 
@@ -47,8 +49,14 @@ public class HSEController {
     @Operation(summary = "Changer le statut d'un incident")
     public ResponseEntity<IncidentResponse> changerStatut(
             @PathVariable UUID id,
-            @RequestParam String statut) {
+            @RequestParam IncidentHSE.Statut statut) {
 
-        return ResponseEntity.ok(hseService.changerStatut(id, IncidentHSE.Statut.valueOf(statut.toUpperCase())));
+        return ResponseEntity.ok(hseService.changerStatut(id, statut));
+    }
+
+    @GetMapping("/kpis")
+    @Operation(summary = "KPIs HSE — TF, TG, heures sans accident")
+    public ResponseEntity<Map<String, Object>> getKPIs(@PathVariable UUID projetId) {
+        return ResponseEntity.ok(hseService.getKPIsHSE(projetId));
     }
 }
