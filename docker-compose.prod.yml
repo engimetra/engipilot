@@ -31,7 +31,7 @@ services:
 
   # ─── REDIS ───────────────────────────────────────────────────────
   redis:
-    image: redis:7.4-alpine
+    image: redis:7.4.2-alpine3.21
     container_name: engipilot-redis
     restart: unless-stopped
     command: >
@@ -149,7 +149,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${APP_DB_USER:-engipilot_app}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-engipilot}
+      DATABASE_URL: postgresql+asyncpg://${APP_DB_USER:-engipilot_app}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-engipilot}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
       interval: 30s
