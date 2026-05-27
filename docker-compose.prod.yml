@@ -1,11 +1,8 @@
-# ENGIPILOT — docker-compose.prod.yml
-# Optimisé pour 2 GB RAM (ubuntu-s-2vcpu-2gb)
-# Prometheus/Grafana désactivés par défaut → activer avec --profile monitoring
-# Usage : docker compose -f docker-compose.prod.yml up -d
-# Avec monitoring : docker compose -f docker-compose.prod.yml --profile monitoring up -d
+version: "3.9"
 
 services:
 
+  # ─── DATABASE ────────────────────────────────────────────────────
   postgres:
     image: postgres:17.2-alpine3.21
     container_name: engipilot-db
@@ -31,116 +28,98 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          memory: 192M
-    security_opt:
-      - no-new-privileges:true
 
+  # ─── REDIS ───────────────────────────────────────────────────────
   redis:
-    image: redis:7.4.2-alpine3.21
+    image: redis:7.4-alpine
     container_name: engipilot-redis
     restart: unless-stopped
     command: >
       redis-server
       --requirepass ${REDIS_PASSWORD}
-      --maxmemory 64mb
+      --maxmemory 128mb
       --maxmemory-policy allkeys-lru
-      --save ""
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping"]
       interval: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 96M
-    security_opt:
-      - no-new-privileges:true
+      timeout: 5s
+      retries: 5
 
+  # ─── ZOOKEEPER ───────────────────────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.6
     container_name: engipilot-zk
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVER_JVMFLAGS: "-Xmx96m -Xms64m"
+      ZOOKEEPER_TICK_TIME:   2000
     volumes:
       - zk_data:/var/lib/zookeeper/data
       - zk_log:/var/lib/zookeeper/log
-    deploy:
-      resources:
-        limits:
-          memory: 160M
-    security_opt:
-      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "echo srvr | nc -w 2 localhost 2181 | grep -q Mode"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
+  # ─── KAFKA ───────────────────────────────────────────────────────
   kafka:
     image: confluentinc/cp-kafka:7.5.6
     container_name: engipilot-kafka
     restart: unless-stopped
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_BROKER_ID:                        1
+      KAFKA_ZOOKEEPER_CONNECT:                zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS:             PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:   PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME:       PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_LOG_RETENTION_HOURS: 168
-      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
       interval: 30s
+      timeout: 10s
       retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 320M
-    security_opt:
-      - no-new-privileges:true
 
+  # ─── MINIO ───────────────────────────────────────────────────────
   minio:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z
     container_name: engipilot-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER:     ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      MINIO_ROOT_USER:     ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123}
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
       interval: 30s
+      timeout: 5s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    security_opt:
-      - no-new-privileges:true
 
+  # ─── BACKEND (SPRING BOOT) ───────────────────────────────────────
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-engipilot}/engipilot/backend:latest
+    build:
+      context: ./backend
     container_name: engipilot-backend
     restart: unless-stopped
     depends_on:
-      postgres: { condition: service_healthy }
-      redis:    { condition: service_healthy }
-      kafka:    { condition: service_healthy }
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL:          jdbc:postgresql://postgres:5432/${POSTGRES_DB:-engipilot}
       APP_DB_USER:                    ${APP_DB_USER:-engipilot_app}
       APP_DB_PASSWORD:                ${APP_DB_PASSWORD}
@@ -149,66 +128,56 @@ services:
       SPRING_DATA_REDIS_HOST:         redis
       SPRING_DATA_REDIS_PASSWORD:     ${REDIS_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      JWT_SECRET:       ${JWT_SECRET}
-      MINIO_ENDPOINT:   http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      # Limiter le heap JVM à 75% de la limite mémoire du container (480M → ~360M heap)
-      JAVA_TOOL_OPTIONS: >-
-        -Xms128m -Xmx360m
-        -XX:+UseContainerSupport
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+ExitOnOutOfMemoryError
+      JWT_SECRET:                     ${JWT_SECRET}
+      MINIO_ENDPOINT:                 http://minio:9000
+      MINIO_ACCESS_KEY:               ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY:               ${MINIO_SECRET_KEY:-minioadmin123}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health 2>/dev/null | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 30s
+      timeout: 10s
+      retries: 3
       start_period: 90s
-    deploy:
-      resources:
-        limits:
-          memory: 480M
-    security_opt:
-      - no-new-privileges:true
 
+  # ─── IA SERVICE ──────────────────────────────────────────────────
   ia-service:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-engipilot}/engipilot/ia:latest
+    build:
+      context: ./ia
     container_name: engipilot-ia
     restart: unless-stopped
-    depends_on: [postgres, kafka]
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      DATABASE_URL:            postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-engipilot}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      IA_DEBUG:                "false"
-    volumes:
-      - ia_models:/app/models
+      DATABASE_URL: postgresql://${APP_DB_USER:-engipilot_app}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-engipilot}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
       interval: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    security_opt:
-      - no-new-privileges:true
+      timeout: 5s
+      retries: 3
 
+  # ─── FRONTEND (NEXT.JS) ──────────────────────────────────────────
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-engipilot}/engipilot/frontend:latest
+    build:
+      context: ./frontend
     container_name: engipilot-frontend
     restart: unless-stopped
-    depends_on: [backend]
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL:     https://engipilot.ma/api/v1
       NEXT_PUBLIC_IA_URL:      https://engipilot.ma/ia
       NEXT_PUBLIC_WS_URL:      wss://engipilot.ma/ws
       NEXT_TELEMETRY_DISABLED: "1"
-    deploy:
-      resources:
-        limits:
-          memory: 192M
-    security_opt:
-      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/landing 2>/dev/null | grep -q '<html' || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
 
+  # ─── NGINX (REVERSE PROXY) ───────────────────────────────────────
   nginx:
     image: nginx:1.27.3-alpine3.20
     container_name: engipilot-nginx
@@ -220,107 +189,16 @@ services:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - certbot_webroot:/var/www/certbot:ro
       - certbot_certs:/etc/letsencrypt:ro
-    depends_on: [frontend, backend]
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/api/v1/actuator/health 2>/dev/null | grep -q UP || wget -qO- http://localhost 2>/dev/null | grep -q '<html' || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost 2>/dev/null | grep -q '<html' || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          memory: 32M
-    security_opt:
-      - no-new-privileges:true
-
-  # ── Renouvellement automatique Let's Encrypt (O7) ────────────────
-  certbot:
-    image: certbot/certbot:v3.0.1
-    container_name: engipilot-certbot
-    restart: unless-stopped
-    volumes:
-      - certbot_webroot:/var/www/certbot
-      - certbot_certs:/etc/letsencrypt
-    entrypoint: >
-      sh -c "trap exit TERM;
-             while :; do
-               certbot renew --webroot -w /var/www/certbot --quiet;
-               sleep 12h & wait $${!};
-             done"
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-    security_opt:
-      - no-new-privileges:true
-
-  # ── Backup automatique PostgreSQL (D3) ──────────────────────────
-  pgbackup:
-    image: prodrigestivill/postgres-backup-local:17-alpine
-    container_name: engipilot-pgbackup
-    restart: unless-stopped
-    depends_on:
-      postgres: { condition: service_healthy }
-    environment:
-      POSTGRES_HOST:     postgres
-      POSTGRES_DB:       ${POSTGRES_DB:-engipilot}
-      POSTGRES_USER:     ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      SCHEDULE:          "@daily"     # Sauvegarde quotidienne à minuit UTC
-      BACKUP_KEEP_DAYS:  7            # 7 sauvegardes journalières
-      BACKUP_KEEP_WEEKS: 4            # 4 sauvegardes hebdomadaires
-      BACKUP_KEEP_MONTHS: 6           # 6 sauvegardes mensuelles
-      HEALTHCHECK_PORT:  8080
-    volumes:
-      - pgbackup_data:/backups
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-    security_opt:
-      - no-new-privileges:true
-
-  # ── Monitoring (optionnel — activer avec --profile monitoring) ──
-  # Sur 2 GB RAM : ne pas activer en même temps que tous les services
-  prometheus:
-    profiles: ["monitoring"]
-    image: prom/prometheus:v2.55.1
-    container_name: engipilot-prometheus
-    restart: unless-stopped
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=7d'
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    security_opt:
-      - no-new-privileges:true
-
-  grafana:
-    profiles: ["monitoring"]
-    image: grafana/grafana:11.4.0
-    container_name: engipilot-grafana
-    restart: unless-stopped
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD:     ${GRAFANA_PASSWORD}
-      GF_SECURITY_DISABLE_GRAVATAR:   "true"
-      GF_ANALYTICS_REPORTING_ENABLED: "false"
-      GF_SERVER_ROOT_URL:             https://engipilot.ma/grafana/
-      GF_SERVER_SERVE_FROM_SUB_PATH:  "true"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana:/etc/grafana/provisioning:ro
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    security_opt:
-      - no-new-privileges:true
 
 volumes:
   postgres_data:
@@ -329,13 +207,5 @@ volumes:
   zk_log:
   kafka_data:
   minio_data:
-  ia_models:
-  pgbackup_data:
-  prometheus_data:
-  grafana_data:
   certbot_webroot:
   certbot_certs:
-
-networks:
-  default:
-    name: engipilot-network
