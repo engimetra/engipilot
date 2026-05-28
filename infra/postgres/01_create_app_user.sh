@@ -13,8 +13,17 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB" <<-EOSQL
     DO \$\$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${APP_USER}') THEN
-            CREATE ROLE "${APP_USER}" WITH LOGIN PASSWORD '${APP_PASS}' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+            CREATE ROLE "${APP_USER}"
+                WITH LOGIN
+                PASSWORD '${APP_PASS}'
+                NOSUPERUSER
+                NOCREATEDB
+                NOCREATEROLE
+                NOINHERIT
+                NOREPLICATION;
         END IF;
     END
     \$\$;
+
+    GRANT CONNECT ON DATABASE ${DB} TO "${APP_USER}";
 EOSQL

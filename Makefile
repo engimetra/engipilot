@@ -50,6 +50,28 @@ clean: ## Supprimer TOUTES les données Docker
 	docker compose down -v
 	@echo "⚠️  Toutes les données supprimées"
 
+db-reset: ## Reset propre PostgreSQL : supprime le volume + recrée engipilot_app
+	@echo "⚠️  Suppression du volume PostgreSQL..."
+	docker compose down -v
+	@echo "🔄 Reconstruction et redémarrage..."
+	docker compose up -d --build
+	@echo ""
+	@echo "⏳ Attente démarrage PostgreSQL (15s)..."
+	@sleep 15
+	@echo "🔍 Vérification user engipilot_app..."
+	@docker exec engipilot-db psql -U admin -d engipilot \
+		-c "SELECT rolname, rolcanlogin FROM pg_roles WHERE rolname = 'engipilot_app';" \
+		2>/dev/null && echo "✅ engipilot_app OK" || echo "❌ engipilot_app introuvable — vérifier les logs"
+
+db-check: ## Vérifier la configuration PostgreSQL (users, permissions)
+	@echo "=== Users PostgreSQL ==="
+	@docker exec engipilot-db psql -U admin -d engipilot \
+		-c "SELECT rolname, rolcanlogin, rolsuper, rolcreatedb FROM pg_roles WHERE rolname IN ('admin','engipilot_app') ORDER BY rolname;"
+	@echo ""
+	@echo "=== Permissions engipilot_app sur les tables ==="
+	@docker exec engipilot-db psql -U admin -d engipilot \
+		-c "SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = 'engipilot_app' ORDER BY table_name, privilege_type;" 2>/dev/null || echo "(aucune table encore — Flyway n'a pas tourné)"
+
 help: ## Afficher cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
