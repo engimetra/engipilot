@@ -9,40 +9,58 @@ services:
     environment:
       POSTGRES_DB: engipilot
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: engipilot_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d engipilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7.4.2-alpine3.21
     container_name: engipilot-redis
     restart: unless-stopped
-    command: redis-server --requirepass engipilot_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: engipilot-backend
     restart: unless-stopped
+    env_file: .env
     expose:
       - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   ia-service:
     build: ./ia
     container_name: engipilot-ia
     restart: unless-stopped
+    env_file: .env
     expose:
       - "8001"
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.dev
+      dockerfile: ./Dockerfile.prod
     container_name: engipilot-frontend
     restart: unless-stopped
     expose:
