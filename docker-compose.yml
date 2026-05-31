@@ -1,4 +1,4 @@
-# version: "3.9"
+version: "3.9"
 
 services:
 
@@ -36,7 +36,8 @@ services:
     build: ./backend
     container_name: engipilot-backend
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     expose:
       - "8080"
     depends_on:
@@ -49,18 +50,30 @@ services:
     build: ./ia
     container_name: engipilot-ia
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     expose:
       - "8001"
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.prod
+      dockerfile: Dockerfile.prod
     container_name: engipilot-frontend
     restart: unless-stopped
+
+    # ✅ FIX CRITIQUE : variables disponibles dans Next.js build
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+
     expose:
       - "3000"
+    depends_on:
+      - backend
+      - ia-service
 
   nginx:
     image: nginx:1.27.3-alpine
