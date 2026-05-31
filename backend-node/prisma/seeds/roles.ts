@@ -1,13 +1,13 @@
-import { prisma } from "../../src/lib/prisma"
+import { prisma } from "./_client"
 
 const ROLES = [
-  { name: "SUPER_ADMIN", displayName: "Super Administrateur", description: "Accès total à la plateforme", isSystem: true },
-  { name: "ADMIN",       displayName: "Administrateur",       description: "Gestion entreprise complète", isSystem: true },
-  { name: "MANAGER",     displayName: "Chef de Projet",       description: "Gestion des projets assignés", isSystem: true },
-  { name: "ENGINEER",    displayName: "Ingénieur",            description: "Saisie et suivi chantier", isSystem: true },
-  { name: "HSE",         displayName: "Responsable HSE",      description: "Gestion sécurité et incidents", isSystem: true },
-  { name: "MEMBER",      displayName: "Membre",               description: "Accès standard lecture/écriture", isSystem: true },
-  { name: "VIEWER",      displayName: "Lecteur",              description: "Accès lecture seule", isSystem: true },
+  { name: "SUPER_ADMIN", description: "Accès total à la plateforme" },
+  { name: "ADMIN",       description: "Gestion entreprise complète" },
+  { name: "MANAGER",     description: "Gestion des projets assignés" },
+  { name: "ENGINEER",    description: "Saisie et suivi chantier" },
+  { name: "HSE",         description: "Gestion sécurité et incidents" },
+  { name: "MEMBER",      description: "Accès standard lecture/écriture" },
+  { name: "VIEWER",      description: "Accès lecture seule" },
 ]
 
 const RESOURCES = [
@@ -22,18 +22,16 @@ const ACTIONS = ["view", "create", "update", "delete", "export", "approve"]
 export async function seedRoles() {
   console.log("  → Seeding roles…")
 
-  // Rôles
   const roles = await Promise.all(
     ROLES.map(r =>
       prisma.role.upsert({
         where:  { name: r.name },
-        update: { displayName: r.displayName },
+        update: { description: r.description },
         create: r,
       })
     )
   )
 
-  // Permissions (toutes les combinaisons action × resource)
   console.log("  → Seeding permissions…")
   const perms = await Promise.all(
     RESOURCES.flatMap(resource =>
@@ -47,12 +45,9 @@ export async function seedRoles() {
     )
   )
 
-  // Attribution des permissions par rôle
-  const permMap = new Map(perms.map(p => [`${p.action}:${p.resource}`, p.id]))
-  const roleMap = new Map(roles.map(r => [r.name, r.id]))
+  const roleMap     = new Map(roles.map(r => [r.name, r.id]))
+  const allPermIds  = perms.map(p => p.id)
 
-  // SUPER_ADMIN & ADMIN → tout
-  const allPermIds = perms.map(p => p.id)
   for (const roleName of ["SUPER_ADMIN", "ADMIN"]) {
     const roleId = roleMap.get(roleName)!
     await Promise.all(
@@ -66,9 +61,10 @@ export async function seedRoles() {
     )
   }
 
-  // MANAGER → tout sauf users/settings
-  const managerPerms = perms.filter(p => !["users", "settings"].includes(p.resource) || p.action === "view")
-  const managerId = roleMap.get("MANAGER")!
+  const managerId    = roleMap.get("MANAGER")!
+  const managerPerms = perms.filter(
+    p => !["users", "settings"].includes(p.resource) || p.action === "view"
+  )
   await Promise.all(
     managerPerms.map(p =>
       prisma.rolePermission.upsert({
@@ -79,10 +75,9 @@ export async function seedRoles() {
     )
   )
 
-  // ENGINEER → view + create + update sur chantier/tâches/workers
+  const engineerId        = roleMap.get("ENGINEER")!
   const engineerActions   = ["view", "create", "update"]
   const engineerResources = ["projects", "sites", "tasks", "workers", "equipment", "materials", "documents", "incidents", "notifications"]
-  const engineerId = roleMap.get("ENGINEER")!
   await Promise.all(
     perms
       .filter(p => engineerActions.includes(p.action) && engineerResources.includes(p.resource))
@@ -95,11 +90,10 @@ export async function seedRoles() {
       )
   )
 
-  // HSE → spécialisé incidents
-  const hseId = roleMap.get("HSE")!
+  const hseId   = roleMap.get("HSE")!
   const hsePerms = perms.filter(p =>
-    (p.resource === "incidents" && ["view","create","update","delete"].includes(p.action)) ||
-    (["view"].includes(p.action) && ["projects","sites","analytics","reports"].includes(p.resource))
+    (p.resource === "incidents" && ["view", "create", "update", "delete"].includes(p.action)) ||
+    (p.action === "view" && ["projects", "sites", "analytics", "reports"].includes(p.resource))
   )
   await Promise.all(
     hsePerms.map(p =>
@@ -111,7 +105,6 @@ export async function seedRoles() {
     )
   )
 
-  // MEMBER → view + create + update limités
   const memberId = roleMap.get("MEMBER")!
   await Promise.all(
     perms
@@ -125,9 +118,7 @@ export async function seedRoles() {
       )
   )
 
-  // VIEWER → view uniquement
   const viewerId = roleMap.get("VIEWER")!
-  const viewPermId = permMap.get("view:projects") ?? ""
   await Promise.all(
     perms
       .filter(p => p.action === "view")

@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 const nextConfig: NextConfig = {
   /* ── Node.js packages for API routes (non-edge) ── */
-  serverExternalPackages: ["minio"],
+  serverExternalPackages: ["minio", "@prisma/client", "@prisma/adapter-pg", "pg"],
 
   /* ── Production compression ── */
   compress: true,

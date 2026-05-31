@@ -188,6 +188,7 @@ model User {
   notifications   Notification[]
   activityLogs    ActivityLog[]
   uploadedDocs    Document[]
+  reports         Report[]
 
   @@map("users")
 }
@@ -307,6 +308,7 @@ model Project {
   aiAlerts      AiAlert[]
   analytics     Analytic[]
   notifications Notification[]
+  reports       Report[]
 
   @@map("projects")
 }
@@ -770,4 +772,40 @@ model ActivityLog {
   user   User?   @relation(fields: [userId], references: [id])
 
   @@map("activity_logs")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RAPPORTS
+// ─────────────────────────────────────────────────────────────
+
+enum ReportType {
+  DAILY_PROGRESS
+  WEEKLY_SUMMARY
+  MONTHLY_KPI
+}
+
+enum ReportGenerator {
+  MANUAL
+  AI
+}
+
+model Report {
+  id          String          @id @default(uuid())
+  title       String
+  type        ReportType      @default(DAILY_PROGRESS)
+  content     String          @db.Text
+  summary     String?         @db.Text
+  period      String?
+  generatedBy ReportGenerator @default(MANUAL)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  authorId  String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId],  references: [id])
+
+  @@map("reports")
 }

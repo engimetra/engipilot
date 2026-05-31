@@ -1,12 +1,13 @@
-import { prisma } from "../../src/lib/prisma"
+import { prisma } from "./_client"
 
+// MySQL schema has no RESIDENTIAL type — map to CONSTRUCTION
 const DEMO_PROJECTS = [
   {
     name:          "Usine Agroalimentaire Bouskoura",
     reference:     "PROJ-2024-001",
     description:   "Construction d'une usine agroalimentaire de 12 000 m² — Phase 2 Génie Civil & Électricité",
-    type:          "INDUSTRIAL" as const,
-    status:        "ACTIVE" as const,
+    type:          "INDUSTRIAL"      as const,
+    status:        "ACTIVE"          as const,
     startDate:     new Date("2024-01-15"),
     endDate:       new Date("2025-12-31"),
     budgetInitial: 210_000_000,
@@ -22,8 +23,8 @@ const DEMO_PROJECTS = [
     name:          "Station Énergie Mohammedia",
     reference:     "PROJ-2024-002",
     description:   "Installation station de production énergétique — Capacité 150 MW",
-    type:          "INFRASTRUCTURE" as const,
-    status:        "ACTIVE" as const,
+    type:          "INFRASTRUCTURE"  as const,
+    status:        "ACTIVE"          as const,
     startDate:     new Date("2024-03-01"),
     endDate:       new Date("2026-06-30"),
     budgetInitial: 210_000_000,
@@ -39,8 +40,8 @@ const DEMO_PROJECTS = [
     name:          "Villas Ain Diab Prestige",
     reference:     "PROJ-2024-003",
     description:   "Résidence de luxe 24 villas — Façade océan · Finitions premium",
-    type:          "RESIDENTIAL" as const,
-    status:        "ACTIVE" as const,
+    type:          "CONSTRUCTION"    as const,
+    status:        "ACTIVE"          as const,
     startDate:     new Date("2024-04-10"),
     endDate:       new Date("2025-09-30"),
     budgetInitial: 85_000_000,
@@ -55,8 +56,8 @@ const DEMO_PROJECTS = [
     name:          "Résidence Al Andalous",
     reference:     "PROJ-2024-004",
     description:   "Résidence 120 appartements R+8 — Infrastructures VRD complètes",
-    type:          "RESIDENTIAL" as const,
-    status:        "ACTIVE" as const,
+    type:          "CONSTRUCTION"    as const,
+    status:        "ACTIVE"          as const,
     startDate:     new Date("2024-02-01"),
     endDate:       new Date("2025-11-30"),
     budgetInitial: 150_000_000,
@@ -69,11 +70,7 @@ const DEMO_PROJECTS = [
   },
 ]
 
-export async function seedProjects(
-  companyId: string,
-  adminId: string,
-  managerId: string,
-) {
+export async function seedProjects(companyId: string, adminId: string, managerId: string) {
   console.log("  → Seeding projects…")
 
   const projects = await Promise.all(
@@ -84,11 +81,10 @@ export async function seedProjects(
         create: { ...p, companyId },
       })
 
-      // Membres
       await prisma.projectMember.upsert({
         where:  { projectId_userId: { projectId: project.id, userId: adminId } },
         update: {},
-        create: { projectId: project.id, userId: adminId, role: "ADMIN" },
+        create: { projectId: project.id, userId: adminId,   role: "ADMIN" },
       })
       await prisma.projectMember.upsert({
         where:  { projectId_userId: { projectId: project.id, userId: managerId } },
@@ -104,33 +100,29 @@ export async function seedProjects(
   return projects
 }
 
-export async function seedTasks(
-  projectId: string,
-  assigneeId: string,
-  creatorId: string,
-) {
+// MySQL schema: TaskStatus = TODO|IN_PROGRESS|REVIEW|DONE|BLOCKED  (no IN_REVIEW)
+//               Priority   = LOW|MEDIUM|HIGH|CRITICAL               (no URGENT)
+export async function seedTasks(projectId: string, assigneeId: string) {
   const TASKS = [
-    { title: "Étude géotechnique Zone A", status: "DONE" as const, priority: "HIGH" as const, progress: 100, estimatedHours: 40 },
-    { title: "Coulage dalle béton — Zone B1", status: "IN_PROGRESS" as const, priority: "URGENT" as const, progress: 65, estimatedHours: 120 },
-    { title: "Installation câblage électrique", status: "IN_PROGRESS" as const, priority: "HIGH" as const, progress: 30, estimatedHours: 80 },
-    { title: "Réception matériaux acier", status: "TODO" as const, priority: "HIGH" as const, progress: 0, estimatedHours: 8 },
-    { title: "Levée NC-047 — Coffrages", status: "BLOCKED" as const, priority: "URGENT" as const, progress: 0, estimatedHours: 16 },
-    { title: "Rapport hebdomadaire S-21", status: "TODO" as const, priority: "MEDIUM" as const, progress: 0, estimatedHours: 4 },
-    { title: "Inspection qualité béton Zone C", status: "IN_REVIEW" as const, priority: "HIGH" as const, progress: 90, estimatedHours: 12 },
-    { title: "Mise à jour planning Gantt", status: "DONE" as const, priority: "MEDIUM" as const, progress: 100, estimatedHours: 6 },
+    { title: "Étude géotechnique Zone A",        status: "DONE"        as const, priority: "HIGH"     as const, progress: 100, estimatedHours: 40  },
+    { title: "Coulage dalle béton — Zone B1",    status: "IN_PROGRESS" as const, priority: "CRITICAL" as const, progress: 65,  estimatedHours: 120 },
+    { title: "Installation câblage électrique",  status: "IN_PROGRESS" as const, priority: "HIGH"     as const, progress: 30,  estimatedHours: 80  },
+    { title: "Réception matériaux acier",        status: "TODO"        as const, priority: "HIGH"     as const, progress: 0,   estimatedHours: 8   },
+    { title: "Levée NC-047 — Coffrages",         status: "BLOCKED"     as const, priority: "CRITICAL" as const, progress: 0,   estimatedHours: 16  },
+    { title: "Rapport hebdomadaire S-21",        status: "TODO"        as const, priority: "MEDIUM"   as const, progress: 0,   estimatedHours: 4   },
+    { title: "Inspection qualité béton Zone C",  status: "REVIEW"      as const, priority: "HIGH"     as const, progress: 90,  estimatedHours: 12  },
+    { title: "Mise à jour planning Gantt",       status: "DONE"        as const, priority: "MEDIUM"   as const, progress: 100, estimatedHours: 6   },
   ]
 
   await Promise.all(
-    TASKS.map((t, i) =>
+    TASKS.map(t =>
       prisma.task.create({
         data: {
           ...t,
           projectId,
           assigneeId,
-          creatorId,
-          columnOrder: i,
-          startDate:   new Date(),
-          endDate:     new Date(Date.now() + (i + 1) * 7 * 24 * 60 * 60 * 1000),
+          startDate: new Date(),
+          endDate:   new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
       })
     )

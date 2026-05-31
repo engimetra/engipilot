@@ -1,51 +1,32 @@
 /* ─────────────────────────────────────────────────────────────
    ENGIPILOT — GET /api/db
-   Health check base de données + métriques Prisma
+   Proxy vers le health-check backend-node
 ───────────────────────────────────────────────────────────── */
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { NextRequest, NextResponse } from "next/server"
+import { backendFetch, getToken } from "@/lib/api-client"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const token = getToken(req)
   const start = Date.now()
 
   try {
-    // Ping PostgreSQL
-    await prisma.$queryRaw`SELECT 1`
-    const latencyMs = Date.now() - start
-
-    // Compte les enregistrements principaux
-    const [companies, users, projects, tasks, aiAlerts, notifications] = await Promise.all([
-      prisma.company.count(),
-      prisma.user.count(),
-      prisma.project.count(),
-      prisma.task.count(),
-      prisma.aiAlert.count(),
-      prisma.notification.count(),
-    ])
-
+    const res = await backendFetch("/health", token)
+    const json = await res.json()
     return NextResponse.json({
-      status:    "connected",
-      provider:  "PostgreSQL",
-      orm:       "Prisma 7",
-      latencyMs,
-      tables: {
-        companies, users, projects, tasks, aiAlerts, notifications,
-      },
+      ...json,
+      latencyMs:   Date.now() - start,
+      proxy:       "frontend → backend-node",
       environment: process.env.NODE_ENV,
+    }, { status: res.status })
+  } catch (err) {
+    console.error("[proxy GET /db]", err)
+    return NextResponse.json({
+      status:    "error",
+      message:   "Backend injoignable",
+      hint:      "Vérifiez NEXT_PUBLIC_API_URL et que backend-node est démarré",
       timestamp: new Date().toISOString(),
-    })
-  } catch (err: unknown) {
-    const error = err as Error
-    return NextResponse.json(
-      {
-        status:  "error",
-        message: error.message,
-        hint:    "Vérifiez DATABASE_URL dans .env.local et que PostgreSQL est démarré",
-        timestamp: new Date().toISOString(),
-      },
-      { status: 503 }
-    )
+    }, { status: 503 })
   }
 }

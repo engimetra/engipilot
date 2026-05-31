@@ -15,6 +15,9 @@ import { hseRouter }           from "@/modules/hse/hse.routes"
 import { aiRouter }            from "@/modules/ai/ai.routes"
 import { analyticsRouter }     from "@/modules/analytics/analytics.routes"
 import { notificationsRouter } from "@/modules/notifications/notifications.routes"
+import { dashboardRouter }     from "@/modules/dashboard/dashboard.routes"
+import { reportsRouter }       from "@/modules/reports/reports.routes"
+import { documentsRouter }     from "@/modules/documents/documents.routes"
 
 const app = express()
 
@@ -52,6 +55,9 @@ app.use(`${API}/hse`,           hseRouter)
 app.use(`${API}/ai`,            aiRouter)
 app.use(`${API}/analytics`,     analyticsRouter)
 app.use(`${API}/notifications`, notificationsRouter)
+app.use(`${API}/dashboard`,     dashboardRouter)
+app.use(`${API}/reports`,       reportsRouter)
+app.use(`${API}/documents`,     documentsRouter)
 
 // ── 404 + Error handlers ──────────────────────────────────────
 app.use(notFoundHandler)

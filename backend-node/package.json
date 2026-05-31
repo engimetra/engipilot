@@ -10,7 +10,7 @@
     "db:generate": "prisma generate",
     "db:migrate":  "prisma migrate dev",
     "db:push":     "prisma db push",
-    "db:seed":     "ts-node prisma/seed.ts",
+    "db:seed":     "ts-node prisma/seeds/index.ts",
     "db:studio":   "prisma studio",
     "lint":        "eslint src --ext .ts",
     "test":        "jest"

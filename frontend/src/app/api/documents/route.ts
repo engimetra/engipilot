@@ -1,61 +1,42 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
-import { verifyJwt } from "@/lib/jwt"
+import { backendFetch, getToken, proxyResponse } from "@/lib/api-client"
 import { uploadToMinio } from "@/lib/minio-client"
 
 export const dynamic = "force-dynamic"
 
-function auth(req: NextRequest) {
-  const token = req.cookies.get("engipilot_session")?.value
-  if (!token) return null
-  return verifyJwt(token)
-}
-
 const EXT_TO_TYPE: Record<string, string> = {
   pdf: "REPORT", dwg: "PLAN", dxf: "PLAN",
-  png: "PHOTO",  jpg: "PHOTO", jpeg: "PHOTO",
+  png: "PHOTO", jpg: "PHOTO", jpeg: "PHOTO",
   xlsx: "OTHER", xls: "OTHER", zip: "OTHER",
-  mpp: "OTHER",  xml: "OTHER",
+  mpp: "OTHER", xml: "OTHER",
 }
 
 const ALLOWED_EXT = new Set(["pdf","dwg","dxf","png","jpg","jpeg","xlsx","xls","zip"])
-const MAX_BYTES    = 50 * 1024 * 1024
+const MAX_BYTES   = 50 * 1024 * 1024
 
-// ── GET /api/documents?projectId= ────────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const payload = auth(req)
-  if (!payload) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  const token = getToken(req)
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
   const projectId = req.nextUrl.searchParams.get("projectId") ?? undefined
 
   try {
-    const docs = await prisma.document.findMany({
-      where: {
-        isActive: true,
-        deletedAt: null,
-        ...(projectId
-          ? { projectId }
-          : { project: { companyId: payload.companyId } }),
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true, name: true, type: true, mimeType: true,
-        size: true, url: true, version: true, createdAt: true,
-        uploadedBy: { select: { firstName: true, lastName: true } },
-      },
-    })
+    const qs = new URLSearchParams()
+    if (projectId) qs.set("projectId", projectId)
 
-    return NextResponse.json(docs)
+    const res              = await backendFetch("/documents", token, { searchParams: qs })
+    const { payload, status } = await proxyResponse(res)
+    return NextResponse.json(payload, { status })
   } catch (err) {
-    console.error("[GET /api/documents]", err)
+    console.error("[proxy GET /documents]", err)
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }
 
-// ── POST /api/documents — upload fichier vers MinIO + Prisma ─────────────────
+// Upload: MinIO stays in frontend — metadata is persisted via backend
 export async function POST(req: NextRequest) {
-  const payload = auth(req)
-  if (!payload) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  const token = getToken(req)
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
   try {
     const formData  = await req.formData()
@@ -67,71 +48,51 @@ export async function POST(req: NextRequest) {
     const ext      = (file.name.split(".").pop() ?? "").toLowerCase()
     const mimeType = file.type || "application/octet-stream"
 
-    if (!ALLOWED_EXT.has(ext)) {
+    if (!ALLOWED_EXT.has(ext))
       return NextResponse.json({ error: `Extension non supportée: .${ext}` }, { status: 400 })
-    }
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_BYTES)
       return NextResponse.json({ error: "Fichier trop lourd (max 50 Mo)" }, { status: 413 })
-    }
 
-    // Vérifier que le projet appartient à la company
-    if (projectId) {
-      const project = await prisma.project.findFirst({
-        where: { id: projectId, companyId: payload.companyId, isActive: true },
-      })
-      if (!project) return NextResponse.json({ error: "Projet introuvable" }, { status: 404 })
-    }
+    // Decode JWT to get companyId for MinIO path (no DB call needed)
+    let companyId = "unknown"
+    try {
+      const [, payloadB64] = token.split(".")
+      const decoded = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"))
+      companyId = decoded.companyId ?? "unknown"
+    } catch { /* use default */ }
 
-    // Upload MinIO
+    // Upload to MinIO
     const buffer     = Buffer.from(await file.arrayBuffer())
-    const objectName = `docs/${payload.companyId}/${projectId ?? "general"}/${Date.now()}_${file.name}`
+    const objectName = `docs/${companyId}/${projectId ?? "general"}/${Date.now()}_${file.name}`
     const url        = await uploadToMinio(buffer, objectName, mimeType)
 
-    // Sauvegarder en base
-    const docType = (EXT_TO_TYPE[ext] ?? "OTHER") as
-      "PLAN" | "CONTRACT" | "REPORT" | "PHOTO" | "VIDEO" |
-      "NC_REPORT" | "PV_MEETING" | "HSE_DOCUMENT" | "PERMIT" | "INVOICE" | "OTHER"
-
-    const doc = await prisma.document.create({
-      data: {
-        name:         file.name,
-        type:         docType,
-        mimeType,
-        size:         file.size,
-        url,
-        uploadedById: payload.sub,
-        ...(projectId ? { projectId } : {}),
-      },
-      select: {
-        id: true, name: true, type: true, mimeType: true,
-        size: true, url: true, version: true, createdAt: true,
-        uploadedBy: { select: { firstName: true, lastName: true } },
-      },
+    // Persist metadata in backend
+    const docType = EXT_TO_TYPE[ext] ?? "OTHER"
+    const res = await backendFetch("/documents", token, {
+      method: "POST",
+      body:   JSON.stringify({ name: file.name, type: docType, mimeType, size: file.size, url, projectId }),
     })
-
-    return NextResponse.json(doc, { status: 201 })
+    const { payload, status } = await proxyResponse(res)
+    return NextResponse.json(payload, { status: status === 200 ? 201 : status })
   } catch (err) {
-    console.error("[POST /api/documents]", err)
+    console.error("[proxy POST /documents]", err)
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }
 
-// ── DELETE /api/documents?id= ─────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const payload = auth(req)
-  if (!payload) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  const token = getToken(req)
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
   const id = req.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 })
 
   try {
-    await prisma.document.updateMany({
-      where: { id, uploadedById: payload.sub },
-      data:  { isActive: false, deletedAt: new Date() },
-    })
-    return NextResponse.json({ ok: true })
+    const res              = await backendFetch(`/documents/${id}`, token, { method: "DELETE" })
+    const { payload, status } = await proxyResponse(res)
+    return NextResponse.json(payload, { status })
   } catch (err) {
-    console.error("[DELETE /api/documents]", err)
+    console.error("[proxy DELETE /documents]", err)
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }

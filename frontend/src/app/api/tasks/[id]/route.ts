@@ -1,97 +1,63 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
-import { verifyJwt } from "@/lib/jwt"
+import { backendFetch, getToken, proxyResponse } from "@/lib/api-client"
 
 export const dynamic = "force-dynamic"
 
-function auth(req: NextRequest) {
-  const token = req.cookies.get("engipilot_session")?.value
-  if (!token) return null
-  return verifyJwt(token)
+type Ctx = { params: Promise<{ id: string }> }
+
+function statusToDb(s: string) {
+  if (s === "EN_COURS")         return "IN_PROGRESS"
+  if (s === "CONTROLE_QUALITE") return "REVIEW"
+  if (s === "TERMINE")          return "DONE"
+  return "TODO"
 }
 
-function statusToDb(status: string): string {
-  switch (status) {
-    case "EN_COURS":         return "IN_PROGRESS"
-    case "CONTROLE_QUALITE": return "IN_REVIEW"
-    case "TERMINE":          return "DONE"
-    default:                 return "TODO"
-  }
-}
-
-function priorityToDb(priority: string): string {
-  switch (priority) {
-    case "CRITIQUE": return "URGENT"
-    case "HAUTE":    return "HIGH"
-    case "BASSE":    return "LOW"
-    default:         return "MEDIUM"
-  }
+function priorityToDb(p: string) {
+  if (p === "CRITIQUE") return "CRITICAL"
+  if (p === "HAUTE")    return "HIGH"
+  if (p === "BASSE")    return "LOW"
+  return "MEDIUM"
 }
 
 // PATCH /api/tasks/[id]
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const payload = auth(req)
-  if (!payload) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
-
+export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const token = getToken(req)
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
   const { id } = await params
 
   try {
-    const existing = await prisma.task.findFirst({
-      where: { id, isActive: true, project: { companyId: payload.companyId } },
-    })
-    if (!existing) return NextResponse.json({ error: "Tâche introuvable" }, { status: 404 })
+    const { titre, statut, priorite, responsable, avancement, date_echeance, description } = await req.json()
 
-    const body = await req.json()
-    const { titre, statut, priorite, responsable, avancement, date_echeance, description, tags } = body
+    const patch: Record<string, unknown> = {}
+    if (titre         !== undefined) patch.title       = titre
+    if (statut        !== undefined) patch.status      = statusToDb(statut)
+    if (priorite      !== undefined) patch.priority    = priorityToDb(priorite)
+    if (responsable   !== undefined) patch.assigneeId  = responsable || null
+    if (avancement    !== undefined) patch.progress    = avancement
+    if (date_echeance !== undefined) patch.endDate     = date_echeance ? new Date(date_echeance).toISOString() : null
+    if (description   !== undefined) patch.description = description || null
 
-    await prisma.task.update({
-      where: { id },
-      data: {
-        ...(titre         !== undefined && { title:       titre }),
-        ...(statut        !== undefined && { status:      statusToDb(statut) as any }),
-        ...(priorite      !== undefined && { priority:    priorityToDb(priorite) as any }),
-        ...(responsable   !== undefined && { assigneeId:  responsable || null }),
-        ...(avancement    !== undefined && { progress:    avancement }),
-        ...(date_echeance !== undefined && { endDate:     date_echeance ? new Date(date_echeance) : null }),
-        ...(description   !== undefined && { description: description || null }),
-        ...(tags          !== undefined && { tags }),
-      },
-    })
-
-    return NextResponse.json({ ok: true })
+    const res              = await backendFetch(`/tasks/${id}`, token, { method: "PATCH", body: JSON.stringify(patch) })
+    const { payload, status } = await proxyResponse(res)
+    return NextResponse.json(payload, { status })
   } catch (err) {
-    console.error("[PATCH /api/tasks/:id]", err)
+    console.error("[proxy PATCH /tasks/:id]", err)
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }
 
-// DELETE /api/tasks/[id] — soft delete
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const payload = auth(req)
-  if (!payload) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
-
+// DELETE /api/tasks/[id]
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const token = getToken(req)
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
   const { id } = await params
 
   try {
-    const existing = await prisma.task.findFirst({
-      where: { id, isActive: true, project: { companyId: payload.companyId } },
-    })
-    if (!existing) return NextResponse.json({ error: "Tâche introuvable" }, { status: 404 })
-
-    await prisma.task.update({
-      where: { id },
-      data:  { isActive: false, deletedAt: new Date() },
-    })
-
-    return NextResponse.json({ ok: true })
+    const res              = await backendFetch(`/tasks/${id}`, token, { method: "DELETE" })
+    const { payload, status } = await proxyResponse(res)
+    return NextResponse.json(payload, { status })
   } catch (err) {
-    console.error("[DELETE /api/tasks/:id]", err)
+    console.error("[proxy DELETE /tasks/:id]", err)
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }

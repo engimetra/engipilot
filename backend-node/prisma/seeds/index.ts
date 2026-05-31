@@ -1,35 +1,32 @@
 // ═══════════════════════════════════════════════════════════════
-//  ENGIPILOT — Database Seed Principal
-//  Ordre d'exécution : company → roles → users → projects → AI
+//  ENGIPILOT — Database Seed (MySQL / backend-node)
+//  Ordre : company → roles → users → projects → tasks →
+//          budgets → incidents → notifications → analytics → AI
 // ═══════════════════════════════════════════════════════════════
-import { prisma }                   from "../../src/lib/prisma"
-import { seedRoles }                from "./roles"
-import { seedUsers }                from "./users"
-import { seedProjects, seedTasks }  from "./projects"
-import { seedAiData }               from "./ai"
+import { prisma }                          from "./_client"
+import { seedRoles }                       from "./roles"
+import { seedUsers }                       from "./users"
+import { seedProjects, seedTasks }         from "./projects"
+import { seedAiData }                      from "./ai"
 
 async function main() {
   console.log("\n╔══════════════════════════════════════════════╗")
-  console.log("║  ENGIPILOT — Database Seed                  ║")
+  console.log("║  ENGIPILOT — Database Seed (MySQL)          ║")
   console.log("╚══════════════════════════════════════════════╝\n")
 
   // 1. Entreprise principale
   console.log("→ Seeding company…")
   const company = await prisma.company.upsert({
-    where:  { slug: "engipilot-demo" },
+    where:  { siret: "DEMO00000001MA" },
     update: {},
     create: {
-      name:        "ENGIPILOT Demo SA",
-      slug:        "engipilot-demo",
-      siret:       "DEMO00000001MA",
-      city:        "Casablanca",
-      country:     "MA",
-      email:       "contact@engipilot.ma",
-      website:     "https://engipilot.ma",
-      plan:        "ENTERPRISE",
-      maxProjects: 50,
-      maxUsers:    100,
-      maxStorage:  50_000,
+      name:    "ENGIPILOT Demo SA",
+      siret:   "DEMO00000001MA",
+      city:    "Casablanca",
+      country: "MA",
+      email:   "contact@engipilot.ma",
+      website: "https://engipilot.ma",
+      plan:    "ENTERPRISE",
     },
   })
   console.log(`  ✅ Company: ${company.name}`)
@@ -38,21 +35,21 @@ async function main() {
   const { roleMap } = await seedRoles()
 
   // 3. Utilisateurs démo
-  const users = await seedUsers(company.id, roleMap)
-  const adminUser   = users.find(u => u.email === "admin@engipilot.ma")!
-  const managerUser = users.find(u => u.email === "manager@engipilot.ma")!
+  const users        = await seedUsers(company.id, roleMap)
+  const adminUser    = users.find(u => u.email === "admin@engipilot.ma")!
+  const managerUser  = users.find(u => u.email === "manager@engipilot.ma")!
   const engineerUser = users.find(u => u.email === "engineer@engipilot.ma")!
 
   // 4. Projets démo
-  const projects = await seedProjects(company.id, adminUser.id, managerUser.id)
+  const projects    = await seedProjects(company.id, adminUser.id, managerUser.id)
   const mainProject = projects[0]
 
-  // 5. Tâches démo sur le projet principal
+  // 5. Tâches démo
   console.log("  → Seeding tasks…")
-  await seedTasks(mainProject.id, engineerUser.id, managerUser.id)
+  await seedTasks(mainProject.id, engineerUser.id)
   console.log("  ✅ Tâches créées")
 
-  // 6. Budgets démo
+  // 6. Budget démo
   console.log("  → Seeding budgets…")
   await prisma.budget.upsert({
     where:  { id: "budget-seed-001" },
@@ -67,7 +64,7 @@ async function main() {
       projectId:     mainProject.id,
     },
   })
-  console.log("  ✅ Budgets créés")
+  console.log("  ✅ Budget créé")
 
   // 7. Incident HSE démo
   console.log("  → Seeding HSE incidents…")
@@ -84,17 +81,17 @@ async function main() {
       projectId:   mainProject.id,
     },
   })
-  console.log("  ✅ Incidents HSE créés")
+  console.log("  ✅ Incident HSE créé")
 
   // 8. Notifications démo
   console.log("  → Seeding notifications…")
   const NOTIFS = [
-    { title: "🔴 Alerte critique — SPI 0.72",      message: "Le projet Usine Bouskoura accuse un retard critique (SPI=0.72). Action requise.",  type: "AI_ALERT" as const },
-    { title: "📊 Rapport hebdomadaire disponible", message: "Le rapport S-21 est prêt à consulter dans la section Rapports.",                    type: "INFO" as const },
-    { title: "✅ NC-046 levée",                    message: "La non-conformité NC-046 a été clôturée avec succès.",                               type: "SUCCESS" as const },
-    { title: "⚠️ Stock béton faible",              message: "Le stock de béton Zone C est en dessous du seuil minimum (15 m³ restants).",          type: "WARNING" as const },
-    { title: "🤖 Nouvelles prédictions IA",        message: "5 nouvelles alertes IA générées. Consultez le module Intelligence IA.",              type: "AI_ALERT" as const },
-    { title: "👤 Nouveau membre ajouté",           message: "Salma El Fassi a rejoint le projet Villas Ain Diab en tant qu'ingénieure.",           type: "INFO" as const },
+    { title: "Alerte critique — SPI 0.72",      message: "Le projet Usine Bouskoura accuse un retard critique (SPI=0.72). Action requise.",  type: "AI_ALERT" as const },
+    { title: "Rapport hebdomadaire disponible", message: "Le rapport S-21 est prêt à consulter dans la section Rapports.",                    type: "INFO"     as const },
+    { title: "NC-046 levée",                    message: "La non-conformité NC-046 a été clôturée avec succès.",                               type: "SUCCESS"  as const },
+    { title: "Stock béton faible",              message: "Le stock de béton Zone C est en dessous du seuil minimum (15 m³ restants).",          type: "WARNING"  as const },
+    { title: "Nouvelles prédictions IA",        message: "5 nouvelles alertes IA générées. Consultez le module Intelligence IA.",              type: "AI_ALERT" as const },
+    { title: "Nouveau membre ajouté",           message: "Salma El Fassi a rejoint le projet Villas Ain Diab en tant qu'ingénieure.",           type: "INFO"     as const },
   ]
 
   await Promise.all(
@@ -108,7 +105,8 @@ async function main() {
 
   // 9. Analytics snapshot
   console.log("  → Seeding analytics…")
-  const today = new Date(); today.setHours(0,0,0,0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   await prisma.analytic.upsert({
     where:  { projectId_period_date: { projectId: mainProject.id, period: "DAILY", date: today } },
     update: {},
@@ -121,29 +119,12 @@ async function main() {
       progress:  47,
       incidents: 2,
       tfRate:    8.5,
-      ncCount:   4,
     },
   })
-  console.log("  ✅ Analytics snapshot créé")
+  console.log("  ✅ Analytics créé")
 
   // 10. Données IA
   await seedAiData(adminUser.id, mainProject.id)
-
-  // 11. Rapport démo
-  console.log("  → Seeding reports…")
-  await prisma.report.create({
-    data: {
-      title:       "Rapport Hebdomadaire S-21 — Usine Bouskoura",
-      type:        "WEEKLY_SUMMARY",
-      generatedBy: "AI",
-      period:      "2025-W21",
-      summary:     "SPI=0.72 critique. Retard +46j prédit. Actions correctives engagées.",
-      content:     `## Rapport S-21 — Usine Bouskoura\n\n**SYNTHÈSE EXECUTIVE**\nSemaine marquée par la confirmation du retard structurel (SPI=0.72).\n\n**KPIs**\n- SPI = 0.72 → Critique 🔴\n- CPI = 0.84 → Élevé 🟠\n- Avancement : 47% (prévu 65%)\n\n**ACTIONS**\n→ Recrutement intérimaires électriciens\n→ Réunion béton 2×/semaine`,
-      projectId:   mainProject.id,
-      authorId:    adminUser.id,
-    },
-  })
-  console.log("  ✅ Rapports créés")
 
   console.log("\n╔══════════════════════════════════════════════╗")
   console.log("║  ✅ Seed terminé avec succès !               ║")
