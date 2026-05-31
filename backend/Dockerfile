@@ -1,15 +1,15 @@
 # =========================
-# BUILD STAGE
+# STAGE 1 : BUILD BACKEND
 # =========================
 FROM eclipse-temurin:21.0.5_11-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copier fichiers Maven wrapper
+# Copier Maven wrapper + config
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
 
-# 🔥 IMPORTANT : rendre mvnw exécutable (FIX 502 + permission denied)
+# 🔥 FIX IMPORTANT : rendre mvnw exécutable dans Docker
 RUN chmod +x mvnw
 
 # Télécharger dépendances
@@ -18,31 +18,27 @@ RUN ./mvnw dependency:go-offline -q
 # Copier le code source
 COPY src ./src
 
-# Build du projet
+# Build Spring Boot
 RUN ./mvnw clean package -DskipTests -q
-
-# Extraire le jar Spring Boot
-RUN java -Djarmode=layertools -jar target/*.jar extract
 
 
 # =========================
-# RUNTIME STAGE
+# STAGE 2 : RUNTIME
 # =========================
 FROM eclipse-temurin:21.0.5_11-jre-alpine
 
 WORKDIR /app
 
-# créer utilisateur non-root
+# Créer user non-root (sécurité)
 RUN addgroup -S engipilot && adduser -S engipilot -G engipilot
-
-# copier artefacts build
-COPY --from=builder /app/dependencies/ ./
-COPY --from=builder /app/spring-boot-loader/ ./
-COPY --from=builder /app/snapshot-dependencies/ ./
-COPY --from=builder /app/application/ ./
 
 USER engipilot
 
+# Copier le jar buildé
+COPY --from=builder /app/target/*.jar app.jar
+
+# Port Spring Boot (ajuste si besoin)
 EXPOSE 8080
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+# Lancer application
+ENTRYPOINT ["java", "-jar", "app.jar"]
