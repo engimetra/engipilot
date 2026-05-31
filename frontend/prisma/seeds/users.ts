@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../src/lib/prisma"
 import bcrypt from "bcryptjs"
 
 const DEMO_USERS = [
@@ -10,7 +10,6 @@ const DEMO_USERS = [
 ]
 
 export async function seedUsers(
-  prisma: PrismaClient,
   companyId: string,
   roleMap: Map<string, string>,
 ) {

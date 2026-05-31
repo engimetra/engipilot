@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../src/lib/prisma"
 
 const DEMO_PROJECTS = [
   {
@@ -70,7 +70,6 @@ const DEMO_PROJECTS = [
 ]
 
 export async function seedProjects(
-  prisma: PrismaClient,
   companyId: string,
   adminId: string,
   managerId: string,
@@ -106,7 +105,6 @@ export async function seedProjects(
 }
 
 export async function seedTasks(
-  prisma: PrismaClient,
   projectId: string,
   assigneeId: string,
   creatorId: string,

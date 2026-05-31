@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../src/lib/prisma"
 
 const ROLES = [
   { name: "SUPER_ADMIN", displayName: "Super Administrateur", description: "Accès total à la plateforme", isSystem: true },
@@ -19,7 +19,7 @@ const RESOURCES = [
 
 const ACTIONS = ["view", "create", "update", "delete", "export", "approve"]
 
-export async function seedRoles(prisma: PrismaClient) {
+export async function seedRoles() {
   console.log("  → Seeding roles…")
 
   // Rôles

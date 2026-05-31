@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../src/lib/prisma"
 
 export async function seedAiData(
-  prisma: PrismaClient,
   userId: string,
   projectId: string,
 ) {

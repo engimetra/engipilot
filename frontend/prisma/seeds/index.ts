@@ -2,18 +2,11 @@
 //  ENGIPILOT — Database Seed Principal
 //  Ordre d'exécution : company → roles → users → projects → AI
 // ═══════════════════════════════════════════════════════════════
-import { PrismaClient } from "@prisma/client"
-import { PrismaPg }    from "@prisma/adapter-pg"
-import { seedRoles }    from "./roles"
-import { seedUsers }    from "./users"
-import { seedProjects, seedTasks } from "./projects"
-import { seedAiData }   from "./ai"
-
-// Prisma 7 nécessite l'adaptateur pg explicite
-const connectionString = process.env.DATABASE_URL
-  ?? "postgresql://postgres:password@localhost:5432/engipilot?schema=public"
-const adapter = new PrismaPg({ connectionString })
-const prisma  = new PrismaClient({ adapter } as never)
+import { prisma }                   from "../../src/lib/prisma"
+import { seedRoles }                from "./roles"
+import { seedUsers }                from "./users"
+import { seedProjects, seedTasks }  from "./projects"
+import { seedAiData }               from "./ai"
 
 async function main() {
   console.log("\n╔══════════════════════════════════════════════╗")
@@ -42,21 +35,21 @@ async function main() {
   console.log(`  ✅ Company: ${company.name}`)
 
   // 2. Rôles & Permissions
-  const { roleMap } = await seedRoles(prisma)
+  const { roleMap } = await seedRoles()
 
   // 3. Utilisateurs démo
-  const users = await seedUsers(prisma, company.id, roleMap)
+  const users = await seedUsers(company.id, roleMap)
   const adminUser   = users.find(u => u.email === "admin@engipilot.ma")!
   const managerUser = users.find(u => u.email === "manager@engipilot.ma")!
   const engineerUser = users.find(u => u.email === "engineer@engipilot.ma")!
 
   // 4. Projets démo
-  const projects = await seedProjects(prisma, company.id, adminUser.id, managerUser.id)
+  const projects = await seedProjects(company.id, adminUser.id, managerUser.id)
   const mainProject = projects[0]
 
   // 5. Tâches démo sur le projet principal
   console.log("  → Seeding tasks…")
-  await seedTasks(prisma, mainProject.id, engineerUser.id, managerUser.id)
+  await seedTasks(mainProject.id, engineerUser.id, managerUser.id)
   console.log("  ✅ Tâches créées")
 
   // 6. Budgets démo
@@ -134,7 +127,7 @@ async function main() {
   console.log("  ✅ Analytics snapshot créé")
 
   // 10. Données IA
-  await seedAiData(prisma, adminUser.id, mainProject.id)
+  await seedAiData(adminUser.id, mainProject.id)
 
   // 11. Rapport démo
   console.log("  → Seeding reports…")
