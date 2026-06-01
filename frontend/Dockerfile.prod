@@ -21,13 +21,15 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 🔥 FIX IMPORTANT : garantir Prisma client proprement
+RUN mkdir -p /app/public
+
 RUN pnpm prisma generate
 
-# 🔍 DEBUG : show build output
-RUN pnpm build && \
-    ls -lah .next/ && \
-    [ -f .next/required-server-files.json ] && echo "✅ required-server-files.json found" || echo "❌ required-server-files.json MISSING"
+RUN pnpm build
+RUN ls -lah .next/
+RUN [ -f .next/required-server-files.json ] \
+    && echo "required-server-files.json found" \
+    || echo "required-server-files.json MISSING"
 
 
 # ── Stage 3 : Runtime ─────────────────────────────────────────────
@@ -41,10 +43,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
@@ -53,4 +54,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["pnpm", "start"]
+CMD ["node", "server.js"]
