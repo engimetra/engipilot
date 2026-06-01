@@ -1,0 +1,207 @@
+
+The following files have been resolved:
+   org.springframework.boot:spring-boot-starter-web:jar:3.5.1:compile -- module spring.boot.starter.web [auto]
+   org.springframework.boot:spring-boot-starter:jar:3.5.1:compile -- module spring.boot.starter [auto]
+   org.springframework.boot:spring-boot:jar:3.5.1:compile -- module spring.boot [auto]
+   org.springframework.boot:spring-boot-autoconfigure:jar:3.5.1:compile -- module spring.boot.autoconfigure [auto]
+   org.springframework.boot:spring-boot-starter-logging:jar:3.5.1:compile -- module spring.boot.starter.logging [auto]
+   ch.qos.logback:logback-classic:jar:1.5.18:compile -- module ch.qos.logback.classic
+   ch.qos.logback:logback-core:jar:1.5.18:compile -- module ch.qos.logback.core
+   org.apache.logging.log4j:log4j-to-slf4j:jar:2.24.3:compile -- module org.apache.logging.log4j.to.slf4j
+   org.slf4j:jul-to-slf4j:jar:2.0.17:compile -- module jul.to.slf4j
+   jakarta.annotation:jakarta.annotation-api:jar:2.1.1:compile -- module jakarta.annotation
+   org.yaml:snakeyaml:jar:2.4:compile -- module org.yaml.snakeyaml
+   org.springframework.boot:spring-boot-starter-json:jar:3.5.1:compile -- module spring.boot.starter.json [auto]
+   com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.19.1:compile -- module com.fasterxml.jackson.datatype.jdk8
+   com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.19.1:compile -- module com.fasterxml.jackson.module.paramnames
+   org.springframework.boot:spring-boot-starter-tomcat:jar:3.5.1:compile -- module spring.boot.starter.tomcat [auto]
+   org.apache.tomcat.embed:tomcat-embed-core:jar:10.1.42:compile -- module org.apache.tomcat.embed.core
+   org.apache.tomcat.embed:tomcat-embed-websocket:jar:10.1.42:compile -- module org.apache.tomcat.embed.websocket
+   org.springframework:spring-web:jar:6.2.8:compile -- module spring.web [auto]
+   org.springframework:spring-beans:jar:6.2.8:compile -- module spring.beans [auto]
+   org.springframework:spring-webmvc:jar:6.2.8:compile -- module spring.webmvc [auto]
+   org.springframework:spring-expression:jar:6.2.8:compile -- module spring.expression [auto]
+   org.springframework.boot:spring-boot-starter-data-jpa:jar:3.5.1:compile -- module spring.boot.starter.data.jpa [auto]
+   org.springframework.boot:spring-boot-starter-jdbc:jar:3.5.1:compile -- module spring.boot.starter.jdbc [auto]
+   com.zaxxer:HikariCP:jar:6.3.0:compile -- module com.zaxxer.hikari
+   org.springframework:spring-jdbc:jar:6.2.8:compile -- module spring.jdbc [auto]
+   org.hibernate.orm:hibernate-core:jar:6.6.18.Final:compile -- module org.hibernate.orm.core [auto]
+   jakarta.persistence:jakarta.persistence-api:jar:3.1.0:compile -- module jakarta.persistence
+   jakarta.transaction:jakarta.transaction-api:jar:2.0.1:compile -- module jakarta.transaction
+   org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile -- module org.jboss.logging
+   org.hibernate.common:hibernate-commons-annotations:jar:7.0.3.Final:runtime -- module org.hibernate.commons.annotations
+   io.smallrye:jandex:jar:3.2.0:runtime -- module org.jboss.jandex [auto]
+   com.fasterxml:classmate:jar:1.7.0:compile -- module com.fasterxml.classmate
+   net.bytebuddy:byte-buddy:jar:1.17.6:runtime -- module net.bytebuddy
+   jakarta.inject:jakarta.inject-api:jar:2.0.1:runtime -- module jakarta.inject
+   org.antlr:antlr4-runtime:jar:4.13.0:compile -- module org.antlr.antlr4.runtime [auto]
+   org.springframework.data:spring-data-jpa:jar:3.5.1:compile -- module spring.data.jpa [auto]
+   org.springframework.data:spring-data-commons:jar:3.5.1:compile -- module spring.data.commons [auto]
+   org.springframework:spring-orm:jar:6.2.8:compile -- module spring.orm [auto]
+   org.slf4j:slf4j-api:jar:2.0.17:compile -- module org.slf4j
+   org.springframework:spring-aspects:jar:6.2.8:compile -- module spring.aspects [auto]
+   org.springframework.boot:spring-boot-starter-security:jar:3.5.1:compile -- module spring.boot.starter.security [auto]
+   org.springframework:spring-aop:jar:6.2.8:compile -- module spring.aop [auto]
+   org.springframework.security:spring-security-config:jar:6.5.1:compile -- module spring.security.config [auto]
+   org.springframework.security:spring-security-web:jar:6.5.1:compile -- module spring.security.web [auto]
+   org.springframework.boot:spring-boot-starter-validation:jar:3.5.1:compile -- module spring.boot.starter.validation [auto]
+   org.apache.tomcat.embed:tomcat-embed-el:jar:10.1.42:compile -- module org.apache.tomcat.embed.el
+   org.hibernate.validator:hibernate-validator:jar:8.0.2.Final:compile -- module org.hibernate.validator [auto]
+   jakarta.validation:jakarta.validation-api:jar:3.0.2:compile -- module jakarta.validation
+   org.springframework.boot:spring-boot-starter-data-redis:jar:3.5.1:compile -- module spring.boot.starter.data.redis [auto]
+   io.lettuce:lettuce-core:jar:6.6.0.RELEASE:compile -- module lettuce.core [auto]
+   redis.clients.authentication:redis-authx-core:jar:0.1.1-beta2:compile -- module redis.clients.authentication.core [auto]
+   io.netty:netty-common:jar:4.1.122.Final:compile -- module io.netty.common [auto]
+   io.netty:netty-handler:jar:4.1.122.Final:compile -- module io.netty.handler [auto]
+   io.netty:netty-resolver:jar:4.1.122.Final:compile -- module io.netty.resolver [auto]
+   io.netty:netty-buffer:jar:4.1.122.Final:compile -- module io.netty.buffer [auto]
+   io.netty:netty-transport-native-unix-common:jar:4.1.122.Final:compile -- module io.netty.transport.unix.common [auto]
+   io.netty:netty-codec:jar:4.1.122.Final:compile -- module io.netty.codec [auto]
+   io.netty:netty-transport:jar:4.1.122.Final:compile -- module io.netty.transport [auto]
+   io.projectreactor:reactor-core:jar:3.7.7:compile -- module reactor.core [auto]
+   org.reactivestreams:reactive-streams:jar:1.0.4:compile -- module org.reactivestreams [auto]
+   org.springframework.data:spring-data-redis:jar:3.5.1:compile -- module spring.data.redis [auto]
+   org.springframework.data:spring-data-keyvalue:jar:3.5.1:compile -- module spring.data.keyvalue [auto]
+   org.springframework:spring-oxm:jar:6.2.8:compile -- module spring.oxm [auto]
+   org.springframework.boot:spring-boot-starter-actuator:jar:3.5.1:compile -- module spring.boot.starter.actuator [auto]
+   org.springframework.boot:spring-boot-actuator-autoconfigure:jar:3.5.1:compile -- module spring.boot.actuator.autoconfigure [auto]
+   org.springframework.boot:spring-boot-actuator:jar:3.5.1:compile -- module spring.boot.actuator [auto]
+   io.micrometer:micrometer-observation:jar:1.15.1:compile -- module micrometer.observation [auto]
+   io.micrometer:micrometer-commons:jar:1.15.1:compile -- module micrometer.commons [auto]
+   io.micrometer:micrometer-jakarta9:jar:1.15.1:compile -- module micrometer.jakarta9 [auto]
+   org.springframework.boot:spring-boot-starter-websocket:jar:3.5.1:compile -- module spring.boot.starter.websocket [auto]
+   org.springframework:spring-messaging:jar:6.2.8:compile -- module spring.messaging [auto]
+   org.springframework:spring-websocket:jar:6.2.8:compile -- module spring.websocket [auto]
+   org.springframework.boot:spring-boot-starter-cache:jar:3.5.1:compile -- module spring.boot.starter.cache [auto]
+   org.springframework:spring-context-support:jar:6.2.8:compile -- module spring.context.support [auto]
+   org.springframework.boot:spring-boot-starter-aop:jar:3.5.1:compile -- module spring.boot.starter.aop [auto]
+   org.aspectj:aspectjweaver:jar:1.9.24:compile -- module org.aspectj.weaver [auto]
+   org.springframework.kafka:spring-kafka:jar:3.3.7:compile -- module spring.kafka [auto]
+   org.springframework:spring-context:jar:6.2.8:compile -- module spring.context [auto]
+   org.springframework:spring-tx:jar:6.2.8:compile -- module spring.tx [auto]
+   org.springframework.retry:spring-retry:jar:2.0.12:compile -- module spring.retry (auto)
+   org.apache.kafka:kafka-clients:jar:3.9.1:compile -- module kafka.clients (auto)
+   com.github.luben:zstd-jni:jar:1.5.6-4:runtime -- module com.github.luben.zstd_jni
+   org.lz4:lz4-java:jar:1.8.0:runtime -- module org.lz4.java [auto]
+   org.postgresql:postgresql:jar:42.7.7:runtime -- module org.postgresql.jdbc [auto]
+   org.checkerframework:checker-qual:jar:3.49.3:compile -- module org.checkerframework.checker.qual
+   org.flywaydb:flyway-core:jar:11.7.2:compile -- module flyway.core (auto)
+   com.fasterxml.jackson.dataformat:jackson-dataformat-toml:jar:2.19.1:compile -- module com.fasterxml.jackson.dataformat.toml
+   com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.19.1:compile -- module com.fasterxml.jackson.datatype.jsr310
+   org.flywaydb:flyway-database-postgresql:jar:11.7.2:compile -- module flyway.database.postgresql (auto)
+   io.jsonwebtoken:jjwt-api:jar:0.12.6:compile -- module jjwt.api (auto)
+   io.jsonwebtoken:jjwt-impl:jar:0.12.6:runtime -- module jjwt.impl (auto)
+   io.jsonwebtoken:jjwt-jackson:jar:0.12.6:runtime -- module jjwt.jackson (auto)
+   com.fasterxml.jackson.core:jackson-databind:jar:2.19.1:compile -- module com.fasterxml.jackson.databind
+   org.mapstruct:mapstruct:jar:1.6.2:compile -- module org.mapstruct [auto]
+   org.projectlombok:lombok:jar:1.18.38:compile (optional) -- module lombok
+   org.springdoc:springdoc-openapi-starter-webmvc-ui:jar:2.8.6:compile -- module org.springdoc.openapi.ui [auto]
+   org.springdoc:springdoc-openapi-starter-webmvc-api:jar:2.8.6:compile -- module org.springdoc.openapi.webmvc.core [auto]
+   org.springdoc:springdoc-openapi-starter-common:jar:2.8.6:compile -- module org.springdoc.openapi.common [auto]
+   io.swagger.core.v3:swagger-core-jakarta:jar:2.2.29:compile -- module io.swagger.v3.core [auto]
+   io.swagger.core.v3:swagger-annotations-jakarta:jar:2.2.29:compile -- module io.swagger.v3.oas.annotations [auto]
+   io.swagger.core.v3:swagger-models-jakarta:jar:2.2.29:compile -- module io.swagger.v3.oas.models [auto]
+   com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.19.1:compile -- module com.fasterxml.jackson.dataformat.yaml
+   org.webjars:swagger-ui:jar:5.20.1:compile -- module swagger.ui (auto)
+   org.webjars:webjars-locator-lite:jar:1.1.0:compile -- module webjars.locator.lite (auto)
+   org.jspecify:jspecify:jar:1.0.0:compile -- module org.jspecify
+   io.micrometer:micrometer-registry-prometheus:jar:1.15.1:compile -- module micrometer.registry.prometheus [auto]
+   io.micrometer:micrometer-core:jar:1.15.1:compile -- module micrometer.core [auto]
+   org.hdrhistogram:HdrHistogram:jar:2.2.2:runtime -- module HdrHistogram (auto)
+   org.latencyutils:LatencyUtils:jar:2.0.3:runtime -- module LatencyUtils (auto)
+   io.prometheus:prometheus-metrics-core:jar:1.3.8:compile -- module io.prometheus.metrics.core [auto]
+   io.prometheus:prometheus-metrics-model:jar:1.3.8:compile -- module io.prometheus.metrics.model [auto]
+   io.prometheus:prometheus-metrics-config:jar:1.3.8:compile -- module io.prometheus.metrics.config [auto]
+   io.prometheus:prometheus-metrics-tracer-common:jar:1.3.8:compile -- module io.prometheus.metrics.tracer.common [auto]
+   io.prometheus:prometheus-metrics-exposition-formats:jar:1.3.8:runtime -- module io.prometheus.metrics.expositionformats [auto]
+   io.prometheus:prometheus-metrics-exposition-formats-no-protobuf:jar:1.3.8:runtime -- module io.prometheus.metrics.expositionformats.noprotobuf [auto]
+   io.prometheus:prometheus-metrics-exposition-textformats:jar:1.3.8:runtime -- module io.prometheus.writer.text [auto]
+   com.google.protobuf:protobuf-java:jar:4.31.0:runtime -- module com.google.protobuf [auto]
+   io.minio:minio:jar:8.5.12:compile -- module minio (auto)
+   com.carrotsearch.thirdparty:simple-xml-safe:jar:2.7.1:compile -- module simple.xml.safe (auto)
+   com.google.guava:guava:jar:33.0.0-jre:compile -- module com.google.common [auto]
+   com.google.guava:failureaccess:jar:1.0.2:compile -- module com.google.common.util.concurrent.internal [auto]
+   com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile -- module listenablefuture (auto)
+   com.google.code.findbugs:jsr305:jar:3.0.2:compile -- module jsr305 (auto)
+   com.google.errorprone:error_prone_annotations:jar:2.23.0:compile -- module com.google.errorprone.annotations [auto]
+   com.google.j2objc:j2objc-annotations:jar:2.8:compile -- module j2objc.annotations (auto)
+   com.squareup.okhttp3:okhttp:jar:4.12.0:compile -- module okhttp3 [auto]
+   com.squareup.okio:okio:jar:3.6.0:compile -- module okio (auto)
+   com.squareup.okio:okio-jvm:jar:3.6.0:compile -- module okio [auto]
+   org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.9.25:compile -- module kotlin.stdlib.common (auto)
+   org.jetbrains.kotlin:kotlin-stdlib-jdk8:jar:1.9.25:compile -- module kotlin.stdlib.jdk8
+   org.jetbrains.kotlin:kotlin-stdlib:jar:1.9.25:compile -- module kotlin.stdlib
+   org.jetbrains.kotlin:kotlin-stdlib-jdk7:jar:1.9.25:compile -- module kotlin.stdlib.jdk7
+   com.fasterxml.jackson.core:jackson-annotations:jar:2.19.1:compile -- module com.fasterxml.jackson.annotation
+   com.fasterxml.jackson.core:jackson-core:jar:2.19.1:compile -- module com.fasterxml.jackson.core
+   org.bouncycastle:bcprov-jdk18on:jar:1.78:compile -- module org.bouncycastle.provider
+   org.apache.commons:commons-compress:jar:1.26.0:compile -- module org.apache.commons.compress
+   commons-io:commons-io:jar:2.15.1:compile -- module org.apache.commons.io
+   org.apache.commons:commons-lang3:jar:3.17.0:compile -- module org.apache.commons.lang3
+   commons-codec:commons-codec:jar:1.18.0:compile -- module org.apache.commons.codec
+   org.xerial.snappy:snappy-java:jar:1.1.10.5:compile -- module snappy.java (auto)
+   net.sf.mpxj:mpxj:jar:12.9.0:compile -- module mpxj (auto)
+   org.apache.poi:poi:jar:5.2.2:compile -- module org.apache.poi.poi
+   org.apache.commons:commons-collections4:jar:4.4:compile -- module org.apache.commons.collections4 [auto]
+   org.apache.commons:commons-math3:jar:3.6.1:compile -- module commons.math3 (auto)
+   com.zaxxer:SparseBitSet:jar:1.2:compile -- module SparseBitSet (auto)
+   org.apache.logging.log4j:log4j-api:jar:2.24.3:compile -- module org.apache.logging.log4j
+   org.xerial:sqlite-jdbc:jar:3.49.1.0:compile -- module org.xerial.sqlitejdbc
+   com.jgoodies:jgoodies-binding:jar:2.13.0:compile -- module jgoodies.binding (auto)
+   com.jgoodies:jgoodies-common:jar:1.8.1:compile -- module jgoodies.common (auto)
+   com.github.joniles:rtfparserkit:jar:1.16.0:compile -- module rtfparserkit (auto)
+   jakarta.xml.bind:jakarta.xml.bind-api:jar:4.0.2:compile -- module jakarta.xml.bind
+   jakarta.activation:jakarta.activation-api:jar:2.1.3:compile -- module jakarta.activation
+   org.glassfish.jaxb:jaxb-runtime:jar:4.0.5:compile -- module org.glassfish.jaxb.runtime
+   org.glassfish.jaxb:jaxb-core:jar:4.0.5:compile -- module org.glassfish.jaxb.core
+   org.eclipse.angus:angus-activation:jar:2.0.2:runtime -- module org.eclipse.angus.activation
+   org.glassfish.jaxb:txw2:jar:4.0.5:compile -- module com.sun.xml.txw2
+   com.sun.istack:istack-commons-runtime:jar:4.1.2:compile -- module com.sun.istack.runtime
+   com.healthmarketscience.jackcess:jackcess:jar:4.0.1:compile -- module com.healthmarketscience.jackcess [auto]
+   commons-logging:commons-logging:jar:1.2:compile -- module commons.logging (auto)
+   org.jsoup:jsoup:jar:1.15.3:compile -- module org.jsoup [auto]
+   org.springframework.boot:spring-boot-starter-test:jar:3.5.1:test -- module spring.boot.starter.test [auto]
+   org.springframework.boot:spring-boot-test:jar:3.5.1:test -- module spring.boot.test [auto]
+   org.springframework.boot:spring-boot-test-autoconfigure:jar:3.5.1:test -- module spring.boot.test.autoconfigure [auto]
+   com.jayway.jsonpath:json-path:jar:2.9.0:test -- module json.path [auto]
+   net.minidev:json-smart:jar:2.5.2:test -- module json.smart (auto)
+   net.minidev:accessors-smart:jar:2.5.2:test -- module accessors.smart (auto)
+   org.ow2.asm:asm:jar:9.7.1:test -- module org.objectweb.asm
+   org.assertj:assertj-core:jar:3.27.3:test -- module org.assertj.core
+   org.awaitility:awaitility:jar:4.2.2:test -- module awaitility (auto)
+   org.hamcrest:hamcrest:jar:3.0:test -- module org.hamcrest [auto]
+   org.junit.jupiter:junit-jupiter:jar:5.12.2:test -- module org.junit.jupiter
+   org.junit.jupiter:junit-jupiter-api:jar:5.12.2:test -- module org.junit.jupiter.api
+   org.opentest4j:opentest4j:jar:1.3.0:test -- module org.opentest4j
+   org.junit.platform:junit-platform-commons:jar:1.12.2:test -- module org.junit.platform.commons
+   org.apiguardian:apiguardian-api:jar:1.1.2:test -- module org.apiguardian.api
+   org.junit.jupiter:junit-jupiter-params:jar:5.12.2:test -- module org.junit.jupiter.params
+   org.junit.jupiter:junit-jupiter-engine:jar:5.12.2:test -- module org.junit.jupiter.engine
+   org.junit.platform:junit-platform-engine:jar:1.12.2:test -- module org.junit.platform.engine
+   org.mockito:mockito-core:jar:5.17.0:test -- module org.mockito
+   net.bytebuddy:byte-buddy-agent:jar:1.17.6:test -- module net.bytebuddy.agent
+   org.objenesis:objenesis:jar:3.3:test -- module org.objenesis [auto]
+   org.mockito:mockito-junit-jupiter:jar:5.17.0:test -- module org.mockito.junit.jupiter
+   org.skyscreamer:jsonassert:jar:1.5.3:test -- module jsonassert (auto)
+   com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test -- module android.json (auto)
+   org.springframework:spring-core:jar:6.2.8:compile -- module spring.core [auto]
+   org.springframework:spring-jcl:jar:6.2.8:compile -- module spring.jcl [auto]
+   org.springframework:spring-test:jar:6.2.8:test -- module spring.test [auto]
+   org.xmlunit:xmlunit-core:jar:2.10.2:test -- module org.xmlunit [auto]
+   org.springframework.security:spring-security-test:jar:6.5.1:test -- module spring.security.test [auto]
+   org.springframework.security:spring-security-core:jar:6.5.1:compile -- module spring.security.core [auto]
+   org.springframework.security:spring-security-crypto:jar:6.5.1:compile -- module spring.security.crypto [auto]
+   org.testcontainers:postgresql:jar:1.20.3:test -- module postgresql (auto)
+   org.testcontainers:jdbc:jar:1.20.3:test -- module jdbc (auto)
+   org.testcontainers:database-commons:jar:1.20.3:test -- module database.commons (auto)
+   org.testcontainers:junit-jupiter:jar:1.20.3:test -- module junit.jupiter (auto)
+   org.testcontainers:testcontainers:jar:1.20.3:test -- module testcontainers (auto)
+   junit:junit:jar:4.13.2:test -- module junit [auto]
+   org.hamcrest:hamcrest-core:jar:3.0:test -- module org.hamcrest.core.deprecated [auto]
+   org.rnorth.duct-tape:duct-tape:jar:1.0.8:test -- module duct.tape (auto)
+   org.jetbrains:annotations:jar:17.0.0:compile -- module org.jetbrains.annotations [auto]
+   com.github.docker-java:docker-java-api:jar:3.4.0:test -- module com.github.dockerjava.api [auto]
+   com.github.docker-java:docker-java-transport-zerodep:jar:3.4.0:test -- module com.github.dockerjava.transport.zerodep [auto]
+   com.github.docker-java:docker-java-transport:jar:3.4.0:test -- module com.github.dockerjava.transport [auto]
+   net.java.dev.jna:jna:jar:5.13.0:test -- module com.sun.jna [auto]
+

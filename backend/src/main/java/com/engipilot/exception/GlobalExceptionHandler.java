@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +40,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadJson(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest()
             .body(new ErrorResponse(400, "Corps de la requête illisible ou mal formé", LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(401).body(new ErrorResponse(401, ex.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException ex) {
+        return ResponseEntity.status(401).body(new ErrorResponse(401, ex.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(400, ex.getMessage(), LocalDateTime.now()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

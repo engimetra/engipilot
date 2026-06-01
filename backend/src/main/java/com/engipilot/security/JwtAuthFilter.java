@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         var userDetails = new EngipilotUserDetails(userId, email, "", role, orgId);
         var authToken = new UsernamePasswordAuthenticationToken(
             userId.toString(), null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+        authToken.setDetails(userDetails);
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
         chain.doFilter(req, res);
