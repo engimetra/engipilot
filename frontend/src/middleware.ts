@@ -41,3 +41,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 }
+
+// ⚠️ Edge Runtime required for next-intl middleware
+export const runtime = "edge"
