@@ -36,10 +36,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
-# ✅ FIX FINAL (IMPORTANT : SHELL FORM, PAS JSON)
-ENTRYPOINT java \
-  -XX:+UseContainerSupport \
-  -XX:MaxRAMPercentage=75.0 \
-  -XX:+UseG1GC \
-  -Djava.security.egd=file:/dev/./urandom \
-  org.springframework.boot.loader.launch.JarLauncher
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-Djava.security.egd=file:/dev/./urandom", "org.springframework.boot.loader.launch.JarLauncher"]

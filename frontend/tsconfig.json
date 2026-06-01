@@ -39,6 +39,7 @@
     "node_modules",
     "prisma",
     "prisma/**",
-    "**/prisma/**"
+    "**/prisma/**",
+    "src/lib/db.examples.ts"
   ]
 }
