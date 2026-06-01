@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
 
   /* ── Tree-shake heavy packages ── */
   experimental: {
+    outputFileTracingRoot: undefined,
     optimizePackageImports: [
       "lucide-react",
       "recharts",
