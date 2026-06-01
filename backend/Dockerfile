@@ -1,44 +1,45 @@
-# =========================
-# STAGE 1 : BUILD BACKEND
-# =========================
+# ── Stage 1 : Build ──────────────────────────────────────────────
 FROM eclipse-temurin:21.0.5_11-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copier Maven wrapper + config
+# Copier wrapper Maven + permissions correctes
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
-
-# 🔥 FIX IMPORTANT : rendre mvnw exécutable dans Docker
 RUN chmod +x mvnw
 
-# Télécharger dépendances
+# Download dependencies
 RUN ./mvnw dependency:go-offline -q
 
-# Copier le code source
+# Build application
 COPY src ./src
-
-# Build Spring Boot
 RUN ./mvnw clean package -DskipTests -q
 
+# Extraction Spring Boot layers
+RUN java -Djarmode=layertools -jar target/*.jar extract
 
-# =========================
-# STAGE 2 : RUNTIME
-# =========================
+
+# ── Stage 2 : Runtime (image légère) ────────────────────────────
 FROM eclipse-temurin:21.0.5_11-jre-alpine
 
 WORKDIR /app
 
-# Créer user non-root (sécurité)
+# Utilisateur non-root (sécurité)
 RUN addgroup -S engipilot && adduser -S engipilot -G engipilot
+
+# Copier layers Spring Boot
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/application/ ./
 
 USER engipilot
 
-# Copier le jar buildé
-COPY --from=builder /app/target/*.jar app.jar
-
-# Port Spring Boot (ajuste si besoin)
 EXPOSE 8080
 
-# Lancer application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Healthcheck (important pour nginx / docker)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+
+# ✅ ENTRYPOINT FIXÉ (CORRECT JSON 100%)
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-Djava.security.egd=file:/dev/./urandom", "org.springframework.boot.loader.launch.JarLauncher"]
