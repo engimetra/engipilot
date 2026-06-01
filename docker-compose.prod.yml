@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-engipilot}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DB_USER: ${APP_DB_USER:-engipilot_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/01_create_app_user.sh:/docker-entrypoint-initdb.d/init.sh:ro
