@@ -163,31 +163,37 @@ enum NotificationType {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  avatar       String?
-  phone        String?
-  isActive     Boolean   @default(true)
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  avatar        String?
+  phone         String?
 
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id])
+  status        UserStatus @default(ACTIVE)
+  emailVerified Boolean    @default(false)
+  lastLoginAt   DateTime?
+  deletedAt     DateTime?
 
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  projectMembers  ProjectMember[]
-  assignedTasks   Task[]            @relation("assignedTasks")
-  attendance      Attendance[]
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id])
+
+  roleId        String
+  role          Role       @relation(fields: [roleId], references: [id])
+
+  // Relations
+  projectMembers ProjectMember[]
+  assignedTasks  Task[]       @relation("assignedTasks")
+  createdTasks   Task[]       @relation("TaskCreator")
+  attendance     Attendance[]
   aiConversations AiConversation[]
-  notifications   Notification[]
-  activityLogs    ActivityLog[]
-  uploadedDocs    Document[]
+  notifications  Notification[]
+  activityLogs   ActivityLog[]
+  uploadedDocs   Document[]
   reports         Report[]
 
   @@map("users")

@@ -224,38 +224,37 @@ enum ReportType {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  avatar       String?
-  phone        String?
-  status       UserStatus @default(ACTIVE)
-  emailVerified Boolean   @default(false)
-  lastLoginAt  DateTime?
-  deletedAt    DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  avatar        String?
+  phone         String?
 
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id])
+  status        UserStatus @default(ACTIVE)
+  emailVerified Boolean    @default(false)
+  lastLoginAt   DateTime?
+  deletedAt     DateTime?
 
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id])
+
+  roleId        String
+  role          Role       @relation(fields: [roleId], references: [id])
 
   // Relations
-  projectMembers  ProjectMember[]
-  assignedTasks   Task[]            @relation("TaskAssignee")
-  createdTasks    Task[]            @relation("TaskCreator")
-  attendance      Attendance[]
+  projectMembers ProjectMember[]
+  assignedTasks  Task[]       @relation("TaskAssignee")
+  createdTasks   Task[]       @relation("TaskCreator")
+  attendance     Attendance[]
   aiConversations AiConversation[]
-  aiMemories      AiMemory[]
-  notifications   Notification[]
-  activityLogs    ActivityLog[]
-  uploadedDocuments Document[]
-  reports         Report[]
-  sessions        UserSession[]
+  notifications  Notification[]
+  activityLogs   ActivityLog[]
+  uploadedDocs   Document[]
 
   @@index([email])
   @@index([companyId])
