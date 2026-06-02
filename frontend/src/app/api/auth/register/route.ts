@@ -3,32 +3,54 @@ import { backendFetch } from "@/lib/api-client"
 
 export const dynamic = "force-dynamic"
 
+const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001"
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const res  = await backendFetch("/auth/register", null, {
+    const { email, password, firstName, lastName } = await req.json()
+
+    // Build payload matching backend schema (full_name, organisation_id)
+    const res = await backendFetch("/auth/register", null, {
       method: "POST",
-      body:   JSON.stringify(body),
+      body: JSON.stringify({
+        email,
+        password,
+        fullName:       `${firstName ?? ""} ${lastName ?? ""}`.trim(),
+        organisationId: DEFAULT_ORG_ID,
+      }),
     })
-    const json = await res.json() as { success?: boolean; data?: { user: unknown; token: string }; message?: string }
+
+    const json = await res.json() as {
+      success?: boolean
+      data?:    { user: unknown; token: string }
+      user?:    unknown
+      token?:   string
+      message?: string
+    }
 
     if (!res.ok) {
-      return NextResponse.json(
-        { error: json.message ?? "Erreur lors de l'inscription" },
-        { status: res.status },
-      )
+      const raw = json.message ?? "Erreur lors de l'inscription"
+      const error =
+        raw.toLowerCase().includes("exist") || raw.toLowerCase().includes("email")
+          ? "Cet email existe déjà"
+          : raw === "Erreur lors de l'inscription"
+          ? "Erreur serveur"
+          : raw
+      return NextResponse.json({ error }, { status: res.status })
     }
 
     const { user, token } = (json.data ?? json) as { user: unknown; token: string }
 
     const response = NextResponse.json({ user }, { status: 201 })
-    response.cookies.set("engipilot_session", token, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path:     "/",
-      maxAge:   8 * 60 * 60,
-    })
+    if (token) {
+      response.cookies.set("engipilot_session", token, {
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path:     "/",
+        maxAge:   8 * 60 * 60,
+      })
+    }
     return response
   } catch (err) {
     console.error("[proxy /auth/register]", err)
