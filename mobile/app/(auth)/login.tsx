@@ -9,13 +9,6 @@ import { StatusBar } from "expo-status-bar"
 import { login } from "../../lib/auth"
 import { COLORS, RADIUS, SHADOW } from "../../lib/theme"
 
-const DEMO_ACCOUNTS = [
-  { label: "Admin",        email: "admin@engipilot.ma",    password: "Engipilot2024!",  color: COLORS.primary },
-  { label: "Chef Projet",  email: "manager@engipilot.ma",  password: "Manager2024!",    color: COLORS.teal    },
-  { label: "Chef Chantier",email: "engineer@engipilot.ma", password: "Engineer2024!",   color: COLORS.success },
-  { label: "HSE",          email: "hse@engipilot.ma",      password: "Hse2024!",        color: COLORS.warning },
-]
-
 export default function LoginScreen() {
   const router = useRouter()
   const [email, setEmail]       = useState("")
@@ -111,9 +104,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Demo accounts */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Comptes de démonstration</Text>
           <View style={styles.demoGrid}>
             {DEMO_ACCOUNTS.map(a => (
               <TouchableOpacity

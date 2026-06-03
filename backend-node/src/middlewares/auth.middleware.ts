@@ -1,5 +1,5 @@
 import { Response, NextFunction } from "express"
-import { jwtConfig } from "@/config/jwt"
+import { jwtConfig } from "../config/jwt"
 import { AuthRequest } from "@/shared/types"
 import { sendUnauthorized } from "@/shared/utils/response"
 

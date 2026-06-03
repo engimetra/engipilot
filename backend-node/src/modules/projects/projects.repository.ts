@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { prisma } from "@/config/database"
+import { prisma } from "../../config/database"
 import { CreateProjectInput, UpdateProjectInput, ProjectFilterInput } from "./projects.dto"
 import { buildPaginatedResult, getPrismaSkip } from "@/shared/utils/pagination"
 

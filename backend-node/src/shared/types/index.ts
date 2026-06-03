@@ -1,5 +1,5 @@
 import { Request } from "express"
-import { JwtPayload } from "@/config/jwt"
+import { JwtPayload } from "../../config/jwt"
 
 // ── Authenticated Request ──────────────────────────────────────
 export interface AuthRequest extends Request {

@@ -1,4 +1,4 @@
-import { prisma } from "@/config/database"
+import { prisma } from "../../config/database"
 import { CreateTaskInput, UpdateTaskInput } from "./tasks.dto"
 
 const TASK_SELECT = {

@@ -2,7 +2,7 @@ import { Router, Response, NextFunction } from "express"
 import { AuthRequest }   from "@/shared/types"
 import { sendSuccess }   from "@/shared/utils/response"
 import { authenticate }  from "@/middlewares/auth.middleware"
-import { prisma }        from "@/config/database"
+import { prisma }        from "../../config/database"
 
 const router = Router()
 router.use(authenticate)

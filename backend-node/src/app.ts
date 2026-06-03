@@ -5,7 +5,7 @@ import morgan from "morgan"
 import compression from "compression"
 import rateLimit from "express-rate-limit"
 
-import { env } from "@/config/env"
+import { env } from "./config/env"
 import { errorHandler, notFoundHandler } from "@/middlewares/error.middleware"
 
 import { authRouter }          from "@/modules/auth/auth.routes"
@@ -20,6 +20,8 @@ import { reportsRouter }       from "@/modules/reports/reports.routes"
 import { documentsRouter }     from "@/modules/documents/documents.routes"
 
 const app = express()
+
+app.set("trust proxy", 1)
 
 // ── Security ─────────────────────────────────────────────────
 app.use(helmet())

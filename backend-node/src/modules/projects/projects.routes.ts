@@ -6,7 +6,7 @@ import { validate }            from "@/middlewares/validate.middleware"
 import { CreateProjectDto, UpdateProjectDto, ProjectFilterDto } from "./projects.dto"
 import { AuthRequest }         from "@/shared/types"
 import { sendSuccess, sendNotFound } from "@/shared/utils/response"
-import { prisma }              from "@/config/database"
+import { prisma }              from "../../config/database"
 
 const router = Router()
 router.use(authenticate)

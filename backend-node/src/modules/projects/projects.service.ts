@@ -1,4 +1,4 @@
-import { prisma } from "@/config/database"
+import { prisma } from "../../config/database"
 import { ProjectsRepository } from "./projects.repository"
 import { CreateProjectInput, UpdateProjectInput, ProjectFilterInput } from "./projects.dto"
 

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
-import { prisma } from "@/config/database"
-import { jwtConfig } from "@/config/jwt"
+import { prisma } from "../../config/database"
+import { jwtConfig } from "../../config/jwt"
 import { RegisterInput, LoginInput } from "./auth.dto"
 
 const BCRYPT_ROUNDS = 12

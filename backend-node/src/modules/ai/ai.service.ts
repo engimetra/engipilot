@@ -1,5 +1,5 @@
-import { prisma } from "@/config/database"
-import { env } from "@/config/env"
+import { prisma } from "../../config/database"
+import { env } from "../../config/env"
 import { SendMessageInput, CreateAlertInput } from "./ai.dto"
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions"

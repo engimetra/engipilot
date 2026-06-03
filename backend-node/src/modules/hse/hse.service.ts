@@ -1,4 +1,4 @@
-import { prisma } from "@/config/database"
+import { prisma } from "../../config/database"
 import { CreateIncidentInput, UpdateIncidentInput } from "./hse.dto"
 
 export const HseService = {
