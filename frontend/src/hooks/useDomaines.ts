@@ -1,6 +1,6 @@
 "use client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import api from "@/lib/api"
+import api from "@/lib/apiClient"
 
 // ── Types (camelCase = format JSON Spring Boot) ───────────────────────────
 

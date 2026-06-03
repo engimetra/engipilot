@@ -1,5 +1,4 @@
-import { apiFetch } from "@/lib/api"
-
+const API_URL   = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1"
 const TOKEN_KEY = "token"
 const USER_KEY  = "user"
 const COOKIE    = "engipilot_session"
@@ -19,7 +18,6 @@ export interface AuthUser {
 function setSession(token: string, user: AuthUser): void {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
-  // Cookie non-httpOnly pour satisfaire le middleware Next.js
   const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : ""
   document.cookie = `${COOKIE}=${token}; path=/; max-age=${MAX_AGE}; samesite=lax${secure}`
 }
@@ -51,10 +49,11 @@ export function isAuthenticated(): boolean {
 
 // ── API calls ─────────────────────────────────────────────────────────────────
 
-export async function login(email: string, password: string): Promise<AuthUser> {
-  const res  = await apiFetch("/auth/login", {
-    method: "POST",
-    body:   JSON.stringify({ email, password }),
+export async function loginUser(email: string, password: string): Promise<AuthUser> {
+  const res  = await fetch(`${API_URL}/auth/login`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ email, password }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.message ?? data.error ?? "Identifiants incorrects")
@@ -64,16 +63,17 @@ export async function login(email: string, password: string): Promise<AuthUser> 
   return user
 }
 
-export async function register(input: {
+export async function registerUser(input: {
   firstName:   string
   lastName:    string
   email:       string
   password:    string
   companyName: string
 }): Promise<AuthUser> {
-  const res  = await apiFetch("/auth/register", {
-    method: "POST",
-    body:   JSON.stringify(input),
+  const res  = await fetch(`${API_URL}/auth/register`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(input),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.message ?? data.error ?? "Erreur lors de la création du compte")
@@ -83,7 +83,7 @@ export async function register(input: {
   return user
 }
 
-export function logout(): void {
+export function logoutUser(): void {
   clearSession()
   window.location.href = "/login"
 }

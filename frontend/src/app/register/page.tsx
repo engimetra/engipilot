@@ -6,7 +6,7 @@ import {
   Building2, User, Mail, Lock, Briefcase,
   Eye, EyeOff, CheckCircle2, ArrowRight, AlertCircle,
 } from "lucide-react"
-import { register } from "@/services/auth"
+import { registerUser } from "@/lib/auth.service"
 
 function validate(
   prenom: string,
@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      await register({ firstName: prenom, lastName: nom, email, password, companyName })
+      await registerUser({ firstName: prenom, lastName: nom, email, password, companyName })
       setSuccess(true)
       setTimeout(() => router.push("/dashboard"), 1500)
     } catch (err) {

@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware"
 import type { Projet, Utilisateur } from "@/types"
 import { hasPermission, hasAnyPermission } from "@/lib/rbac"
 import type { Permission } from "@/lib/rbac"
-import { clearAuthToken } from "@/lib/api"
+import { clearSession } from "@/lib/auth.service"
 
 interface AppState {
   user:          Utilisateur | null
@@ -35,7 +35,7 @@ export const useStore = create<AppState>()(
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
 
       logout: () => {
-        clearAuthToken()
+        clearSession()
         if (typeof window !== "undefined") {
           document.cookie = "engipilot_session=; path=/; max-age=0; SameSite=Lax"
         }

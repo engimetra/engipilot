@@ -1,4 +1,4 @@
-import api from "@/lib/api"
+import api from "@/lib/apiClient"
 import type { Projet, EVMResult, Tache, RapportJournalier, NonConformite, IncidentHSE } from "@/types"
 
 export interface PageResponse<T> {

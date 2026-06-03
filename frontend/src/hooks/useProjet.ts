@@ -1,6 +1,6 @@
 "use client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import api from "@/lib/api"
+import api from "@/lib/apiClient"
 import type { Projet, EVMResult, Tache } from "@/types"
 
 interface PageResponse<T> {

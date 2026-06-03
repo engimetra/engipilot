@@ -9,13 +9,13 @@ import {
   type ReactNode,
 } from "react"
 import {
-  login as authLogin,
-  register as authRegister,
-  logout as authLogout,
+  loginUser as authLogin,
+  registerUser as authRegister,
+  logoutUser as authLogout,
   getUser,
   isAuthenticated,
   type AuthUser,
-} from "@/services/auth"
+} from "@/lib/auth.service"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

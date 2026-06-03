@@ -1,4 +1,4 @@
-import api from "@/lib/api"
+import api from "@/lib/apiClient"
 
 const IA_URL = process.env.NEXT_PUBLIC_IA_URL ?? "http://localhost:8001"
 
