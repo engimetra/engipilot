@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -19,6 +20,14 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    // --- TEST DE DIAGNOSTIC ---
+    @PostMapping("/simple-login")
+    public ResponseEntity<String> simpleLogin(@RequestBody Map<String, String> creds) {
+        System.out.println("--- TEST : Tentative de connexion reçue pour " + creds.get("email") + " ---");
+        return ResponseEntity.ok("Le contrôleur AuthController est opérationnel et reçoit bien les données.");
+    }
+    // --------------------------
 
     @PostMapping("/login")
     @Operation(summary = "Connexion — retourne un token JWT")
