@@ -2,46 +2,29 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Building2, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1"
+import { login, isAuthenticated } from "@/services/auth"
 
 export default function LoginPage() {
-  const [email, setEmail]               = useState("")
-  const [password, setPassword]         = useState("")
+  const [email,        setEmail]        = useState("")
+  const [password,     setPassword]     = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading]           = useState(false)
-  const [error, setError]               = useState<string | null>(null)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("token")) {
-      router.replace("/dashboard")
-    }
+    if (isAuthenticated()) router.replace("/dashboard")
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email, password }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message ?? data.error ?? "Email ou mot de passe incorrect")
-        return
-      }
-
-      localStorage.setItem("token", data.accessToken)
+      await login(email, password)
       router.push("/dashboard")
-    } catch {
-      setError("Impossible de contacter le serveur. Réessayez.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur de connexion")
     } finally {
       setLoading(false)
     }
@@ -51,7 +34,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
 
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
@@ -61,7 +43,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Se connecter à ENGIPILOT
@@ -71,7 +52,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-medium text-foreground block mb-1.5">
@@ -143,7 +123,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Register link */}
         <p className="mt-6 text-center text-sm text-muted-fg">
           Pas encore de compte ?{" "}
           <a href="/register" className="text-primary font-semibold hover:underline">

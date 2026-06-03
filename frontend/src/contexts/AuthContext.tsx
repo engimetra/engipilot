@@ -8,130 +8,71 @@ import {
   useCallback,
   type ReactNode,
 } from "react"
-import { useRouter } from "next/navigation"
+import {
+  login as authLogin,
+  register as authRegister,
+  logout as authLogout,
+  getUser,
+  isAuthenticated,
+  type AuthUser,
+} from "@/services/auth"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface AuthUser {
-  id: string
-  email: string
-  fullName: string
-  role: string
-  organisationId: string
-}
-
-export interface RegisterInput {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-}
-
-export interface LoginInput {
-  email: string
-  password: string
-}
+interface LoginInput    { email: string; password: string }
+interface RegisterInput { firstName: string; lastName: string; email: string; password: string; companyName: string }
 
 interface AuthContextValue {
-  currentUser: AuthUser | null
-  isLoading: boolean
+  currentUser:     AuthUser | null
+  isLoading:       boolean
   isAuthenticated: boolean
-  register: (input: RegisterInput) => Promise<void>
-  login: (input: LoginInput) => Promise<void>
-  logout: () => Promise<void>
+  login:           (input: LoginInput)    => Promise<void>
+  register:        (input: RegisterInput) => Promise<void>
+  logout:          () => void
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-// ─── Normalizer ───────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toAuthUser(raw: any): AuthUser {
-  return {
-    id: String(raw?.id ?? ""),
-    email: String(raw?.email ?? ""),
-    fullName: String(
-      raw?.fullName ??
-      raw?.full_name ??
-      `${raw?.prenom ?? raw?.firstName ?? ""} ${raw?.nom ?? raw?.lastName ?? ""}`.trim()
-    ),
-    role: String(raw?.role ?? "UTILISATEUR_STANDARD"),
-    organisationId: String(
-      raw?.organisationId ??
-      raw?.organisation_id ??
-      raw?.organisation?.id ??
-      "00000000-0000-0000-0000-000000000001"
-    ),
-  }
-}
-
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const [isLoading,   setIsLoading]   = useState(true)
 
-  // Restore session on mount via httpOnly cookie check
+  // Restaurer la session depuis localStorage au montage
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        if (data?.user) setCurrentUser(toAuthUser(data.user))
-      })
-      .catch(() => null)
-      .finally(() => setIsLoading(false))
+    if (isAuthenticated()) {
+      setCurrentUser(getUser())
+    }
+    setIsLoading(false)
   }, [])
 
-  const register = useCallback(
-    async ({ firstName, lastName, email, password }: RegisterInput) => {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création du compte")
-      if (data.user) setCurrentUser(toAuthUser(data.user))
-      router.push("/dashboard")
-    },
-    [router]
-  )
+  const login = useCallback(async ({ email, password }: LoginInput) => {
+    const user = await authLogin(email, password)
+    setCurrentUser(user)
+  }, [])
 
-  const login = useCallback(
-    async ({ email, password }: LoginInput) => {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? "Identifiants incorrects")
-      if (data.user) setCurrentUser(toAuthUser(data.user))
-      router.push("/dashboard")
-    },
-    [router]
-  )
+  const register = useCallback(async (input: RegisterInput) => {
+    const user = await authRegister(input)
+    setCurrentUser(user)
+  }, [])
 
-  const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
+  const logout = useCallback(() => {
+    authLogout()
     setCurrentUser(null)
-    router.push("/login")
-  }, [router])
+  }, [])
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        isLoading,
-        isAuthenticated: !!currentUser,
-        register,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{
+      currentUser,
+      isLoading,
+      isAuthenticated: !!currentUser,
+      login,
+      register,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   )

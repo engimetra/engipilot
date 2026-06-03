@@ -14,10 +14,10 @@ export function useNotifications(onNotif?: (n: NotifPayload) => void) {
   useEffect(() => {
     let client: Client | null = null
 
-    fetch("/api/auth/me")
-      .then(r => (r.ok ? r.json() : null))
-      .then(user => {
-        const companyId: string | undefined = user?.company?.id
+    Promise.resolve(null).then(() => {
+      const stored = typeof window !== "undefined" ? localStorage.getItem("user") : null
+      const user = stored ? JSON.parse(stored) : null
+      const companyId: string | undefined = user?.companyId
         if (!companyId) return
 
         const wsBase = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8080/ws"
