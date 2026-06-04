@@ -12,9 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-// Remplace Utilisateur.java — ajoute UserDetails pour Spring Security
-// Mappé sur "utilisateurs" (table Spring Boot, UUID, snake_case) — pas sur "users"
-// qui appartient à Prisma/Next.js (IDs cuid texte, schéma incompatible).
 @Entity
 @Table(name = "utilisateurs")
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
@@ -27,7 +24,8 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    // CORRIGÉ : Nom de colonne mis à jour vers 'mot_de_passe' pour correspondre à la DB
+    @Column(name = "mot_de_passe", nullable = false)
     private String passwordHash;
 
     @Column(name = "full_name", nullable = false)
