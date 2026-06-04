@@ -5,22 +5,35 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 import { loginUser } from "@/lib/auth.service"
 
 export function LoginForm() {
-  const [email,        setEmail]        = useState("")
-  const [password,     setPassword]     = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    
     try {
+      console.log("Tentative de connexion en cours...")
+      
+      // Appel au service d'authentification
       await loginUser(email, password)
+      
+      console.log("Succès : Utilisateur authentifié.")
+      
+      // Forcer la navigation vers le dashboard
       router.push("/dashboard")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de connexion")
+      
+      // Rafraîchir le routeur pour appliquer les changements d'état (Middleware)
+      router.refresh() 
+      
+    } catch (err: any) {
+      console.error("ERREUR DE CONNEXION :", err)
+      setError(err?.message || "Une erreur est survenue lors de la connexion.")
     } finally {
       setLoading(false)
     }
@@ -29,15 +42,13 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-xs font-medium text-foreground block mb-1.5">
-          Adresse email
-        </label>
+        <label className="text-xs font-medium text-foreground block mb-1.5">Adresse email</label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="vous@entreprise.ma"
             className="input pl-9"
             required
@@ -47,15 +58,13 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label className="text-xs font-medium text-foreground block mb-1.5">
-          Mot de passe
-        </label>
+        <label className="text-xs font-medium text-foreground block mb-1.5">Mot de passe</label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
           <input
             type={showPassword ? "text" : "password"}
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             className="input pl-9 pr-10"
             required
@@ -64,7 +73,7 @@ export function LoginForm() {
           />
           <button
             type="button"
-            onClick={() => setShowPassword(p => !p)}
+            onClick={() => setShowPassword((p) => !p)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-fg hover:text-foreground transition-colors"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -73,7 +82,7 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="text-sm text-danger bg-danger/8 border border-danger/20 rounded-lg px-3 py-2">
+        <div className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
           {error}
         </div>
       )}
@@ -81,8 +90,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-primary hover:bg-primary-hover disabled:opacity-60 text-white font-semibold
-                   py-2.5 rounded-lg transition-all duration-150 text-sm flex items-center justify-center gap-2 shadow-sm"
+        className="w-full bg-primary hover:bg-primary-hover disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-all duration-150 text-sm flex items-center justify-center gap-2 shadow-sm"
       >
         {loading ? (
           <>
