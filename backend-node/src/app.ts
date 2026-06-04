@@ -21,22 +21,23 @@ import { documentsRouter } from "@/modules/documents/documents.routes"
 
 const app = express()
 
-// Nécessaire si vous êtes derrière un reverse proxy (ex: Nginx, Heroku, Render)
 app.set("trust proxy", 1)
 
 // ── Security & CORS ──────────────────────────────────────────
 app.use(helmet())
 
-// Configuration CORS renforcée pour autoriser le frontend
+// Configuration CORS permissive pour lever le blocage 403
 app.use(cors({ 
-  origin: ["https://www.engipilot.ma", "http://localhost:3000"], 
-  credentials: true, // Autorise l'envoi de cookies/sessions
+  origin: (origin, callback) => {
+    callback(null, true)
+  },
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }))
 
 app.use(rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
+  windowMs: env.RATE_LIMIT_WINDOW_MS || 900000,
   max:      env.RATE_LIMIT_MAX || 100,
   message:  { success: false, message: "Trop de requêtes — réessayez plus tard" },
 }))
