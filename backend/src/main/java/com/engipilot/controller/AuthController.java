@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth") // CORRIGÉ : Suppression du /v1 pour correspondre au frontend
 @RequiredArgsConstructor
 @Tag(name = "Auth", description = "Authentification JWT")
 public class AuthController {
@@ -22,12 +22,12 @@ public class AuthController {
     private final AuthService authService;
 
     // --- TEST DE DIAGNOSTIC ---
-    @PostMapping("/simple-login")
-    public ResponseEntity<String> simpleLogin(@RequestBody Map<String, String> creds) {
-        System.out.println("--- TEST : Tentative de connexion reçue pour " + creds.get("email") + " ---");
-        return ResponseEntity.ok("Le contrôleur AuthController est opérationnel et reçoit bien les données.");
+    // Appelable via : POST /api/auth/simple-test
+    @PostMapping("/simple-test")
+    public ResponseEntity<String> simpleTest(@RequestBody Map<String, String> creds) {
+        System.out.println("--- TEST : Connexion reçue pour : " + creds.get("email") + " ---");
+        return ResponseEntity.ok("Le contrôleur AuthController est bien accessible.");
     }
-    // --------------------------
 
     @PostMapping("/login")
     @Operation(summary = "Connexion — retourne un token JWT")
