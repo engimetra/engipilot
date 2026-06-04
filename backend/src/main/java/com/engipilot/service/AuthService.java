@@ -48,7 +48,6 @@ public class AuthService {
             throw new BadCredentialsException("Email ou mot de passe incorrect");
         }
 
-        // Vérification si le compte est actif
         if (!user.isActive()) {
             throw new DisabledException("Compte désactivé. Contactez le support.");
         }
@@ -80,7 +79,7 @@ public class AuthService {
 
         String hashedPassword = passwordEncoder.encode(request.password());
 
-        // Création de l'utilisateur sans la méthode isActive() dans le Builder
+        // Création de l'utilisateur avec la méthode .active(true) corrigée
         User user = userRepository.save(
             User.builder()
                 .email(request.email())
@@ -88,6 +87,7 @@ public class AuthService {
                 .fullName(request.fullName())
                 .role(User.Role.ADMIN)
                 .organisation(org)
+                .active(true) // <--- Correction appliquée ici
                 .build()
         );
 
@@ -97,6 +97,7 @@ public class AuthService {
         return AuthResponse.of(token, user);
     }
 
+    // ── GET ME ─────────────────────────────────────────────────────────────
     public User getMe(UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", userId));
