@@ -15,7 +15,7 @@ import { hseRouter } from "@/modules/hse/hse.routes";
 import { aiRouter } from "@/modules/ai/ai.routes";
 import { analyticsRouter } from "@/modules/analytics/analytics.routes";
 import { notificationsRouter } from "@/modules/notifications/notifications.routes";
-import { dashboardRouter } from "@/modules/dashboard/dashboard.routes";
+import { dashboardRouter } from "@/modules/dashboard/diagnostics.routes";
 import { reportsRouter } from "@/modules/reports/reports.routes";
 import { documentsRouter } from "@/modules/documents/documents.routes";
 
@@ -24,15 +24,14 @@ const app = express();
 app.set("trust proxy", 1);
 
 // ── Security & CORS ──────────────────────────────────────────
-app.use(helmet());
-
-// Configuration CORS pour autoriser les requêtes venant de votre frontend
 app.use(cors({
-  origin: "*", // Autorise toutes les origines pour le développement
+  origin: env.FRONTEND_URL || "http://localhost:3000",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
+
+app.use(helmet());
 
 app.use(rateLimit({
   windowMs: Number(env.RATE_LIMIT_WINDOW_MS) || 900000,
