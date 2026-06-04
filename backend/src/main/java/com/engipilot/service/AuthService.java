@@ -37,25 +37,18 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
 
-        // 1. Chercher l'utilisateur — orElseThrow évite le null check manuel
         User user = userRepository.findByEmail(request.email())
             .orElseThrow(() -> {
-                // log.warn et pas log.error : tentative normale, pas une erreur système
                 log.warn("Tentative de login avec email inconnu : {}", request.email());
-                // BadCredentialsException et pas NotFoundException :
-                // ne pas révéler si l'email existe ou non (sécurité OWASP A07)
                 return new BadCredentialsException("Email ou mot de passe incorrect");
             });
 
-        // 2. Vérifier BCrypt
-        // passwordEncoder.matches() compare le mot de passe clair avec le hash
-        // Impossible de décoder le hash — vérification one-way uniquement
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             log.warn("Mot de passe incorrect pour : {}", request.email());
             throw new BadCredentialsException("Email ou mot de passe incorrect");
         }
 
-        // 3. Vérifier que le compte n'est pas désactivé
+        // Vérification si le compte est actif
         if (!user.isActive()) {
             throw new DisabledException("Compte désactivé. Contactez le support.");
         }
@@ -73,12 +66,10 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
 
-        // 1. Email unique
         if (userRepository.existsByEmail(request.email())) {
             throw new ConflictException("Cet email est déjà utilisé");
         }
 
-        // 2. Créer l'organisation (multi-tenant : chaque client = une org)
         Organisation org = organisationRepository.save(
             Organisation.builder()
                 .nom(request.organisationName())
@@ -87,11 +78,9 @@ public class AuthService {
                 .build()
         );
 
-        // 3. Hasher le mot de passe AVANT de stocker
-        // La responsabilité du hashing appartient au service, pas au modèle
         String hashedPassword = passwordEncoder.encode(request.password());
 
-        // 4. Créer le premier utilisateur = ADMIN de son organisation
+        // Création de l'utilisateur sans la méthode isActive() dans le Builder
         User user = userRepository.save(
             User.builder()
                 .email(request.email())
@@ -108,7 +97,6 @@ public class AuthService {
         return AuthResponse.of(token, user);
     }
 
-    // ── GET ME ─────────────────────────────────────────────────────────────
     public User getMe(UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", userId));
