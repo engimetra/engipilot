@@ -8,16 +8,16 @@ import rateLimit from "express-rate-limit"
 import { env } from "./config/env"
 import { errorHandler, notFoundHandler } from "@/middlewares/error.middleware"
 
-import { authRouter }          from "@/modules/auth/auth.routes"
-import { projectsRouter }      from "@/modules/projects/projects.routes"
-import { tasksRouter }         from "@/modules/tasks/tasks.routes"
-import { hseRouter }           from "@/modules/hse/hse.routes"
-import { aiRouter }            from "@/modules/ai/ai.routes"
-import { analyticsRouter }     from "@/modules/analytics/analytics.routes"
+import { authRouter } from "@/modules/auth/auth.routes"
+import { projectsRouter } from "@/modules/projects/projects.routes"
+import { tasksRouter } from "@/modules/tasks/tasks.routes"
+import { hseRouter } from "@/modules/hse/hse.routes"
+import { aiRouter } from "@/modules/ai/ai.routes"
+import { analyticsRouter } from "@/modules/analytics/analytics.routes"
 import { notificationsRouter } from "@/modules/notifications/notifications.routes"
-import { dashboardRouter }     from "@/modules/dashboard/dashboard.routes"
-import { reportsRouter }       from "@/modules/reports/reports.routes"
-import { documentsRouter }     from "@/modules/documents/documents.routes"
+import { dashboardRouter } from "@/modules/dashboard/dashboard.routes"
+import { reportsRouter } from "@/modules/reports/reports.routes"
+import { documentsRouter } from "@/modules/documents/documents.routes"
 
 const app = express()
 
@@ -25,7 +25,15 @@ app.set("trust proxy", 1)
 
 // ── Security ─────────────────────────────────────────────────
 app.use(helmet())
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }))
+
+// CORRECTION CORS : Autorise explicitement votre domaine et localhost
+app.use(cors({ 
+  origin: ["https://www.engipilot.ma", "http://localhost:3000"], 
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
+
 app.use(rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max:      env.RATE_LIMIT_MAX,
