@@ -1,25 +1,39 @@
-# Env — fichiers à ne jamais commiter
+#################################################
+# ENV FILES (NE JAMAIS COMMIT)
+#################################################
 .env
-.env.local
-.env.production
-.env.development
-.env.staging
-.env.test
+.env.*
 **/.env
-**/.env.local
-**/.env.*.local
-mobile/.env
-backend/.env
-backend/.env.*
-# .env.example est intentionnellement commité comme template de référence
+**/.env.*
 
-# Next.js
+#################################################
+# NODE MODULES (GLOBAL SAFE - IMPORTANT)
+#################################################
+node_modules/
+**/node_modules/
+
+#################################################
+# PRISMA (IMPORTANT - AUCUN FICHIER GÉNÉRÉ)
+#################################################
+.prisma/
+**/.prisma/
+**/node_modules/.prisma/
+
+#################################################
+# NEXT.JS (FRONTEND)
+#################################################
 frontend/.next/
-frontend/node_modules/
 frontend/out/
 frontend/.turbo/
 
-# Mobile (Expo / React Native)
+#################################################
+# REACT / FRONTEND CACHE
+#################################################
+frontend/node_modules/
+
+#################################################
+# MOBILE (EXPO / REACT NATIVE)
+#################################################
 mobile/node_modules/
 mobile/.expo/
 mobile/dist/
@@ -27,35 +41,65 @@ mobile/android/
 mobile/ios/
 mobile/.metro-health-check*
 
-# Java
+#################################################
+# BACKEND NODE
+#################################################
+backend-node/node_modules/
+
+#################################################
+# JAVA BACKEND
+#################################################
 backend/target/
 *.class
 *.jar
+*.war
 
-# Python
+#################################################
+# PYTHON / IA MODULE
+#################################################
 ia/__pycache__/
 ia/.venv/
 ia/**/__pycache__/
 *.pyc
+*.pyo
 *.egg-info/
+
+# modèles IA (si utilisés)
 ia/models/*.joblib
 ia/models/*.pkl
 !ia/models/.gitkeep
 
-# SQL backups
+#################################################
+# DATABASE / BACKUPS
+#################################################
+*.sql
 backup_*.sql
 
-# Logs
+#################################################
+# LOGS
+#################################################
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# IDE
+#################################################
+# IDE / EDITORS
+#################################################
+.vscode/
 .vscode/settings.json
 .idea/
 *.iml
 
-# OS
+#################################################
+# OS FILES
+#################################################
 .DS_Store
 Thumbs.db
+
+#################################################
+# TURBO / MONOREPO CACHE (OPTIONNEL MAIS PRO)
+#################################################
+.turbo/
+dist/
+build/
