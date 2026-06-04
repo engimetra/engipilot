@@ -21,22 +21,23 @@ import { documentsRouter } from "@/modules/documents/documents.routes"
 
 const app = express()
 
+// Nécessaire si vous êtes derrière un reverse proxy (ex: Nginx, Heroku, Render)
 app.set("trust proxy", 1)
 
-// ── Security ─────────────────────────────────────────────────
+// ── Security & CORS ──────────────────────────────────────────
 app.use(helmet())
 
-// CORRECTION CORS : Autorise explicitement votre domaine et localhost
+// Configuration CORS renforcée pour autoriser le frontend
 app.use(cors({ 
   origin: ["https://www.engipilot.ma", "http://localhost:3000"], 
-  credentials: true,
+  credentials: true, // Autorise l'envoi de cookies/sessions
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }))
 
 app.use(rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max:      env.RATE_LIMIT_MAX,
+  windowMs: env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
+  max:      env.RATE_LIMIT_MAX || 100,
   message:  { success: false, message: "Trop de requêtes — réessayez plus tard" },
 }))
 
@@ -56,7 +57,7 @@ app.get("/health", (_req, res) => {
 })
 
 // ── API Routes ────────────────────────────────────────────────
-const API = env.API_PREFIX
+const API = env.API_PREFIX || "/api/v1"
 
 app.use(`${API}/auth`,          authRouter)
 app.use(`${API}/projects`,      projectsRouter)
