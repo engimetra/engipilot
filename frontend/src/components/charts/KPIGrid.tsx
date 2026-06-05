@@ -48,21 +48,20 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
 function KPICard({ icon: Icon, label, sublabel, value, delta, deltaUp, accent, accentBg, accentText, sparkline }: KPICardProps) {
   return (
-    <div className="group relative bg-white border border-border rounded-2xl p-5 hover:shadow-card-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
-      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: accent }} />
+    <div className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-card-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentBg}`}>
-          <Icon className={accentText} strokeWidth={2} style={{ width: 18, height: 18 }} />
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${accentBg}`}>
+          <Icon className={accentText} strokeWidth={2} style={{ width: 15, height: 15 }} />
         </div>
         {sparkline && <Sparkline data={sparkline} color={accent} />}
       </div>
-      <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-[10px] text-muted-fg/60 mb-2 leading-none">{sublabel}</p>
-      <p className="text-2xl font-black tracking-tight text-foreground">{value}</p>
+      <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-0.5 truncate">{label}</p>
+      <p className="text-[10px] text-muted-fg/50 mb-2 leading-none truncate">{sublabel}</p>
+      <p className="text-xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
       {delta && (
-        <div className={`mt-2.5 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full
+        <div className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md
           ${deltaUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-          {deltaUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          {deltaUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
           {delta}
         </div>
       )}
