@@ -103,7 +103,10 @@ export default function DocumentsPage() {
   // ── Fetch depuis l'API ────────────────────────────────────────────────────
   const { data: apiDocs = [], isLoading } = useQuery<ApiDoc[]>({
     queryKey: ["documents"],
-    queryFn:  () => fetch("/api/documents").then(r => r.json()),
+    queryFn:  () => fetch("/api/documents").then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      return r.json()
+    }),
   })
 
   const docs: Doc[] = apiDocs.map(apiDocToUi)

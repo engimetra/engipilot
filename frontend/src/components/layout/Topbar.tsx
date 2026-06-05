@@ -2,31 +2,32 @@
 import { useState, useRef, useEffect } from "react"
 import {
   Bell, Search, Plus, LogOut, ChevronDown,
-  AlertTriangle, CheckCircle2, Clock, Zap, X, ArrowRight, Home, Menu,
+  AlertTriangle, CheckCircle2, Clock, Zap, X, ArrowRight, Menu,
+  Layers,
 } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { useRouter } from "next/navigation"
 import { Link, usePathname } from "@/i18n/navigation"
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher"
 
-const PAGE_LABELS: Record<string, string> = {
-  "/dashboard":     "Dashboard",
-  "/chantiers":     "Chantiers",
-  "/kanban":        "Kanban",
-  "/planning":      "Planning",
-  "/analytics":     "Analytics",
-  "/ia":            "Module IA",
-  "/chat":          "Chat IA",
-  "/hse":           "HSE",
-  "/qualite":       "Qualité NC",
-  "/rapports":      "Rapports",
-  "/documents":     "Documents",
-  "/equipes":       "Équipes",
-  "/notifications": "Notifications",
-  "/parametres":    "Paramètres",
-  "/facturation":   "Facturation",
-  "/onboarding":    "Onboarding",
-  "/admin":         "Administration",
+const PAGE_LABELS: Record<string, { label: string; emoji: string }> = {
+  "/dashboard":     { label: "Dashboard",      emoji: "📊" },
+  "/chantiers":     { label: "Chantiers",       emoji: "🏗️" },
+  "/kanban":        { label: "Kanban",          emoji: "📋" },
+  "/planning":      { label: "Planning",        emoji: "📅" },
+  "/analytics":     { label: "Analytics",       emoji: "📈" },
+  "/ia":            { label: "Module IA",       emoji: "🤖" },
+  "/chat":          { label: "Chat IA",         emoji: "💬" },
+  "/hse":           { label: "HSE",             emoji: "🦺" },
+  "/qualite":       { label: "Qualité",         emoji: "✅" },
+  "/rapports":      { label: "Rapports",        emoji: "📄" },
+  "/documents":     { label: "Documents",       emoji: "📁" },
+  "/equipes":       { label: "Équipes",         emoji: "👥" },
+  "/notifications": { label: "Notifications",   emoji: "🔔" },
+  "/parametres":    { label: "Paramètres",      emoji: "⚙️" },
+  "/facturation":   { label: "Facturation",     emoji: "💳" },
+  "/onboarding":    { label: "Onboarding",      emoji: "🚀" },
+  "/admin":         { label: "Administration",  emoji: "🛡️" },
 }
 
 type NotifType = "RETARD" | "BUDGET" | "HSE" | "IA"
@@ -41,102 +42,195 @@ interface QuickNotif {
 }
 
 const NOTIF_CONFIG: Record<NotifType, { icon: React.ElementType; bg: string; text: string; dot: string }> = {
-  RETARD: { icon: Clock,         bg: "bg-danger/10",   text: "text-danger",   dot: "bg-danger"   },
-  BUDGET: { icon: AlertTriangle, bg: "bg-warning/10",  text: "text-warning",  dot: "bg-warning"  },
-  HSE:    { icon: CheckCircle2,  bg: "bg-success/10",  text: "text-success",  dot: "bg-success"  },
-  IA:     { icon: Zap,           bg: "bg-primary/10",  text: "text-primary",  dot: "bg-primary"  },
+  RETARD: { icon: Clock,         bg: "var(--color-danger-light)",   text: "var(--color-danger)",   dot: "var(--color-danger)"   },
+  BUDGET: { icon: AlertTriangle, bg: "var(--color-warning-light)",  text: "var(--color-warning)",  dot: "var(--color-warning)"  },
+  HSE:    { icon: CheckCircle2,  bg: "var(--color-success-light)",  text: "var(--color-success)",  dot: "var(--color-success)"  },
+  IA:     { icon: Zap,           bg: "var(--color-primary-light)",  text: "var(--color-primary)",  dot: "var(--color-primary)"  },
 }
 
 const INIT_NOTIFS: QuickNotif[] = [
-  { id:"n1", type:"RETARD", title:"Retard critique détecté",      body:"Usine Bouskoura — lot Électricité +28j",  time:"Il y a 5 min",  read:false },
-  { id:"n2", type:"BUDGET", title:"Dépassement budgétaire",       body:"Résidence Al Andalous — CPI = 0.87",      time:"Il y a 42 min", read:false },
-  { id:"n3", type:"HSE",    title:"Incident HSE clôturé",         body:"NC-047 levée — Bouskoura R+2",            time:"Il y a 1h",     read:false },
-  { id:"n4", type:"IA",     title:"Analyse IA disponible",        body:"Prédiction livraison mise à jour",        time:"Il y a 2h",     read:false },
-  { id:"n5", type:"BUDGET", title:"Rapport mensuel généré",       body:"Mai 2025 — Résidence Al Andalous",        time:"Il y a 3h",     read:true  },
+  { id:"n1", type:"RETARD", title:"Retard critique détecté",  body:"Usine Bouskoura — lot Électricité +28j",  time:"Il y a 5 min",  read:false },
+  { id:"n2", type:"BUDGET", title:"Dépassement budgétaire",   body:"Résidence Al Andalous — CPI = 0.87",      time:"Il y a 42 min", read:false },
+  { id:"n3", type:"HSE",    title:"Incident HSE clôturé",     body:"NC-047 levée — Bouskoura R+2",            time:"Il y a 1h",     read:false },
+  { id:"n4", type:"IA",     title:"Analyse IA disponible",    body:"Prédiction livraison mise à jour",        time:"Il y a 2h",     read:false },
+  { id:"n5", type:"BUDGET", title:"Rapport mensuel généré",   body:"Mai 2025 — Résidence Al Andalous",        time:"Il y a 3h",     read:true  },
 ]
 
 export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { user, logout } = useStore()
-  const role = user?.role
+  const role   = user?.role
   const router = useRouter()
   const pathname = usePathname()
 
-  const [notifs, setNotifs] = useState<QuickNotif[]>(INIT_NOTIFS)
-  const [open, setOpen] = useState(false)
-  const dropRef = useRef<HTMLDivElement>(null)
+  const [notifs, setNotifs]   = useState<QuickNotif[]>(INIT_NOTIFS)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [userOpen, setUserOpen]   = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const userRef  = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifs.filter(n => !n.read).length
 
-  const segment = "/" + (pathname.split("/")[1] ?? "")
-  const pageLabel = PAGE_LABELS[segment] ?? "ENGIPILOT"
+  const segment  = "/" + (pathname.split("/")[1] ?? "")
+  const pageMeta = PAGE_LABELS[segment]
 
+  // Close dropdowns on outside click
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+    function handler(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
+      if (userRef.current  && !userRef.current.contains(e.target as Node))  setUserOpen(false)
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [open])
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
-  const markAllRead = () => setNotifs(prev => prev.map(n => ({ ...n, read: true })))
-  const markRead = (id: string) => setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  const markAllRead = () => setNotifs(p => p.map(n => ({ ...n, read: true })))
+  const markRead    = (id: string) => setNotifs(p => p.map(n => n.id === id ? { ...n, read: true } : n))
 
-  const handleLogout = () => {
-    logout()
-    router.push("/login")
-  }
+  const initials = [
+    (user?.prenom?.[0] ?? "").toUpperCase(),
+    (user?.nom?.[0]    ?? "").toUpperCase(),
+  ].join("") || "U"
 
   return (
-    <header className="h-14 bg-white border-b border-border flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 flex-shrink-0">
-      {/* Hamburger — mobile/tablet only */}
+    <header
+      style={{
+        height: "56px",
+        background: "var(--color-card)",
+        borderBottom: "1px solid var(--color-border)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "0 20px",
+        flexShrink: 0,
+        boxShadow: "var(--shadow-topbar)",
+        zIndex: 20,
+      }}
+    >
+      {/* Hamburger — mobile */}
       <button
         onClick={onMenuToggle}
-        className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-fg hover:text-foreground transition-colors flex-shrink-0"
-        aria-label="Ouvrir le menu"
+        className="lg:hidden flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+        style={{ width: "32px", height: "32px", flexShrink: 0, color: "var(--color-muted-fg)" }}
+        aria-label="Menu"
       >
-        <Menu className="w-5 h-5" />
+        <Menu style={{ width: "18px", height: "18px" }} />
       </button>
 
-      {/* Back to home + Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm min-w-0 flex-shrink-0">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
         <Link
           href="/landing"
-          className="flex items-center gap-1.5 text-muted-fg hover:text-primary transition-colors duration-150 group"
-          title="Retour à la page d'accueil"
+          className="flex items-center gap-1.5 transition-colors rounded-lg px-2 py-1 hover:bg-muted"
+          style={{ color: "var(--color-muted-fg)", fontSize: "13px", fontWeight: 500 }}
         >
-          <span className="w-7 h-7 flex items-center justify-center rounded-lg group-hover:bg-primary/10 transition-colors duration-150">
-            <Home className="w-3.5 h-3.5" />
-          </span>
-          <span className="hidden sm:inline font-medium">ENGIPILOT</span>
+          <Layers style={{ width: "13px", height: "13px" }} />
+          <span className="hidden sm:inline">ENGIPILOT</span>
         </Link>
-        <span className="text-muted-fg hidden sm:inline">/</span>
-        <span className="font-semibold text-foreground truncate">{pageLabel}</span>
+        {pageMeta && (
+          <>
+            <span style={{ color: "var(--color-border)", fontSize: "16px", lineHeight: 1, userSelect: "none" }}>/</span>
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--color-foreground)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {pageMeta.label}
+            </span>
+          </>
+        )}
       </nav>
 
-      {/* Search */}
-      <div className="hidden sm:flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2 flex-1 max-w-xs ml-2">
-        <Search className="w-3.5 h-3.5 text-muted-fg flex-shrink-0" />
+      {/* Search bar */}
+      <div
+        className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 ml-3 flex-1 max-w-sm transition-colors"
+        style={{
+          background: "var(--color-muted)",
+          border: "1px solid var(--color-border)",
+          cursor: "text",
+        }}
+      >
+        <Search style={{ width: "13px", height: "13px", color: "var(--color-muted-fg-2)", flexShrink: 0 }} />
         <input
           placeholder="Rechercher..."
-          className="bg-transparent text-sm outline-none flex-1 min-w-0 placeholder:text-muted-fg"
+          style={{
+            background: "transparent",
+            fontSize: "13px",
+            outline: "none",
+            flex: 1,
+            minWidth: 0,
+            color: "var(--color-foreground)",
+          }}
+          className="placeholder:text-muted-fg-2"
         />
+        <kbd
+          style={{
+            fontSize: "10px",
+            padding: "1px 5px",
+            borderRadius: "4px",
+            background: "var(--color-card)",
+            border: "1px solid var(--color-border)",
+            color: "var(--color-muted-fg-2)",
+            fontFamily: "monospace",
+            flexShrink: 0,
+          }}
+        >
+          ⌘K
+        </kbd>
       </div>
 
-      {/* Right actions */}
-      <div className="ml-auto flex items-center gap-2">
+      {/* Right side */}
+      <div className="ml-auto flex items-center gap-1.5">
+
         {/* Project selector */}
-        <div className="hidden md:flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 cursor-pointer hover:bg-[#EAECF0] transition-colors duration-150 group">
-          <span className="text-xs text-muted-fg group-hover:text-foreground truncate max-w-[130px] transition-colors">
+        <div
+          className="hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors hover:bg-muted cursor-pointer"
+          style={{
+            border: "1px solid var(--color-border)",
+            background: "var(--color-card)",
+          }}
+        >
+          <span
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{ background: "var(--color-success)" }}
+          />
+          <span
+            style={{
+              fontSize: "12px",
+              color: "var(--color-foreground-2)",
+              fontWeight: 500,
+              maxWidth: "130px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             Résidence Al Andalous
           </span>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-fg flex-shrink-0" />
+          <ChevronDown style={{ width: "12px", height: "12px", color: "var(--color-muted-fg-2)", flexShrink: 0 }} />
         </div>
 
         {/* New button */}
-        <button className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors duration-150 shadow-sm">
-          <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+        <button
+          className="flex items-center gap-1.5 transition-all"
+          style={{
+            background: "var(--color-primary)",
+            color: "#fff",
+            fontSize: "12px",
+            fontWeight: 600,
+            padding: "6px 12px",
+            borderRadius: "8px",
+            border: "none",
+            boxShadow: "0 1px 2px rgba(91,82,245,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+            cursor: "pointer",
+            letterSpacing: "-0.01em",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--color-primary-hover)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "var(--color-primary)")}
+        >
+          <Plus style={{ width: "13px", height: "13px" }} strokeWidth={2.5} />
           <span className="hidden sm:inline">Nouveau</span>
         </button>
 
@@ -144,36 +238,90 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
         <LanguageSwitcher />
 
         {/* Online status */}
-        <div className="hidden lg:flex items-center gap-1.5 text-xs text-success font-medium">
-          <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+        <div
+          className="hidden lg:flex items-center gap-1.5"
+          style={{ fontSize: "11.5px", fontWeight: 500, color: "var(--color-success)" }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: "var(--color-success)", animation: "pulse-dot 2s ease-in-out infinite" }}
+          />
           En ligne
         </div>
 
-        {/* ── Notifications bell + dropdown ── */}
-        <div className="relative" ref={dropRef}>
+        {/* ── Notifications ── */}
+        <div className="relative" ref={notifRef}>
           <button
-            onClick={() => setOpen(v => !v)}
-            className={`relative w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150
-              ${open ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-fg"}`}
+            onClick={() => setNotifOpen(v => !v)}
+            className="relative flex items-center justify-center rounded-lg transition-colors"
+            style={{
+              width: "32px",
+              height: "32px",
+              background: notifOpen ? "var(--color-primary-light)" : "transparent",
+              color: notifOpen ? "var(--color-primary)" : "var(--color-muted-fg)",
+            }}
+            onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = "var(--color-muted)" }}
+            onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = "transparent" }}
           >
-            <Bell className="w-4 h-4" />
+            <Bell style={{ width: "16px", height: "16px" }} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[14px] h-3.5 flex items-center justify-center
-                               bg-danger text-white text-[9px] font-black rounded-full px-0.5 border border-white leading-none">
+              <span
+                style={{
+                  position: "absolute",
+                  top: "5px",
+                  right: "5px",
+                  minWidth: "14px",
+                  height: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "var(--color-danger)",
+                  color: "#fff",
+                  fontSize: "9px",
+                  fontWeight: 800,
+                  borderRadius: "99px",
+                  padding: "0 3px",
+                  border: "2px solid var(--color-card)",
+                  lineHeight: 1,
+                }}
+              >
                 {unreadCount}
               </span>
             )}
           </button>
 
-          {open && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-border rounded-2xl shadow-card-lg z-50 overflow-hidden animate-[pageEnter_0.15s_ease]">
-              {/* Dropdown header */}
-              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          {notifOpen && (
+            <div
+              className="absolute right-0 top-full mt-2 overflow-hidden"
+              style={{
+                width: "320px",
+                background: "var(--color-card)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "14px",
+                boxShadow: "var(--shadow-float)",
+                zIndex: 50,
+                animation: "slideDown 0.15s cubic-bezier(0.4,0,0.2,1) both",
+              }}
+            >
+              {/* Header */}
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ borderBottom: "1px solid var(--color-border)" }}
+              >
                 <div className="flex items-center gap-2">
-                  <Bell className="w-3.5 h-3.5 text-foreground" />
-                  <span className="text-sm font-bold text-foreground">Notifications</span>
+                  <Bell style={{ width: "13px", height: "13px", color: "var(--color-foreground)" }} />
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-foreground)" }}>Notifications</span>
                   {unreadCount > 0 && (
-                    <span className="text-[10px] font-black bg-danger text-white px-1.5 py-0.5 rounded-full">
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        background: "var(--color-danger)",
+                        color: "#fff",
+                        padding: "2px 6px",
+                        borderRadius: "99px",
+                      }}
+                    >
                       {unreadCount}
                     </span>
                   )}
@@ -182,45 +330,73 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      className="text-[10px] font-semibold text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-lg hover:bg-primary/5"
+                      style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-primary)", padding: "3px 8px", borderRadius: "6px", cursor: "pointer" }}
+                      className="hover:bg-primary/5 transition-colors"
                     >
                       Tout lire
                     </button>
                   )}
                   <button
-                    onClick={() => setOpen(false)}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-fg"
+                    onClick={() => setNotifOpen(false)}
+                    className="flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                    style={{ width: "24px", height: "24px", color: "var(--color-muted-fg)" }}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X style={{ width: "13px", height: "13px" }} />
                   </button>
                 </div>
               </div>
 
-              {/* Notification list */}
-              <div className="max-h-72 overflow-y-auto">
+              {/* List */}
+              <div style={{ maxHeight: "280px", overflowY: "auto" }}>
                 {notifs.map(n => {
-                  const cfg = NOTIF_CONFIG[n.type]
+                  const cfg  = NOTIF_CONFIG[n.type]
                   const Icon = cfg.icon
                   return (
                     <div
                       key={n.id}
                       onClick={() => markRead(n.id)}
-                      className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 cursor-pointer
-                        hover:bg-muted/40 transition-colors duration-150
-                        ${!n.read ? "bg-primary/[0.02]" : ""}`}
+                      className="flex items-start gap-3 cursor-pointer transition-colors"
+                      style={{
+                        padding: "10px 16px",
+                        borderBottom: "1px solid var(--color-border-subtle)",
+                        background: !n.read ? "rgba(91,82,245,0.02)" : "transparent",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--color-muted)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = !n.read ? "rgba(91,82,245,0.02)" : "transparent")}
                     >
-                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${cfg.bg}`}>
-                        <Icon className={`w-3.5 h-3.5 ${cfg.text}`} strokeWidth={2.5} />
+                      <div
+                        className="flex items-center justify-center rounded-xl flex-shrink-0 mt-0.5"
+                        style={{ width: "28px", height: "28px", background: cfg.bg }}
+                      >
+                        <Icon style={{ width: "13px", height: "13px", color: cfg.text }} strokeWidth={2.5} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`text-xs font-semibold leading-tight truncate ${n.read ? "text-muted-fg" : "text-foreground"}`}>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: n.read ? 500 : 700,
+                              color: n.read ? "var(--color-muted-fg)" : "var(--color-foreground)",
+                              lineHeight: 1.3,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              maxWidth: "180px",
+                            }}
+                          >
                             {n.title}
                           </p>
-                          {!n.read && <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-0.5 ${cfg.dot}`} />}
+                          {!n.read && (
+                            <span
+                              className="flex-shrink-0 mt-1"
+                              style={{ width: "6px", height: "6px", borderRadius: "99px", background: cfg.dot }}
+                            />
+                          )}
                         </div>
-                        <p className="text-[11px] text-muted-fg mt-0.5 leading-snug truncate">{n.body}</p>
-                        <p className="text-[10px] text-muted-fg/60 mt-1">{n.time}</p>
+                        <p style={{ fontSize: "11px", color: "var(--color-muted-fg)", marginTop: "2px", lineHeight: 1.4 }} className="truncate">
+                          {n.body}
+                        </p>
+                        <p style={{ fontSize: "10px", color: "var(--color-muted-fg-2)", marginTop: "3px" }}>{n.time}</p>
                       </div>
                     </div>
                   )
@@ -228,55 +404,134 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2.5 border-t border-border bg-muted/30">
+              <div
+                className="px-4 py-2.5"
+                style={{ borderTop: "1px solid var(--color-border)", background: "var(--color-muted)" }}
+              >
                 <Link
                   href="/notifications"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
+                  onClick={() => setNotifOpen(false)}
+                  className="flex items-center justify-center gap-1.5 transition-colors"
+                  style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-primary)" }}
                 >
                   Voir toutes les notifications
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight style={{ width: "13px", height: "13px" }} />
                 </Link>
               </div>
             </div>
           )}
         </div>
 
-        {/* User + role badge */}
-        <div className="flex items-center gap-2 cursor-pointer hover:bg-muted rounded-lg px-2 py-1 transition-colors duration-150">
-          {role === "SUPER_ADMIN" ? (
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#635BFF] to-[#8B5CF6]
-                            flex items-center justify-center text-[10px] font-black text-white ring-2 ring-purple-300/50">
-              SA
+        {/* ── User menu ── */}
+        <div className="relative" ref={userRef}>
+          <button
+            onClick={() => setUserOpen(v => !v)}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted"
+            style={{ cursor: "pointer", border: "none", background: "transparent" }}
+          >
+            {role === "SUPER_ADMIN" ? (
+              <div
+                className="flex items-center justify-center rounded-full text-white flex-shrink-0"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%)",
+                  fontSize: "10px",
+                  fontWeight: 900,
+                  boxShadow: "0 0 0 2px rgba(124,58,237,0.25)",
+                }}
+              >
+                SA
+              </div>
+            ) : (
+              <div
+                className="flex items-center justify-center rounded-full flex-shrink-0"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  background: "var(--color-primary-light)",
+                  color: "var(--color-primary)",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  boxShadow: "0 0 0 2px var(--color-primary-light)",
+                }}
+              >
+                {initials}
+              </div>
+            )}
+
+            <div className="hidden lg:flex flex-col text-left leading-none">
+              <span
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--color-foreground)",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {user ? `${user.prenom} ${user.nom ?? ""}`.trim() : "Utilisateur"}
+              </span>
+              {role && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    color: role === "SUPER_ADMIN" ? "var(--color-purple)" : "var(--color-muted-fg)",
+                    marginTop: "1px",
+                  }}
+                >
+                  {role === "SUPER_ADMIN" ? "⚡ Super Admin" : role.replace(/_/g, " ")}
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary ring-2 ring-primary/20">
-              {user?.prenom?.[0]?.toUpperCase() ?? "U"}
+            <ChevronDown
+              style={{ width: "13px", height: "13px", color: "var(--color-muted-fg-2)" }}
+              className="hidden lg:inline"
+            />
+          </button>
+
+          {userOpen && (
+            <div
+              className="absolute right-0 top-full mt-2 overflow-hidden"
+              style={{
+                width: "200px",
+                background: "var(--color-card)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-float)",
+                zIndex: 50,
+                animation: "slideDown 0.15s cubic-bezier(0.4,0,0.2,1) both",
+              }}
+            >
+              <div className="p-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-foreground)" }}>
+                  {user ? `${user.prenom} ${user.nom ?? ""}`.trim() : "Utilisateur"}
+                </p>
+                <p style={{ fontSize: "11px", color: "var(--color-muted-fg)", marginTop: "2px" }} className="truncate">
+                  {user?.email ?? ""}
+                </p>
+              </div>
+              <div className="p-1.5">
+                <Link
+                  href="/parametres"
+                  onClick={() => setUserOpen(false)}
+                  className="flex items-center gap-2.5 w-full rounded-lg px-2.5 py-2 hover:bg-muted transition-colors"
+                  style={{ fontSize: "12.5px", color: "var(--color-foreground-2)", fontWeight: 500 }}
+                >
+                  Paramètres
+                </Link>
+                <button
+                  onClick={() => { logout(); router.push("/login") }}
+                  className="flex items-center gap-2.5 w-full rounded-lg px-2.5 py-2 hover:bg-danger/8 transition-colors"
+                  style={{ fontSize: "12.5px", color: "var(--color-danger)", fontWeight: 500 }}
+                >
+                  <LogOut style={{ width: "13px", height: "13px" }} />
+                  Déconnexion
+                </button>
+              </div>
             </div>
           )}
-          <div className="hidden lg:flex flex-col leading-none">
-            <span className="text-sm font-semibold text-foreground">
-              {user ? `${user.prenom} ${user.nom ?? ""}`.trim() : "Utilisateur"}
-            </span>
-            {role && (
-              <span className={`text-[10px] font-bold mt-0.5 ${
-                role === "SUPER_ADMIN" ? "text-purple-500" : "text-muted-fg"
-              }`}>
-                {role === "SUPER_ADMIN" ? "⚡ SUPER ADMIN" : role.replace("_", " ")}
-              </span>
-            )}
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-fg hidden lg:inline" />
         </div>
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-danger/10 text-muted-fg hover:text-danger transition-colors duration-150"
-          title="Déconnexion"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
       </div>
     </header>
   )
