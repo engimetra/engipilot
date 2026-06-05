@@ -19,6 +19,12 @@ const notoArabic = Noto_Sans_Arabic({
 export const metadata: Metadata = {
   title: "ENGIPILOT — Supervision Intelligente des Chantiers",
   description: "Plateforme SaaS BTP · KPIs EVM · IA Prédictive · Gestion de performance",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ENGIPILOT",
+  },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +37,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={`${inter.variable} ${notoArabic.variable}`}
     >
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#635BFF" />
+      </head>
       <body>
         <Providers>
           {children}

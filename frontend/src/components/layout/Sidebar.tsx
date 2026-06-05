@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ROLE_CONFIG } from "@/lib/rbac"
 import type { Permission } from "@/lib/rbac"
-import { Search, LogOut, Shield, ChevronDown } from "lucide-react"
+import { Search, LogOut, Shield, ChevronDown, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Link, usePathname } from "@/i18n/navigation"
 
@@ -70,7 +70,7 @@ const NAV: NavSection[] = [
   },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const router   = useRouter()
   const { can, isSuperAdmin, role, user } = usePermissions()
@@ -82,17 +82,27 @@ export function Sidebar() {
   const q = search.toLowerCase().trim()
 
   return (
-    <aside className="w-60 bg-white border-r border-border flex flex-col flex-shrink-0 h-full overflow-hidden">
+    <aside className="w-64 lg:w-60 bg-white border-r border-border flex flex-col flex-shrink-0 h-full overflow-hidden">
 
-      {/* ── Logo ── */}
+      {/* ── Logo + Close (mobile) ── */}
       <div className="px-4 h-14 border-b border-border flex items-center gap-3 flex-shrink-0">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
           <span className="text-white text-xs font-black">EP</span>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="font-bold text-sm text-foreground tracking-tight leading-tight">ENGIPILOT</div>
           <div className="text-[10px] text-muted-fg leading-tight">BTP · IA · SaaS</div>
         </div>
+        {/* Close button — visible only on mobile/tablet */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-fg hover:text-foreground transition-colors flex-shrink-0"
+            aria-label="Fermer le menu"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* ── Search ── */}

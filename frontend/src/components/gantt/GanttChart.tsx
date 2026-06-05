@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AlertTriangle, CheckCircle2, Clock, ChevronRight } from "lucide-react"
 
 export type GanttLot = {
@@ -30,6 +30,17 @@ const STATUT_CONFIG: Record<string, { label: string; icon: React.ElementType; bg
 
 export function GanttChart({ lots, todayPct, projectName }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [isMobile, setIsMobile]   = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)")
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [])
+
+  const labelWidth = isMobile ? "80px" : "160px"
 
   return (
     <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-card">
@@ -73,7 +84,7 @@ export function GanttChart({ lots, todayPct, projectName }: Props) {
                   <div
                     key={lot.id}
                     className="grid gap-0 items-center group cursor-pointer"
-                    style={{ gridTemplateColumns: "160px 1fr" }}
+                    style={{ gridTemplateColumns: `${labelWidth} 1fr` }}
                     onMouseEnter={() => setHoveredId(lot.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >

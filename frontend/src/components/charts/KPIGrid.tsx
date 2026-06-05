@@ -163,7 +163,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
 export function KPIGrid({ data }: { data?: DashboardKpis }) {
   const kpis = buildKpis(data)
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
       {kpis.map(kpi => <KPICard key={kpi.label} {...kpi} />)}
     </div>
   )

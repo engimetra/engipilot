@@ -183,6 +183,18 @@ export default function DashboardPage() {
     queryFn:  fetchDashboard,
   })
 
+  const projects    = data?.projects ?? []
+  const activeEvmId = evmProjectId ?? projects[0]?.id ?? null
+
+  const { data: evm, isLoading: evmLoading } = useQuery<EvmData>({
+    queryKey:  ["evm", activeEvmId],
+    queryFn:   () => fetchEvmKpis(activeEvmId!),
+    enabled:   !!activeEvmId,
+    staleTime: 2 * 60 * 1000,
+  })
+
+  const modules = buildModules(data)
+
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
@@ -204,17 +216,6 @@ export default function DashboardPage() {
       </div>
     )
   }
-
-  const modules        = buildModules(data)
-  const projects       = data?.projects ?? []
-  const activeEvmId    = evmProjectId ?? projects[0]?.id ?? null
-
-  const { data: evm, isLoading: evmLoading } = useQuery<EvmData>({
-    queryKey:  ["evm", activeEvmId],
-    queryFn:   () => fetchEvmKpis(activeEvmId!),
-    enabled:   !!activeEvmId,
-    staleTime: 2 * 60 * 1000,
-  })
 
   return (
     <div className="space-y-6 page-enter">

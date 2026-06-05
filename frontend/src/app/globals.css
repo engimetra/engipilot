@@ -79,7 +79,7 @@
 
   /* ── Typography ── */
   .page-title {
-    @apply text-2xl font-bold text-foreground tracking-tight;
+    @apply text-lg sm:text-xl lg:text-2xl font-bold text-foreground tracking-tight;
   }
   .section-title {
     @apply text-xs font-semibold text-muted-fg uppercase tracking-wider mb-3;

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react"
 import {
   Bell, Search, Plus, LogOut, ChevronDown,
-  AlertTriangle, CheckCircle2, Clock, Zap, X, ArrowRight, Home,
+  AlertTriangle, CheckCircle2, Clock, Zap, X, ArrowRight, Home, Menu,
 } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { useRouter } from "next/navigation"
@@ -55,7 +55,7 @@ const INIT_NOTIFS: QuickNotif[] = [
   { id:"n5", type:"BUDGET", title:"Rapport mensuel généré",       body:"Mai 2025 — Résidence Al Andalous",        time:"Il y a 3h",     read:true  },
 ]
 
-export function Topbar() {
+export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { user, logout } = useStore()
   const role = user?.role
   const router = useRouter()
@@ -89,7 +89,16 @@ export function Topbar() {
   }
 
   return (
-    <header className="h-14 bg-white border-b border-border flex items-center gap-3 px-6 flex-shrink-0">
+    <header className="h-14 bg-white border-b border-border flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 flex-shrink-0">
+      {/* Hamburger — mobile/tablet only */}
+      <button
+        onClick={onMenuToggle}
+        className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-fg hover:text-foreground transition-colors flex-shrink-0"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Back to home + Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm min-w-0 flex-shrink-0">
         <Link
@@ -107,7 +116,7 @@ export function Topbar() {
       </nav>
 
       {/* Search */}
-      <div className="flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2 flex-1 max-w-xs ml-2">
+      <div className="hidden sm:flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2 flex-1 max-w-xs ml-2">
         <Search className="w-3.5 h-3.5 text-muted-fg flex-shrink-0" />
         <input
           placeholder="Rechercher..."

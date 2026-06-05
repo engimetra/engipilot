@@ -244,7 +244,7 @@ export default function HSEPage() {
       </div>
 
       {/* ══ KPI CARDS ══ */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {[
           {
             icon: ShieldAlert, label: "Taux Fréquence", sublabel: "Cible < 15",

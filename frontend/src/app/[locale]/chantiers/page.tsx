@@ -347,8 +347,68 @@ export default function ChantiersPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-border rounded-xl shadow-card overflow-hidden">
+      {/* ── Mobile cards (< md) ── */}
+      <div className="md:hidden space-y-3">
+        {isLoading && (
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-fg text-sm">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            Chargement…
+          </div>
+        )}
+        {!isLoading && filtered.length === 0 && (
+          <div className="text-center py-10 text-muted-fg text-sm">Aucun chantier trouvé.</div>
+        )}
+        {filtered.map(c => (
+          <div key={c.id} className="bg-white border border-border rounded-xl shadow-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-semibold text-foreground truncate">{c.name}</div>
+                <div className="text-xs text-muted-fg font-mono mt-0.5">{c.reference}</div>
+              </div>
+              <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full font-semibold border flex-shrink-0 ${STATUT_STYLE[c._statut] ?? STATUT_STYLE.EN_COURS}`}>
+                {c._statut.replace("_", " ")}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-muted-fg">Avancement</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${c._avancement}%`, background: c._avancement > 75 ? "#00C875" : c._avancement > 50 ? "#635BFF" : "#FDAB3D" }} />
+                  </div>
+                  <span className="font-semibold tabular-nums">{c._avancement}%</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Budget</span>
+                <div className="font-semibold mt-1 font-mono">{c._budget}</div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Fin prévue</span>
+                <div className="font-semibold mt-1 font-mono">{c._fin}</div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Chef de projet</span>
+                <div className="font-semibold mt-1 truncate">{c._responsable}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+              <Link href={`/chantiers/${c.id}`} className="flex-1 flex items-center justify-center gap-1 text-xs text-primary font-semibold py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
+                Voir détails <ExternalLink className="w-3 h-3" />
+              </Link>
+              <button onClick={() => handleEditOpen(c)} className="p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-muted transition-colors">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setDeleteId(c.id)} className="p-1.5 rounded-lg text-muted-fg hover:text-danger hover:bg-danger/8 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table (≥ md) ── */}
+      <div className="hidden md:block bg-white border border-border rounded-xl shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
