@@ -192,14 +192,16 @@ export default function LoginPage() {
     return map[dbRole] ?? "UTILISATEUR_STANDARD"
   }
 
-  const applyUser = (apiUser: { id: string; email: string; firstName: string; lastName: string; avatar?: string | null; role: string; company: { id: string } }) => {
+  const applyUser = (apiUser: { id: string; email: string; firstName: string; lastName: string; avatar?: string | null; role: string | { name: string }; company?: { id: string }; companyId?: string }) => {
+    const roleName = typeof apiUser.role === "string" ? apiUser.role : apiUser.role?.name ?? ""
+    const orgId    = apiUser.company?.id ?? apiUser.companyId ?? ""
     const u: Utilisateur = {
       id:              apiUser.id,
       email:           apiUser.email,
       prenom:          apiUser.firstName,
       nom:             apiUser.lastName,
-      role:            toRole(apiUser.role),
-      organisation_id: apiUser.company.id,
+      role:            toRole(roleName),
+      organisation_id: orgId,
       avatar_url:      apiUser.avatar ?? undefined,
       actif:           true,
       created_at:      new Date().toISOString(),
