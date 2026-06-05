@@ -205,10 +205,10 @@ export default function ChantiersPage() {
       _debut:     formatDate(p.startDate),
       _fin:       formatDate(p.endDate),
       _color:     pickColor(p.id),
-      _responsable: p.members[0]
+      _responsable: Array.isArray(p.members) && p.members[0]
         ? `${p.members[0].user.firstName[0]}. ${p.members[0].user.lastName}`
         : "—",
-      _initiales: p.members[0]
+      _initiales: Array.isArray(p.members) && p.members[0]
         ? initiales(`${p.members[0].user.firstName} ${p.members[0].user.lastName}`)
         : "??",
     }))

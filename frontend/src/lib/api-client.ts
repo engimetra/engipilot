@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server"
 
-// Server-side base URL — never exposed to the browser
-const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1").replace(/\/$/, "")
+function getBase(): string {
+  return (process.env.BACKEND_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://engipilot-backend:8080/api/v1").replace(/\/$/, "")
+}
 
 export function getToken(req: NextRequest): string | null {
   return req.cookies.get("engipilot_session")?.value ?? null
@@ -23,8 +24,9 @@ export async function backendFetch(
   if (token) headers["Authorization"] = `Bearer ${token}`
   if (opts.body && typeof opts.body === "string") headers["Content-Type"] = "application/json"
 
+  const base = getBase()
   const qs  = opts.searchParams?.toString()
-  const url = qs ? `${BASE}${path}?${qs}` : `${BASE}${path}`
+  const url = qs ? `${base}${path}?${qs}` : `${base}${path}`
 
   return fetch(url, { method: opts.method ?? "GET", headers, body: opts.body })
 }
@@ -49,9 +51,15 @@ export async function proxyResponse(
     }
   }
 
-  const wrapped = json as { success?: boolean; data?: unknown }
-  return {
-    payload: wrapped.success !== undefined ? (wrapped.data ?? null) : json,
-    status:  res.status,
+  const wrapped = json as { success?: boolean; data?: unknown; content?: unknown; totalElements?: unknown }
+  let payload: unknown
+  if (wrapped.success !== undefined) {
+    payload = wrapped.data ?? null
+  } else if (Array.isArray((wrapped as { content?: unknown }).content)) {
+    // Spring paginated response: { content: [], totalElements: N, ... }
+    payload = wrapped.content
+  } else {
+    payload = json
   }
+  return { payload, status: res.status }
 }
