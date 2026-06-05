@@ -68,7 +68,7 @@ export default function LandingPage() {
               onClick={() => router.push("/login")}
               className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-3 rounded-xl font-semibold shadow-lg"
             >
-              Commencer gratuitement
+              Créer un compte
             </button>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function LandingPage() {
                 onClick={() => router.push("/login")}
                 className="bg-blue-600 hover:bg-blue-700 transition text-white px-8 py-4 rounded-2xl font-semibold shadow-xl"
               >
-                Commencer gratuitement →
+                Créer un compte →
               </button>
               <button
                 onClick={() => scrollTo("features")}
@@ -252,7 +252,7 @@ export default function LandingPage() {
               {
                 name: "Starter", price: "Gratuit", sub: "pour toujours",
                 features: ["3 chantiers", "Dashboard & KPIs", "Rapports journaliers", "1 utilisateur"],
-                cta: "Commencer gratuitement", highlight: false,
+                cta: "Créer un compte", highlight: false,
               },
               {
                 name: "Pro", price: "1 490 MAD", sub: "/ mois",
@@ -398,7 +398,7 @@ export default function LandingPage() {
                 onClick={() => router.push("/login")}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition"
               >
-                Commencer gratuitement →
+                Créer un compte →
               </button>
               <button
                 onClick={() => scrollTo("a-propos")}
