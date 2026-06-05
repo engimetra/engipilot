@@ -138,8 +138,8 @@ export const ROLE_CONFIG: Record<RolePlateforme, {
     shortLabel:  "SUPER ADMIN",
     description: "Accès total plateforme & développement",
     color:       "text-white",
-    bg:          "bg-gradient-to-r from-[#635BFF] to-[#8B5CF6]",
-    ring:        "ring-purple-400/50",
+    bg:          "bg-gradient-to-r from-[#1e512d] to-[#ff751f]",
+    ring:        "ring-green-400/50",
     tier:        "platform",
   },
   ADMIN_ENTREPRISE: {

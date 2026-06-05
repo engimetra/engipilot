@@ -115,8 +115,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             style={{
               width: "30px",
               height: "30px",
-              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%)",
-              boxShadow: "0 2px 8px rgba(91,82,245,0.35)",
+              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)",
+              boxShadow: "0 2px 8px rgba(30,81,45,0.35)",
             }}
           >
             <span style={{ color: "#fff", fontSize: "10px", fontWeight: 900, letterSpacing: "-0.05em" }}>EP</span>
@@ -293,8 +293,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           <div
             className="mx-3 my-3 rounded-xl p-3"
             style={{
-              background: "linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-purple-light) 100%)",
-              border: "1px solid rgba(91,82,245,0.15)",
+              background: "linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent-light) 100%)",
+              border: "1px solid rgba(30,81,45,0.15)",
             }}
           >
             <div className="flex items-center gap-2.5 mb-2.5">
@@ -303,10 +303,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                 style={{
                   width: "32px",
                   height: "32px",
-                  background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%)",
+                  background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)",
                   fontSize: "11px",
                   fontWeight: 800,
-                  boxShadow: "0 2px 6px rgba(91,82,245,0.3)",
+                  boxShadow: "0 2px 6px rgba(30,81,45,0.3)",
                 }}
               >
                 {(user?.prenom?.[0] ?? "S").toUpperCase()}
@@ -329,7 +329,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                   fontWeight: 800,
                   padding: "3px 8px",
                   borderRadius: "99px",
-                  background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%)",
+                  background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)",
                   color: "#fff",
                   letterSpacing: "0.04em",
                 }}
@@ -355,14 +355,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             style={{ padding: "12px 16px" }}
           >
             <div
-              className="flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold ring-2"
-              style={{
-                width: "32px",
-                height: "32px",
-                background: cfg?.bg ?? "var(--color-primary-light)",
-                color: cfg?.color ?? "var(--color-primary)",
-                boxShadow: `0 0 0 2px ${cfg?.ring ?? "var(--color-primary-light)"}`,
-              }}
+              className={cn(
+                "flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold",
+                cfg?.bg  ?? "bg-primary/10",
+                cfg?.color ?? "text-primary",
+              )}
+              style={{ width: "32px", height: "32px", flexShrink: 0 }}
             >
               {initials || "U"}
             </div>

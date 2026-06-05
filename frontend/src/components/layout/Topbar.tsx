@@ -128,7 +128,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
         </Link>
         {pageMeta && (
           <>
-            <span style={{ color: "var(--color-border)", fontSize: "16px", lineHeight: 1, userSelect: "none" }}>/</span>
+            <span style={{ color: "var(--color-muted-fg)", fontSize: "16px", lineHeight: 1, userSelect: "none" }}>/</span>
             <span
               style={{
                 fontSize: "13px",
@@ -223,7 +223,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
             padding: "6px 12px",
             borderRadius: "8px",
             border: "none",
-            boxShadow: "0 1px 2px rgba(91,82,245,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+            boxShadow: "0 1px 2px rgba(30,81,45,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
             cursor: "pointer",
             letterSpacing: "-0.01em",
           }}
@@ -359,10 +359,10 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                       style={{
                         padding: "10px 16px",
                         borderBottom: "1px solid var(--color-border-subtle)",
-                        background: !n.read ? "rgba(91,82,245,0.02)" : "transparent",
+                        background: !n.read ? "rgba(30,81,45,0.02)" : "transparent",
                       }}
                       onMouseEnter={e => (e.currentTarget.style.background = "var(--color-muted)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = !n.read ? "rgba(91,82,245,0.02)" : "transparent")}
+                      onMouseLeave={e => (e.currentTarget.style.background = !n.read ? "rgba(30,81,45,0.02)" : "transparent")}
                     >
                       <div
                         className="flex items-center justify-center rounded-xl flex-shrink-0 mt-0.5"

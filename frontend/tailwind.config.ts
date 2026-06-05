@@ -46,6 +46,11 @@ const config: Config = {
           DEFAULT: "var(--color-teal)",
           light:   "var(--color-teal-light)",
         },
+        accent: {
+          DEFAULT: "var(--color-accent)",
+          hover:   "var(--color-accent-hover)",
+          light:   "var(--color-accent-light)",
+        },
         orange: "var(--color-orange)",
         blue:   "var(--color-blue)",
       },
