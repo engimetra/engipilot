@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 
 // Server-side base URL — never exposed to the browser
-const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1").replace(/\/$/, "")
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1").replace(/\/$/, "")
 
 export function getToken(req: NextRequest): string | null {
   return req.cookies.get("engipilot_session")?.value ?? null

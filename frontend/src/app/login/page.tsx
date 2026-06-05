@@ -178,28 +178,33 @@ export default function LoginPage() {
   const router = useRouter()
   const setUser = useStore(s => s.setUser)
 
-  // Mapping DB role name → RolePlateforme frontend type
+  // Mapping Spring Boot Role enum → RolePlateforme frontend type
   const toRole = (dbRole: string): RolePlateforme => {
     const map: Record<string, RolePlateforme> = {
-      SUPER_ADMIN: "SUPER_ADMIN",
-      ADMIN:       "ADMIN_ENTREPRISE",
-      MANAGER:     "CHEF_PROJET",
-      ENGINEER:    "CHEF_CHANTIER",
-      HSE:         "CHEF_CHANTIER",
-      MEMBER:      "UTILISATEUR_STANDARD",
-      VIEWER:      "CONSULTANT",
+      SUPER_ADMIN:   "SUPER_ADMIN",
+      ADMIN:         "ADMIN_ENTREPRISE",
+      CHEF_PROJET:   "CHEF_PROJET",
+      CHEF_CHANTIER: "CHEF_CHANTIER",
+      CONSULTANT:    "CONSULTANT",
+      LECTEUR:       "UTILISATEUR_STANDARD",
+      // legacy Node.js names kept as fallback
+      MANAGER:       "CHEF_PROJET",
+      ENGINEER:      "CHEF_CHANTIER",
+      MEMBER:        "UTILISATEUR_STANDARD",
+      VIEWER:        "CONSULTANT",
     }
     return map[dbRole] ?? "UTILISATEUR_STANDARD"
   }
 
-  const applyUser = (apiUser: { id: string; email: string; firstName: string; lastName: string; avatar?: string | null; role: string | { name: string }; company?: { id: string }; companyId?: string }) => {
+  const applyUser = (apiUser: { id: string; email: string; fullName?: string; firstName?: string; lastName?: string; avatar?: string | null; role: string | { name: string }; organisationId?: string; company?: { id: string }; companyId?: string }) => {
     const roleName = typeof apiUser.role === "string" ? apiUser.role : apiUser.role?.name ?? ""
-    const orgId    = apiUser.company?.id ?? apiUser.companyId ?? ""
+    const orgId    = apiUser.organisationId ?? apiUser.company?.id ?? apiUser.companyId ?? ""
+    const [prenom = "", nom = ""] = (apiUser.fullName ?? `${apiUser.firstName ?? ""} ${apiUser.lastName ?? ""}`).trim().split(" ")
     const u: Utilisateur = {
       id:              apiUser.id,
       email:           apiUser.email,
-      prenom:          apiUser.firstName,
-      nom:             apiUser.lastName,
+      prenom,
+      nom,
       role:            toRole(roleName),
       organisation_id: orgId,
       avatar_url:      apiUser.avatar ?? undefined,

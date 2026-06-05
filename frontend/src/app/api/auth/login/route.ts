@@ -19,9 +19,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const raw = (json.data ?? json) as { user: unknown; token?: string; accessToken?: string }
-    const { user } = raw
-    const token = raw.token ?? raw.accessToken ?? ""
+    const raw = (json.data ?? json) as { user: unknown; token: string }
+    const { user, token } = raw
 
     const response = NextResponse.json({ user })
     response.cookies.set("engipilot_session", token, {
