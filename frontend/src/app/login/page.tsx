@@ -239,7 +239,7 @@ const inputCls = (hasError: boolean) =>
    focus:ring-2 focus:ring-offset-0
    ${hasError
      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-     : "border-gray-200 focus:border-[#635BFF] focus:ring-[#635BFF]/10"}`
+     : "border-gray-200 focus:border-[#1e512d] focus:ring-[#1e512d]/10"}`
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Main page
@@ -397,7 +397,7 @@ export default function LoginPage() {
                    px-8 py-10 lg:px-14 lg:py-14
                    min-h-[280px] lg:min-h-screen"
         style={{
-          background: "linear-gradient(135deg, #3730a3 0%, #4c1d95 30%, #5b21b6 55%, #635BFF 100%)",
+          background: "linear-gradient(135deg, #1e512d 0%, #1a6635 40%, #cc5500 80%, #ff751f 100%)",
         }}
       >
         {/* Dot grid pattern */}
@@ -513,10 +513,10 @@ export default function LoginPage() {
                 onClick={() => switchMode(m)}
                 className={`flex-1 pb-3 text-sm font-semibold transition-all duration-150
                             border-b-2 -mb-px
-                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] focus-visible:ring-offset-2 rounded-t
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] focus-visible:ring-offset-2 rounded-t
                             ${mode === m
-                              ? "border-[#635BFF] text-[#635BFF]"
-                              : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                              ? "border-[#1e512d] text-[#1e512d]"
+                              : "border-transparent text-gray-500 hover:text-gray-800"}`}
               >
                 {m === "login" ? "Connexion" : "Créer un compte"}
               </button>
@@ -622,7 +622,7 @@ export default function LoginPage() {
                 {mode === "login" && (
                   <button
                     type="button"
-                    className="text-xs text-[#635BFF] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] rounded"
+                    className="text-xs text-[#1e512d] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] rounded"
                   >
                     Mot de passe oublié ?
                   </button>
@@ -651,7 +651,7 @@ export default function LoginPage() {
                   aria-label={showPass ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
                              transition-colors focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[#635BFF] rounded"
+                             focus-visible:ring-[#1e512d] rounded"
                 >
                   {showPass
                     ? <EyeOff className="w-4 h-4" aria-hidden />
@@ -693,7 +693,7 @@ export default function LoginPage() {
                   aria-label={showConf ? "Masquer la confirmation" : "Afficher la confirmation"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
                              transition-colors focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[#635BFF] rounded"
+                             focus-visible:ring-[#1e512d] rounded"
                 >
                   {showConf
                     ? <EyeOff className="w-4 h-4" aria-hidden />
@@ -710,8 +710,8 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={fields.rememberMe}
                   onChange={e => set("rememberMe", e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-[#635BFF]
-                             accent-[#635BFF] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#635BFF]"
+                  className="w-4 h-4 rounded border-gray-300 text-[#1e512d]
+                             accent-[#1e512d] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#1e512d]"
                 />
                 <label
                   htmlFor="rememberMe"
@@ -743,9 +743,9 @@ export default function LoginPage() {
                          flex items-center justify-center gap-2 mt-2 transition-all duration-150
                          active:scale-[0.99] shadow-md
                          disabled:opacity-60 disabled:cursor-not-allowed
-                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] focus-visible:ring-offset-2"
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] focus-visible:ring-offset-2"
               style={{
-                background: "linear-gradient(135deg, #635BFF 0%, #4F46E5 100%)",
+                background: "linear-gradient(135deg, #1e512d 0%, #ff751f 100%)",
               }}
             >
               {loading ? (
@@ -767,11 +767,11 @@ export default function LoginPage() {
             {mode === "login" ? (
               <>
                 En vous connectant, vous acceptez nos{" "}
-                <button type="button" className="text-[#635BFF] hover:underline">
+                <button type="button" className="text-[#1e512d] hover:underline">
                   Conditions d'utilisation
                 </button>{" "}
                 et notre{" "}
-                <button type="button" className="text-[#635BFF] hover:underline">
+                <button type="button" className="text-[#1e512d] hover:underline">
                   Politique de confidentialité
                 </button>
                 .<br className="hidden sm:block" />
@@ -780,9 +780,9 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="text-[#635BFF] font-semibold hover:underline
+                    className="text-[#1e512d] font-semibold hover:underline
                                focus-visible:outline-none focus-visible:ring-2
-                               focus-visible:ring-[#635BFF] rounded"
+                               focus-visible:ring-[#1e512d] rounded"
                   >
                     S'inscrire gratuitement
                   </button>
@@ -791,7 +791,7 @@ export default function LoginPage() {
             ) : (
               <>
                 En créant un compte, vous acceptez nos{" "}
-                <button type="button" className="text-[#635BFF] hover:underline">
+                <button type="button" className="text-[#1e512d] hover:underline">
                   Conditions d'utilisation
                 </button>.<br className="hidden sm:block" />
                 <span className="mt-2 inline-block">
@@ -799,9 +799,9 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("login")}
-                    className="text-[#635BFF] font-semibold hover:underline
+                    className="text-[#1e512d] font-semibold hover:underline
                                focus-visible:outline-none focus-visible:ring-2
-                               focus-visible:ring-[#635BFF] rounded"
+                               focus-visible:ring-[#1e512d] rounded"
                   >
                     Se connecter
                   </button>

@@ -48,9 +48,7 @@ public class AuthService {
             });
 
         // 2. Vérifier BCrypt
-        // passwordEncoder.matches() compare le mot de passe clair avec le hash
-        // Impossible de décoder le hash — vérification one-way uniquement
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             log.warn("Mot de passe incorrect pour : {}", request.email());
             throw new BadCredentialsException("Email ou mot de passe incorrect");
         }

@@ -40,7 +40,7 @@ export default function LandingPage() {
 
           <button
             onClick={() => scrollTo("hero")}
-            className="text-3xl font-black text-blue-600 hover:opacity-80 transition"
+            className="text-3xl font-black text-[#1e512d] hover:opacity-80 transition"
           >
             ENGIPILOT
           </button>
@@ -50,7 +50,7 @@ export default function LandingPage() {
               <button
                 key={link.label}
                 onClick={link.action}
-                className="text-[#0B132B] hover:text-blue-600 transition-colors"
+                className="text-[#0B132B] hover:text-[#1e512d] transition-colors"
               >
                 {link.label}
               </button>
@@ -60,13 +60,13 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/login")}
-              className="text-sm font-medium hover:text-blue-600 transition-colors"
+              className="text-sm font-medium hover:text-[#1e512d] transition-colors"
             >
               Se connecter
             </button>
             <button
               onClick={() => router.push("/login")}
-              className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-3 rounded-xl font-semibold shadow-lg"
+              className="bg-[#1e512d] hover:bg-[#174024] transition text-white px-5 py-3 rounded-xl font-semibold shadow-lg"
             >
               Créer un compte
             </button>
@@ -78,14 +78,14 @@ export default function LandingPage() {
       <section id="hero" className="py-24">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold mb-8">
+            <div className="inline-flex items-center gap-2 bg-[#E4F0E7] text-[#1e512d] px-4 py-2 rounded-full text-sm font-semibold mb-8">
               🚀 LA PLATEFORME TOUT-EN-UN POUR LE BTP
             </div>
 
             <h2 className="text-6xl font-black leading-tight">
               Pilotez vos projets<br />
               BTP avec{" "}
-              <span className="text-blue-600">intelligence</span>
+              <span className="text-[#1e512d]">intelligence</span>
             </h2>
 
             <p className="mt-8 text-lg text-gray-600 leading-relaxed max-w-xl">
@@ -97,7 +97,7 @@ export default function LandingPage() {
             <div className="mt-10 flex gap-5 flex-wrap">
               <button
                 onClick={() => router.push("/login")}
-                className="bg-blue-600 hover:bg-blue-700 transition text-white px-8 py-4 rounded-2xl font-semibold shadow-xl"
+                className="bg-[#1e512d] hover:bg-[#174024] transition text-white px-8 py-4 rounded-2xl font-semibold shadow-xl"
               >
                 Créer un compte →
               </button>
@@ -138,12 +138,12 @@ export default function LandingPage() {
                 <h4 className="font-bold mb-5">Avancement des projets</h4>
                 <div className="flex items-end gap-3 h-40">
                   {[20, 40, 35, 60, 70, 85].map((h, i) => (
-                    <div key={i} className="bg-blue-500 rounded-t-xl flex-1" style={{ height: `${h}%` }} />
+                    <div key={i} className="rounded-t-xl flex-1" style={{ height: `${h}%`, background: i % 2 === 0 ? "#1e512d" : "#ff751f" }} />
                   ))}
                 </div>
               </div>
               <div className="bg-[#F7F9FC] rounded-2xl p-6 h-64 flex items-center justify-center">
-                <div className="w-44 h-44 rounded-full border-[18px] border-blue-500 border-t-cyan-300 border-r-purple-400" />
+                <div className="w-44 h-44 rounded-full border-[18px] border-[#1e512d] border-t-[#ff751f] border-r-[#424244]" />
               </div>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function LandingPage() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8 text-center font-black text-2xl text-gray-400">
             {["BOUYGUES", "EIFFAGE", "SOGEA", "VINCI", "RAZEL-BEC", "PFO"].map((n) => (
-              <div key={n} className="hover:text-blue-600 transition-colors cursor-default">{n}</div>
+              <div key={n} className="hover:text-[#1e512d] transition-colors cursor-default">{n}</div>
             ))}
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function LandingPage() {
               <button
                 key={module.title}
                 onClick={() => router.push("/login")}
-                className="bg-white border rounded-3xl p-8 hover:shadow-2xl hover:border-blue-200 transition duration-300 text-left"
+                className="bg-white border rounded-3xl p-8 hover:shadow-2xl hover:border-[#1e512d]/30 transition duration-300 text-left"
               >
                 <div className="text-5xl mb-6">{module.icon}</div>
                 <h3 className="text-xl font-bold mb-3">{module.title}</h3>
@@ -195,22 +195,22 @@ export default function LandingPage() {
       {/* ── IA / Fonctionnalités ── */}
       <section id="features" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-gradient-to-r from-[#001B5E] to-[#0036C7] rounded-[40px] p-14 text-white grid lg:grid-cols-2 gap-16 items-center">
+          <div className="bg-gradient-to-r from-[#1e512d] to-[#cc5500] rounded-[40px] p-14 text-white grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <div className="inline-flex bg-blue-500/20 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+              <div className="inline-flex bg-white/20 px-4 py-2 rounded-full text-sm font-semibold mb-6">
                 🤖 IA INTÉGRÉE
               </div>
               <h2 className="text-5xl font-black leading-tight">
                 L'IA au service de vos projets
               </h2>
-              <p className="mt-8 text-blue-100 leading-relaxed text-lg">
+              <p className="mt-8 text-white/80 leading-relaxed text-lg">
                 ENGIPILOT analyse vos données en temps réel pour prédire les
                 risques, optimiser les ressources et améliorer les performances
                 de vos chantiers.
               </p>
               <button
                 onClick={() => router.push("/login")}
-                className="mt-10 bg-white text-blue-700 px-8 py-4 rounded-2xl font-bold hover:scale-105 transition"
+                className="mt-10 bg-white text-[#1e512d] px-8 py-4 rounded-2xl font-bold hover:scale-105 transition"
               >
                 Découvrir nos capacités IA →
               </button>
@@ -269,18 +269,19 @@ export default function LandingPage() {
                 key={plan.name}
                 className={`rounded-3xl p-10 border flex flex-col gap-6 ${
                   plan.highlight
-                    ? "bg-blue-600 text-white border-blue-600 shadow-2xl scale-105"
+                    ? "text-white border-transparent shadow-2xl scale-105"
                     : "bg-white border-gray-200"
                 }`}
+                style={plan.highlight ? { background: "linear-gradient(135deg, #1e512d 0%, #ff751f 100%)" } : undefined}
               >
                 <div>
                   <h3 className={`text-2xl font-black ${plan.highlight ? "text-white" : ""}`}>{plan.name}</h3>
                   <div className="mt-3">
-                    <span className={`text-4xl font-black ${plan.highlight ? "text-white" : "text-blue-600"}`}>
+                    <span className={`text-4xl font-black ${plan.highlight ? "text-white" : "text-[#1e512d]"}`}>
                       {plan.price}
                     </span>
                     {plan.sub && (
-                      <span className={`text-sm ml-1 ${plan.highlight ? "text-blue-100" : "text-gray-500"}`}>
+                      <span className={`text-sm ml-1 ${plan.highlight ? "text-white/70" : "text-gray-500"}`}>
                         {plan.sub}
                       </span>
                     )}
@@ -289,8 +290,8 @@ export default function LandingPage() {
 
                 <ul className="space-y-3 flex-1">
                   {plan.features.map((f) => (
-                    <li key={f} className={`flex items-center gap-2 text-sm ${plan.highlight ? "text-blue-100" : "text-gray-600"}`}>
-                      <span className={plan.highlight ? "text-white" : "text-blue-600"}>✓</span> {f}
+                    <li key={f} className={`flex items-center gap-2 text-sm ${plan.highlight ? "text-white/80" : "text-gray-600"}`}>
+                      <span className={plan.highlight ? "text-white" : "text-[#1e512d]"}>✓</span> {f}
                     </li>
                   ))}
                 </ul>
@@ -299,9 +300,10 @@ export default function LandingPage() {
                   onClick={() => router.push("/login")}
                   className={`w-full py-4 rounded-2xl font-bold transition ${
                     plan.highlight
-                      ? "bg-white text-blue-600 hover:bg-blue-50"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                      ? "bg-white text-[#1e512d] hover:bg-[#E4F0E7]"
+                      : "text-white hover:opacity-90"
                   }`}
+                  style={!plan.highlight ? { background: "linear-gradient(135deg, #1e512d 0%, #ff751f 100%)" } : undefined}
                 >
                   {plan.cta}
                 </button>
@@ -332,7 +334,7 @@ export default function LandingPage() {
                 <p className="text-gray-500 text-sm leading-relaxed flex-1">{r.desc}</p>
                 <button
                   onClick={() => scrollTo("ressources")}
-                  className="text-blue-600 font-semibold text-sm hover:underline text-left"
+                  className="text-[#1e512d] font-semibold text-sm hover:underline text-left"
                 >
                   {r.cta} →
                 </button>
@@ -358,7 +360,7 @@ export default function LandingPage() {
             </p>
             <button
               onClick={() => router.push("/login")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition"
+              className="bg-[#1e512d] hover:bg-[#174024] text-white px-8 py-4 rounded-2xl font-bold transition"
             >
               Rejoindre ENGIPILOT →
             </button>
@@ -372,7 +374,7 @@ export default function LandingPage() {
               { value: "99.9%",  label: "Disponibilité SLA"  },
             ].map((s) => (
               <div key={s.label} className="bg-[#F7F9FC] rounded-2xl p-8 text-center">
-                <div className="text-4xl font-black text-blue-600">{s.value}</div>
+                <div className="text-4xl font-black text-[#1e512d]">{s.value}</div>
                 <div className="text-gray-500 text-sm mt-2">{s.label}</div>
               </div>
             ))}
@@ -396,7 +398,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5 flex-shrink-0">
               <button
                 onClick={() => router.push("/login")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition"
+                className="bg-[#1e512d] hover:bg-[#174024] text-white px-8 py-4 rounded-2xl font-bold transition"
               >
                 Créer un compte →
               </button>
@@ -412,7 +414,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer id="footer" className="bg-[#00154A] text-white py-16">
+      <footer id="footer" className="bg-[#0f2e18] text-white py-16">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-5 gap-12">
           <div>
             <button
@@ -421,7 +423,7 @@ export default function LandingPage() {
             >
               ENGIPILOT
             </button>
-            <p className="mt-5 text-blue-100 leading-relaxed">
+            <p className="mt-5 text-white/70 leading-relaxed">
               La plateforme tout-en-un pour piloter vos projets BTP avec
               intelligence et performance.
             </p>
@@ -449,7 +451,7 @@ export default function LandingPage() {
           ].map((col) => (
             <div key={col.title}>
               <h4 className="font-bold mb-5">{col.title}</h4>
-              <ul className="space-y-3 text-blue-100">
+              <ul className="space-y-3 text-white/70">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     <button
@@ -474,7 +476,7 @@ export default function LandingPage() {
               />
               <button
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 px-5 transition"
+                className="bg-[#ff751f] hover:bg-[#e8611a] px-5 transition"
               >
                 →
               </button>
@@ -482,7 +484,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 mt-14 pt-8 border-t border-white/10 text-sm text-blue-100 flex flex-col lg:flex-row justify-between gap-5">
+        <div className="max-w-7xl mx-auto px-6 mt-14 pt-8 border-t border-white/10 text-sm text-white/60 flex flex-col lg:flex-row justify-between gap-5">
           <p>© 2026 ENGIPILOT. Tous droits réservés.</p>
           <div className="flex gap-8">
             <button onClick={() => scrollTo("a-propos")} className="hover:text-white transition-colors">Confidentialité</button>
