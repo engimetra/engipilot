@@ -116,7 +116,7 @@ services:
       redis:
         condition: service_healthy
       kafka:
-        condition: service_healthy
+        condition: service_started
       minio:
         condition: service_healthy
     environment:
