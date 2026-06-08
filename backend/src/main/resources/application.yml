@@ -83,6 +83,20 @@ spring:
       - utilisateurs
       - lots
 
+# Mail (Gmail SMTP ou autre)
+  mail:
+    host:     ${MAIL_HOST:smtp.gmail.com}
+    port:     ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@engipilot.ma}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+# App config
+app:
+  frontend-url: ${FRONTEND_URL:https://www.engipilot.ma}
+
 # JWT — JWT_SECRET OBLIGATOIRE en production (≥ 32 caractères)
 jwt:
   secret:        ${JWT_SECRET}

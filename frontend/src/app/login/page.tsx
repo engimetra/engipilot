@@ -257,6 +257,31 @@ export default function LoginPage() {
   const [apiErr, setApiErr]     = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
 
+  /* forgot-password state */
+  const [forgotMode,    setForgotMode]    = useState(false)
+  const [forgotEmail,   setForgotEmail]   = useState("")
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotSent,    setForgotSent]    = useState(false)
+  const [forgotErr,     setForgotErr]     = useState("")
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!EMAIL_RE.test(forgotEmail)) { setForgotErr("Adresse email invalide"); return }
+    setForgotLoading(true); setForgotErr("")
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+      setForgotSent(true)
+    } catch {
+      setForgotErr("Impossible de contacter le serveur")
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
   /* helpers */
   const set = (k: keyof Fields, v: string | boolean) =>
     setFields(f => ({ ...f, [k]: v }))
@@ -523,7 +548,70 @@ export default function LoginPage() {
             ))}
           </div>
 
+          {/* ── Forgot password panel ── */}
+          {forgotMode && (
+            <div className="mb-6">
+              {forgotSent ? (
+                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                  <CheckCircle2 className="w-10 h-10 text-[#1e512d]" />
+                  <p className="text-gray-800 font-semibold">Email envoyé !</p>
+                  <p className="text-sm text-gray-500">
+                    Si cet email est enregistré, vous recevrez un lien de réinitialisation dans quelques minutes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail("") }}
+                    className="text-sm text-[#1e512d] hover:underline mt-2"
+                  >
+                    Retour à la connexion
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotSubmit} className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Entrez votre adresse email pour recevoir un lien de réinitialisation.
+                    </p>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden />
+                      <input
+                        type="email"
+                        value={forgotEmail}
+                        onChange={e => { setForgotEmail(e.target.value); setForgotErr("") }}
+                        placeholder="votre@email.com"
+                        className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e512d]/30 focus:border-[#1e512d]"
+                        required
+                      />
+                    </div>
+                    {forgotErr && (
+                      <p className="flex items-center gap-1 text-xs text-red-500 mt-1.5">
+                        <AlertCircle className="w-3 h-3" />{forgotErr}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="w-full py-2.5 rounded-xl bg-[#1e512d] text-white font-semibold text-sm
+                               hover:bg-[#1e512d]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {forgotLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Envoyer le lien
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(false); setForgotErr("") }}
+                    className="w-full text-sm text-gray-500 hover:text-[#1e512d] transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
           {/* Form */}
+          {!forgotMode && (
           <form
             onSubmit={handleSubmit}
             noValidate
@@ -622,6 +710,7 @@ export default function LoginPage() {
                 {mode === "login" && (
                   <button
                     type="button"
+                    onClick={() => { setForgotMode(true); setForgotEmail(fields.email); setForgotErr(""); setForgotSent(false) }}
                     className="text-xs text-[#1e512d] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] rounded"
                   >
                     Mot de passe oublié ?
@@ -761,6 +850,7 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+          )}
 
           {/* ── Legal / switch ── */}
           <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
