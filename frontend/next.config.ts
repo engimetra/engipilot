@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   /* ── Standalone output for Docker ── */
   output: "standalone",
 
+
   /* ── Node.js packages for API routes (non-edge) ── */
   serverExternalPackages: ["minio", "@prisma/client", "@prisma/adapter-pg", "pg"],
 
@@ -17,6 +18,14 @@ const nextConfig: NextConfig = {
 
   /* ── Tree-shake heavy packages ── */
   experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "engipilot.ma",
+        "www.engipilot.ma",
+        "209.38.231.154",
+        "localhost:3000",
+      ],
+    },
     optimizePackageImports: [
       "lucide-react",
       "recharts",
