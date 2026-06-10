@@ -2,15 +2,20 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Building2, Eye, EyeOff, Mail, Lock, User, ArrowRight,
-  Loader2, AlertCircle, CheckCircle2, BarChart3, Brain, ShieldCheck,
+  Eye, EyeOff, Mail, Lock, User, Building2,
+  Loader2, AlertCircle, CheckCircle2, ShieldCheck,
+  BarChart3, Brain, HardHat, ArrowRight,
 } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import type { RolePlateforme, Utilisateur } from "@/types"
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Types & helpers
-───────────────────────────────────────────────────────────────────────────── */
+/* ─── constants ────────────────────────────────────────────────────────────── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const BLUE  = "#1E3A8A"
+const NAVY  = "#0F172A"
+const ORANGE = "#F97316"
+
 type Mode = "login" | "register"
 
 interface Fields {
@@ -21,7 +26,6 @@ interface Fields {
   confirmPassword: string
   rememberMe:      boolean
 }
-
 interface FieldErrors {
   fullName?:        string
   orgName?:         string
@@ -30,7 +34,10 @@ interface FieldErrors {
   confirmPassword?: string
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const INITIAL: Fields = {
+  fullName: "", orgName: "", email: "",
+  password: "", confirmPassword: "", rememberMe: false,
+}
 
 const toRole = (raw: string): RolePlateforme => {
   const map: Record<string, RolePlateforme> = {
@@ -44,131 +51,114 @@ const toRole = (raw: string): RolePlateforme => {
   return map[raw] ?? "UTILISATEUR_STANDARD"
 }
 
-const INITIAL: Fields = {
-  fullName: "", orgName: "", email: "",
-  password: "", confirmPassword: "", rememberMe: false,
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Left panel — construction SVG illustration
-───────────────────────────────────────────────────────────────────────────── */
-function CityIllustration() {
+/* ─── Blueprint SVG illustration ───────────────────────────────────────────── */
+function BlueprintIllustration() {
   return (
-    <svg
-      viewBox="0 0 800 320"
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-full opacity-20"
-      aria-hidden="true"
-    >
-      {/* Buildings */}
-      <rect x="30"  y="160" width="60" height="160" rx="4" fill="white"/>
-      <rect x="45"  y="140" width="30" height="20"  rx="2" fill="white"/>
-      <rect x="50"  y="180" width="8"  height="10"  fill="#635BFF" opacity=".6"/>
-      <rect x="65"  y="180" width="8"  height="10"  fill="#635BFF" opacity=".6"/>
-      <rect x="50"  y="200" width="8"  height="10"  fill="#635BFF" opacity=".4"/>
-      <rect x="65"  y="200" width="8"  height="10"  fill="#635BFF" opacity=".4"/>
+    <svg viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" aria-hidden>
+      {/* Grid */}
+      {Array.from({ length: 11 }, (_, i) => (
+        <line key={`v${i}`} x1={i * 52} y1="0" x2={i * 52} y2="420"
+          stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      ))}
+      {Array.from({ length: 9 }, (_, i) => (
+        <line key={`h${i}`} x1="0" y1={i * 52} x2="520" y2={i * 52}
+          stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      ))}
 
-      <rect x="110" y="110" width="80" height="210" rx="4" fill="white"/>
-      <rect x="130" y="130" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
-      <rect x="150" y="130" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
-      <rect x="130" y="155" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
-      <rect x="150" y="155" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
-      <rect x="130" y="180" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
-      <rect x="150" y="180" width="12" height="14"  fill="#8b5cf6" opacity=".5"/>
+      {/* Building A — main tower */}
+      <rect x="60" y="120" width="120" height="280" rx="3" fill="none"
+        stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+      <rect x="60" y="120" width="120" height="30" rx="3" fill="rgba(249,115,22,0.15)"
+        stroke={ORANGE} strokeWidth="1.5" />
+      {/* Windows grid */}
+      {[0,1,2,3,4].map(row => [0,1,2].map(col => (
+        <rect key={`wa${row}${col}`}
+          x={75 + col * 36} y={168 + row * 42} width="22" height="28" rx="2"
+          fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+      )))}
+      {/* Door */}
+      <rect x="105" y="352" width="30" height="48" rx="2"
+        fill="rgba(249,115,22,0.2)" stroke={ORANGE} strokeWidth="1.5" />
 
-      <rect x="210" y="180" width="50" height="140" rx="4" fill="white"/>
-      <rect x="275" y="90"  width="90" height="230" rx="4" fill="white" opacity=".9"/>
-      <rect x="290" y="110" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="315" y="110" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="290" y="140" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="315" y="140" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="290" y="170" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="315" y="170" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="290" y="200" width="14" height="16"  fill="#635BFF" opacity=".5"/>
-      <rect x="315" y="200" width="14" height="16"  fill="#635BFF" opacity=".5"/>
+      {/* Building B — mid-rise */}
+      <rect x="220" y="180" width="90" height="220" rx="3" fill="none"
+        stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+      {[0,1,2,3].map(row => [0,1].map(col => (
+        <rect key={`wb${row}${col}`}
+          x={232 + col * 40} y={200 + row * 44} width="24" height="30" rx="2"
+          fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+      )))}
+      <rect x="247" y="352" width="26" height="48" rx="2"
+        fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
 
-      <rect x="390" y="140" width="70" height="180" rx="4" fill="white" opacity=".85"/>
-      <rect x="480" y="200" width="55" height="120" rx="4" fill="white"/>
+      {/* Building C — short */}
+      <rect x="350" y="260" width="70" height="140" rx="3" fill="none"
+        stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
+      {[0,1].map(row => [0,1].map(col => (
+        <rect key={`wc${row}${col}`}
+          x={360 + col * 32} y={278 + row * 44} width="18" height="24" rx="2"
+          fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+      )))}
 
-      {/* Crane 1 */}
-      <line x1="560" y1="60"  x2="560" y2="260" stroke="white" strokeWidth="4"/>
-      <line x1="520" y1="60"  x2="660" y2="60"  stroke="white" strokeWidth="4"/>
-      <line x1="520" y1="60"  x2="540" y2="100" stroke="white" strokeWidth="2.5"/>
-      <line x1="660" y1="60"  x2="640" y2="100" stroke="white" strokeWidth="2.5"/>
-      <line x1="620" y1="60"  x2="620" y2="120" stroke="white" strokeWidth="2"/>
+      {/* Crane */}
+      <line x1="430" y1="60" x2="430" y2="260" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
+      <line x1="390" y1="60" x2="490" y2="60" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
+      <line x1="390" y1="60" x2="408" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+      <line x1="490" y1="60" x2="472" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+      {/* Hook */}
+      <line x1="470" y1="60" x2="470" y2="140" stroke={ORANGE} strokeWidth="1.5" strokeDasharray="4 3" />
+      <rect x="462" y="138" width="16" height="12" rx="2" fill="none" stroke={ORANGE} strokeWidth="1.5" />
 
-      {/* Crane 2 */}
-      <line x1="700" y1="100" x2="700" y2="260" stroke="white" strokeWidth="3.5"/>
-      <line x1="670" y1="100" x2="780" y2="100" stroke="white" strokeWidth="3.5"/>
-      <line x1="670" y1="100" x2="685" y2="130" stroke="white" strokeWidth="2"/>
-      <line x1="760" y1="100" x2="745" y2="130" stroke="white" strokeWidth="2"/>
-      <line x1="745" y1="100" x2="745" y2="150" stroke="white" strokeWidth="2"/>
+      {/* Ground */}
+      <line x1="0" y1="400" x2="520" y2="400" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
 
-      {/* Ground line */}
-      <line x1="0" y1="310" x2="800" y2="310" stroke="white" strokeWidth="2" opacity=".3"/>
+      {/* Dimension lines */}
+      <line x1="60" y1="415" x2="180" y2="415" stroke={ORANGE} strokeWidth="1" markerEnd="url(#arr)" />
+      <text x="110" y="412" fill={ORANGE} fontSize="9" textAnchor="middle" fontFamily="monospace">12.0 m</text>
 
-      {/* Dots grid */}
-      {[0,1,2,3,4,5,6].map(col =>
-        [0,1,2,3].map(row => (
-          <circle
-            key={`${col}-${row}`}
-            cx={580 + col * 28}
-            cy={20  + row * 28}
-            r="2"
-            fill="white"
-            opacity=".25"
-          />
-        ))
-      )}
+      {/* Measurement box */}
+      <rect x="340" y="60" width="80" height="52" rx="4"
+        fill="rgba(30,58,138,0.4)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+      <text x="380" y="78" fill="rgba(255,255,255,0.9)" fontSize="8" textAnchor="middle" fontFamily="monospace">PROJET R+8</text>
+      <text x="380" y="91" fill={ORANGE} fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ENGIPILOT</text>
+      <text x="380" y="104" fill="rgba(255,255,255,0.5)" fontSize="7" textAnchor="middle" fontFamily="monospace">v2.4 — 2025</text>
+
+      {/* Cross markers */}
+      {[[50,110],[210,170],[340,250]].map(([cx,cy], i) => (
+        <g key={i}>
+          <line x1={cx-6} y1={cy} x2={cx+6} y2={cy} stroke={ORANGE} strokeWidth="1" opacity=".6" />
+          <line x1={cx} y1={cy-6} x2={cx} y2={cy+6} stroke={ORANGE} strokeWidth="1" opacity=".6" />
+          <circle cx={cx} cy={cy} r="2" fill={ORANGE} opacity=".6" />
+        </g>
+      ))}
     </svg>
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Feature card
-───────────────────────────────────────────────────────────────────────────── */
-function FeatureCard({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: React.ElementType
-  title: string
-  desc: string
-}) {
+/* ─── Feature pill ─────────────────────────────────────────────────────────── */
+function Feature({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <div className="flex items-start gap-4 group">
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0
-                   bg-white/10 backdrop-blur-sm border border-white/20
-                   group-hover:bg-white/20 transition-all duration-300"
-      >
-        <Icon className="w-5 h-5 text-white" />
+    <div className="flex items-center gap-2.5">
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)" }}>
+        <Icon className="w-4 h-4" style={{ color: ORANGE }} />
       </div>
-      <div>
-        <p className="text-white font-semibold text-sm leading-tight">{title}</p>
-        <p className="text-white/60 text-xs mt-1 leading-relaxed">{desc}</p>
-      </div>
+      <span className="text-white/70 text-sm">{text}</span>
     </div>
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Field error
-───────────────────────────────────────────────────────────────────────────── */
+/* ─── Form helpers ─────────────────────────────────────────────────────────── */
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null
   return (
     <p role="alert" className="flex items-center gap-1 text-xs text-red-500 mt-1.5">
-      <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden />
+      <AlertCircle className="w-3 h-3 flex-shrink-0" />
       {msg}
     </p>
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Password strength
-───────────────────────────────────────────────────────────────────────────── */
 function PasswordStrength({ value }: { value: string }) {
   if (!value) return null
   const score =
@@ -177,73 +167,35 @@ function PasswordStrength({ value }: { value: string }) {
     (/[A-Z]/.test(value) ? 1 : 0) +
     (/[0-9]/.test(value) ? 1 : 0) +
     (/[^A-Za-z0-9]/.test(value) ? 1 : 0)
-
   const levels = [
-    { label: "Très faible", color: "bg-red-500",    w: "w-1/5" },
-    { label: "Faible",      color: "bg-orange-500", w: "w-2/5" },
-    { label: "Moyen",       color: "bg-yellow-500", w: "w-3/5" },
-    { label: "Fort",        color: "bg-blue-500",   w: "w-4/5" },
-    { label: "Très fort",   color: "bg-green-500",  w: "w-full" },
+    { label: "Très faible", color: "#ef4444", w: "20%" },
+    { label: "Faible",      color: "#f97316", w: "40%" },
+    { label: "Moyen",       color: "#eab308", w: "60%" },
+    { label: "Fort",        color: "#3b82f6", w: "80%" },
+    { label: "Très fort",   color: "#22c55e", w: "100%" },
   ]
-  const level = levels[Math.min(score - 1, 4)] ?? levels[0]
-
+  const lvl = levels[Math.min(score - 1, 4)] ?? levels[0]
   return (
-    <div className="mt-2" aria-live="polite">
-      <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${level.color} ${level.w}`} />
+    <div className="mt-2">
+      <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500"
+          style={{ width: lvl.w, background: lvl.color }} />
       </div>
-      <p className="text-xs text-gray-400 mt-1">
-        Force : <span className="font-medium text-gray-600">{level.label}</span>
-      </p>
+      <p className="text-xs text-slate-400 mt-1">Force : <span className="font-medium text-slate-600">{lvl.label}</span></p>
     </div>
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Input wrapper
-───────────────────────────────────────────────────────────────────────────── */
-function InputField({
-  id, label, required = true, error, touched, valid, children,
-}: {
-  id: string
-  label: string
-  required?: boolean
-  error?: string
-  touched?: boolean
-  valid?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label}
-        {required && <span className="text-red-500 ml-0.5" aria-hidden>*</span>}
-      </label>
-      <div className="relative">
-        {children}
-        {touched && valid && (
-          <CheckCircle2
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none"
-            aria-hidden
-          />
-        )}
-      </div>
-      {touched && <FieldError msg={error} />}
-    </div>
-  )
-}
+const inputBase =
+  "w-full border rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white outline-none " +
+  "placeholder:text-slate-400 transition-all duration-150 text-slate-800"
+const inputCls = (err: boolean) =>
+  inputBase +
+  (err
+    ? " border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+    : " border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100")
 
-const inputCls = (hasError: boolean) =>
-  `w-full border rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white outline-none
-   placeholder:text-gray-400 transition-all duration-150
-   focus:ring-2 focus:ring-offset-0
-   ${hasError
-     ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-     : "border-gray-200 focus:border-[#1e512d] focus:ring-[#1e512d]/10"}`
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Main page
-───────────────────────────────────────────────────────────────────────────── */
+/* ─── Page ─────────────────────────────────────────────────────────────────── */
 export default function LoginPage() {
   const router  = useRouter()
   const setUser = useStore(s => s.setUser)
@@ -257,12 +209,52 @@ export default function LoginPage() {
   const [apiErr, setApiErr]     = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
 
-  /* forgot-password state */
   const [forgotMode,    setForgotMode]    = useState(false)
   const [forgotEmail,   setForgotEmail]   = useState("")
   const [forgotLoading, setForgotLoading] = useState(false)
   const [forgotSent,    setForgotSent]    = useState(false)
   const [forgotErr,     setForgotErr]     = useState("")
+
+  const set = (k: keyof Fields, v: string | boolean) =>
+    setFields(f => ({ ...f, [k]: v }))
+
+  const touch = (k: keyof Fields) =>
+    setTouched(p => ({ ...p, [k]: true }))
+
+  const switchMode = (m: Mode) => {
+    setMode(m); setFields(INITIAL); setTouched({})
+    setErrors({}); setApiErr(null)
+    setShowPass(false); setShowConf(false)
+  }
+
+  const validate = (f: Fields, m: Mode): FieldErrors => {
+    const e: FieldErrors = {}
+    if (m === "register") {
+      if (!f.fullName.trim())              e.fullName = "Le nom complet est requis"
+      else if (f.fullName.trim().length < 2) e.fullName = "Minimum 2 caractères"
+      if (!f.orgName.trim())               e.orgName = "Le nom de la société est requis"
+      else if (f.orgName.trim().length < 2) e.orgName = "Minimum 2 caractères"
+    }
+    if (!f.email.trim())         e.email = "L'adresse email est requise"
+    else if (!EMAIL_RE.test(f.email)) e.email = "Format d'email invalide"
+    if (!f.password)             e.password = "Le mot de passe est requis"
+    else if (f.password.length < 8) e.password = "Minimum 8 caractères"
+    if (m === "register") {
+      if (!f.confirmPassword)          e.confirmPassword = "La confirmation est requise"
+      else if (f.confirmPassword !== f.password) e.confirmPassword = "Les mots de passe ne correspondent pas"
+    }
+    return e
+  }
+
+  const handleBlur = (k: keyof Fields) => {
+    touch(k); setErrors(validate(fields, mode))
+  }
+
+  const handleChange = (k: keyof Fields, v: string | boolean) => {
+    const next = { ...fields, [k]: v }
+    setFields(next)
+    if (touched[k]) setErrors(validate(next, mode))
+  }
 
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -282,119 +274,40 @@ export default function LoginPage() {
     }
   }
 
-  /* helpers */
-  const set = (k: keyof Fields, v: string | boolean) =>
-    setFields(f => ({ ...f, [k]: v }))
-
-  const touch = (k: keyof Fields) =>
-    setTouched(p => ({ ...p, [k]: true }))
-
-  const switchMode = (m: Mode) => {
-    setMode(m); setFields(INITIAL); setTouched({})
-    setErrors({}); setApiErr(null)
-    setShowPass(false); setShowConf(false)
-  }
-
-  /* validation */
-  const validate = (f: Fields, m: Mode): FieldErrors => {
-    const e: FieldErrors = {}
-    if (m === "register") {
-      if (!f.fullName.trim())
-        e.fullName = "Le nom complet est requis"
-      else if (f.fullName.trim().length < 2)
-        e.fullName = "Minimum 2 caractères"
-
-      if (!f.orgName.trim())
-        e.orgName = "Le nom de la société est requis"
-      else if (f.orgName.trim().length < 2)
-        e.orgName = "Minimum 2 caractères"
-    }
-    if (!f.email.trim())
-      e.email = "L'adresse email est requise"
-    else if (!EMAIL_RE.test(f.email))
-      e.email = "Format d'email invalide"
-
-    if (!f.password)
-      e.password = "Le mot de passe est requis"
-    else if (f.password.length < 8)
-      e.password = "Minimum 8 caractères"
-
-    if (m === "register") {
-      if (!f.confirmPassword)
-        e.confirmPassword = "La confirmation est requise"
-      else if (f.confirmPassword !== f.password)
-        e.confirmPassword = "Les mots de passe ne correspondent pas"
-    }
-    return e
-  }
-
-  const handleBlur = (k: keyof Fields) => {
-    touch(k)
-    setErrors(validate(fields, mode))
-  }
-
-  const handleChange = (k: keyof Fields, v: string | boolean) => {
-    const next = { ...fields, [k]: v }
-    setFields(next)
-    if (touched[k]) setErrors(validate(next, mode))
-  }
-
-  /* submit */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const allTouched: Partial<Record<keyof Fields, boolean>> = {
-      email: true, password: true,
-    }
+    const allTouched: Partial<Record<keyof Fields, boolean>> = { email: true, password: true }
     if (mode === "register") {
-      allTouched.fullName        = true
-      allTouched.orgName         = true
-      allTouched.confirmPassword = true
+      allTouched.fullName = true; allTouched.orgName = true; allTouched.confirmPassword = true
     }
     setTouched(allTouched)
-
     const errs = validate(fields, mode)
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
 
-    setLoading(true)
-    setApiErr(null)
+    setLoading(true); setApiErr(null)
     try {
       const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register"
       const body = mode === "login"
         ? { email: fields.email.trim(), password: fields.password }
-        : {
-            email:            fields.email.trim(),
-            password:         fields.password,
-            fullName:         fields.fullName.trim(),
-            organisationName: fields.orgName.trim(),
-          }
+        : { email: fields.email.trim(), password: fields.password,
+            fullName: fields.fullName.trim(), organisationName: fields.orgName.trim() }
 
       const res  = await fetch(endpoint, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(body),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       })
       const data = await res.json()
-
-      if (!res.ok) {
-        setApiErr(data.error ?? "Une erreur est survenue. Veuillez réessayer.")
-        return
-      }
+      if (!res.ok) { setApiErr(data.error ?? "Une erreur est survenue."); return }
 
       const apiUser  = data.user
-      const roleName = typeof apiUser.role === "string"
-        ? apiUser.role
-        : (apiUser.role?.name ?? "")
-      const parts  = (apiUser.fullName ?? "").trim().split(" ")
-      const prenom = parts[0] ?? ""
-      const nom    = parts.slice(1).join(" ") || ""
-
+      const roleName = typeof apiUser.role === "string" ? apiUser.role : (apiUser.role?.name ?? "")
+      const parts    = (apiUser.fullName ?? "").trim().split(" ")
       const u: Utilisateur = {
         id:              apiUser.id,
         email:           apiUser.email,
-        prenom,
-        nom,
+        prenom:          parts[0] ?? "",
+        nom:             parts.slice(1).join(" ") || "",
         role:            toRole(roleName),
         organisation_id: apiUser.organisationId ?? "",
         actif:           true,
@@ -412,496 +325,339 @@ export default function LoginPage() {
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans">
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          LEFT — Marketing panel
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ LEFT PANEL ══════════════════════════════════════════════════════════ */}
       <div
-        className="relative lg:w-1/2 flex flex-col justify-between overflow-hidden
-                   px-8 py-10 lg:px-14 lg:py-14
-                   min-h-[280px] lg:min-h-screen"
-        style={{
-          background: "linear-gradient(135deg, #1e512d 0%, #1a6635 40%, #cc5500 80%, #ff751f 100%)",
-        }}
+        className="relative lg:w-[55%] flex flex-col justify-between overflow-hidden
+                   px-8 py-10 lg:px-14 lg:py-12 min-h-[320px] lg:min-h-screen"
+        style={{ background: `linear-gradient(160deg, ${NAVY} 0%, #0d2260 60%, #1a1040 100%)` }}
       >
-        {/* Dot grid pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none"
+        {/* subtle grid overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-40"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-          aria-hidden
-        />
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            backgroundSize: "52px 52px",
+          }} />
 
-        {/* Glow blobs */}
-        <div
-          className="absolute top-[-80px] right-[-60px] w-72 h-72 rounded-full pointer-events-none"
-          style={{
-            background: "radial-gradient(circle, rgba(139,92,246,0.45) 0%, transparent 70%)",
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute bottom-[-60px] left-[-40px] w-60 h-60 rounded-full pointer-events-none"
-          style={{
-            background: "radial-gradient(circle, rgba(99,91,255,0.35) 0%, transparent 70%)",
-          }}
-          aria-hidden
-        />
+        {/* orange glow */}
+        <div className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at bottom left, rgba(249,115,22,0.12) 0%, transparent 65%)" }} />
+        <div className="absolute top-0 right-0 w-72 h-72 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at top right, rgba(30,58,138,0.5) 0%, transparent 65%)" }} />
 
-        {/* City SVG — bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none" aria-hidden>
-          <CityIllustration />
-        </div>
-
-        {/* Content */}
+        {/* top: logo */}
         <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-10 lg:mb-16">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center
-                         bg-white/15 backdrop-blur-sm border border-white/25"
-            >
-              <Building2 className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden />
+          <div className="flex items-center gap-3 mb-12 lg:mb-16">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: ORANGE, boxShadow: "0 4px 14px rgba(249,115,22,0.4)" }}>
+              <HardHat className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-white font-black text-xl tracking-tight">ENGIPILOT</span>
+            <div>
+              <span className="text-white font-black text-xl tracking-widest">ENGIPILOT</span>
+              <div className="text-white/40 text-[10px] tracking-[0.2em] uppercase -mt-0.5">
+                BTP · Ingénierie · Chantiers
+              </div>
+            </div>
           </div>
 
           {/* Headline */}
-          <h1 className="text-3xl lg:text-[2.4rem] font-black text-white leading-[1.15] mb-5">
-            Supervision<br />Intelligente des<br />Chantiers BTP
+          <h1 className="text-3xl lg:text-4xl font-black text-white leading-[1.15] mb-4 tracking-tight">
+            La plateforme intelligente<br />
+            <span style={{ color: ORANGE }}>pour piloter vos projets</span><br />
+            de construction
           </h1>
-          <p className="text-white/65 text-base leading-relaxed max-w-md mb-10">
-            Pilotez vos projets avec l'IA, analysez vos KPIs en temps réel
-            et anticipez les risques avant qu'ils n'impactent vos délais.
+          <p className="text-white/55 text-sm lg:text-base leading-relaxed max-w-md mb-10">
+            Supervision en temps réel, IA prédictive et gestion HSE —
+            conçu pour les ingénieurs et chefs de chantier exigeants.
           </p>
 
-          {/* Feature cards */}
-          <div className="space-y-5 mb-10 lg:mb-0">
-            <FeatureCard
-              icon={BarChart3}
-              title="KPIs EVM en temps réel"
-              desc="SPI, CPI, EAC calculés et actualisés automatiquement"
-            />
-            <FeatureCard
-              icon={Brain}
-              title="IA Prédictive"
-              desc="Détection proactive de retards et anomalies budgétaires"
-            />
-            <FeatureCard
-              icon={ShieldCheck}
-              title="HSE & Qualité NC"
-              desc="Gestion des non-conformités et conformité automatisée"
-            />
+          {/* Features */}
+          <div className="space-y-4 mb-10 lg:mb-0">
+            <Feature icon={BarChart3} text="KPIs EVM · SPI · CPI calculés en temps réel" />
+            <Feature icon={Brain}     text="IA prédictive — alertes retard & dépassement" />
+            <Feature icon={ShieldCheck} text="HSE & Non-conformités automatisées" />
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="relative z-10 text-white/30 text-xs mt-auto hidden lg:block">
-          © {new Date().getFullYear()} ENGIPILOT — SaaS BTP Maroc
-        </p>
+        {/* bottom: illustration */}
+        <div className="relative z-10 hidden lg:block">
+          <div className="h-52 opacity-70">
+            <BlueprintIllustration />
+          </div>
+          <p className="text-white/25 text-xs mt-4">
+            © {new Date().getFullYear()} ENGIPILOT — SaaS BTP Maroc · Tous droits réservés
+          </p>
+        </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          RIGHT — Auth form
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className="lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-[420px]">
+      {/* ══ RIGHT PANEL ═════════════════════════════════════════════════════════ */}
+      <div className="lg:w-[45%] flex items-center justify-center px-6 py-14 bg-slate-50">
+        <div className="w-full max-w-[400px]">
 
-          {/* Heading */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-              Bienvenue sur ENGIPILOT
-            </h2>
-            <p className="text-gray-500 text-sm mt-2">
-              {mode === "login"
-                ? "Connectez-vous à votre compte pour continuer"
-                : "Créez votre compte et commencez gratuitement"}
-            </p>
-          </div>
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/80 border border-slate-100 p-8">
 
-          {/* Tab switcher */}
-          <div
-            className="flex border-b border-gray-200 mb-8"
-            role="tablist"
-            aria-label="Mode d'authentification"
-          >
-            {(["login", "register"] as Mode[]).map(m => (
-              <button
-                key={m}
-                role="tab"
-                aria-selected={mode === m}
-                type="button"
-                onClick={() => switchMode(m)}
-                className={`flex-1 pb-3 text-sm font-semibold transition-all duration-150
-                            border-b-2 -mb-px
-                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] focus-visible:ring-offset-2 rounded-t
-                            ${mode === m
-                              ? "border-[#1e512d] text-[#1e512d]"
-                              : "border-transparent text-gray-500 hover:text-gray-800"}`}
-              >
-                {m === "login" ? "Connexion" : "Créer un compte"}
-              </button>
-            ))}
-          </div>
+            {/* Header */}
+            <div className="mb-7">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                {forgotMode ? "Réinitialiser le mot de passe" : mode === "login" ? "Connexion" : "Créer un compte"}
+              </h2>
+              <p className="text-slate-500 text-sm mt-1">
+                {forgotMode
+                  ? "Entrez votre email pour recevoir un lien"
+                  : mode === "login"
+                  ? "Accédez à votre espace de pilotage"
+                  : "Commencez à piloter vos chantiers"}
+              </p>
+            </div>
 
-          {/* ── Forgot password panel ── */}
-          {forgotMode && (
-            <div className="mb-6">
-              {forgotSent ? (
-                <div className="flex flex-col items-center gap-3 py-6 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-[#1e512d]" />
-                  <p className="text-gray-800 font-semibold">Email envoyé !</p>
-                  <p className="text-sm text-gray-500">
+            {/* Tab switcher (not shown in forgotMode) */}
+            {!forgotMode && (
+              <div className="flex rounded-xl p-1 mb-7"
+                style={{ background: "#f1f5f9" }}>
+                {(["login", "register"] as Mode[]).map(m => (
+                  <button key={m} type="button" onClick={() => switchMode(m)}
+                    className="flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
+                    style={mode === m
+                      ? { background: "white", color: BLUE, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                      : { color: "#64748b" }}>
+                    {m === "login" ? "Connexion" : "Inscription"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── Forgot password ── */}
+            {forgotMode && (
+              forgotSent ? (
+                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "#f0fdf4" }}>
+                    <CheckCircle2 className="w-7 h-7 text-green-500" />
+                  </div>
+                  <p className="text-slate-800 font-semibold">Email envoyé !</p>
+                  <p className="text-sm text-slate-500">
                     Si cet email est enregistré, vous recevrez un lien de réinitialisation dans quelques minutes.
                   </p>
-                  <button
-                    type="button"
+                  <button type="button"
                     onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail("") }}
-                    className="text-sm text-[#1e512d] hover:underline mt-2"
-                  >
-                    Retour à la connexion
+                    className="text-sm font-semibold mt-2 hover:underline"
+                    style={{ color: BLUE }}>
+                    ← Retour à la connexion
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleForgotSubmit} className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Entrez votre adresse email pour recevoir un lien de réinitialisation.
-                    </p>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden />
-                      <input
-                        type="email"
-                        value={forgotEmail}
-                        onChange={e => { setForgotEmail(e.target.value); setForgotErr("") }}
-                        placeholder="votre@email.com"
-                        className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e512d]/30 focus:border-[#1e512d]"
-                        required
-                      />
-                    </div>
-                    {forgotErr && (
-                      <p className="flex items-center gap-1 text-xs text-red-500 mt-1.5">
-                        <AlertCircle className="w-3 h-3" />{forgotErr}
-                      </p>
-                    )}
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="email" value={forgotEmail} placeholder="votre@email.com"
+                      onChange={e => { setForgotEmail(e.target.value); setForgotErr("") }}
+                      className={inputCls(!!forgotErr)} required />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="w-full py-2.5 rounded-xl bg-[#1e512d] text-white font-semibold text-sm
-                               hover:bg-[#1e512d]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
+                  {forgotErr && (
+                    <p className="flex items-center gap-1 text-xs text-red-500">
+                      <AlertCircle className="w-3 h-3" />{forgotErr}
+                    </p>
+                  )}
+                  <button type="submit" disabled={forgotLoading}
+                    className="w-full py-2.5 rounded-xl text-white font-semibold text-sm
+                               flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                    style={{ background: `linear-gradient(135deg, ${BLUE}, ${ORANGE})` }}>
                     {forgotLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                     Envoyer le lien
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => { setForgotMode(false); setForgotErr("") }}
-                    className="w-full text-sm text-gray-500 hover:text-[#1e512d] transition-colors"
-                  >
+                  <button type="button" onClick={() => { setForgotMode(false); setForgotErr("") }}
+                    className="w-full text-sm text-slate-500 hover:text-slate-700">
                     Annuler
                   </button>
                 </form>
-              )}
-            </div>
-          )}
-
-          {/* Form */}
-          {!forgotMode && (
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="space-y-4"
-            aria-label={mode === "login" ? "Formulaire de connexion" : "Formulaire d'inscription"}
-          >
-
-            {/* ── Register fields ── */}
-            {mode === "register" && (
-              <>
-                <InputField
-                  id="fullName"
-                  label="Nom complet"
-                  error={errors.fullName}
-                  touched={touched.fullName}
-                  valid={!errors.fullName && !!fields.fullName}
-                >
-                  <User
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                    aria-hidden
-                  />
-                  <input
-                    id="fullName"
-                    type="text"
-                    autoComplete="name"
-                    value={fields.fullName}
-                    onChange={e => handleChange("fullName", e.target.value)}
-                    onBlur={() => handleBlur("fullName")}
-                    placeholder="Entrez votre nom complet"
-                    className={inputCls(!!(touched.fullName && errors.fullName))}
-                    aria-required="true"
-                    aria-invalid={!!(touched.fullName && errors.fullName)}
-                    aria-describedby={errors.fullName ? "fullName-err" : undefined}
-                  />
-                </InputField>
-
-                <InputField
-                  id="orgName"
-                  label="Société"
-                  error={errors.orgName}
-                  touched={touched.orgName}
-                  valid={!errors.orgName && !!fields.orgName}
-                >
-                  <Building2
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                    aria-hidden
-                  />
-                  <input
-                    id="orgName"
-                    type="text"
-                    autoComplete="organization"
-                    value={fields.orgName}
-                    onChange={e => handleChange("orgName", e.target.value)}
-                    onBlur={() => handleBlur("orgName")}
-                    placeholder="Entrez le nom de votre entreprise"
-                    className={inputCls(!!(touched.orgName && errors.orgName))}
-                    aria-required="true"
-                    aria-invalid={!!(touched.orgName && errors.orgName)}
-                  />
-                </InputField>
-              </>
+              )
             )}
 
-            {/* ── Email ── */}
-            <InputField
-              id="email"
-              label="Adresse email"
-              error={errors.email}
-              touched={touched.email}
-              valid={!errors.email && !!fields.email}
-            >
-              <Mail
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                aria-hidden
-              />
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={fields.email}
-                onChange={e => handleChange("email", e.target.value)}
-                onBlur={() => handleBlur("email")}
-                placeholder="Entrez votre adresse email"
-                className={inputCls(!!(touched.email && errors.email))}
-                aria-required="true"
-                aria-invalid={!!(touched.email && errors.email)}
-              />
-            </InputField>
+            {/* ── Main form ── */}
+            {!forgotMode && (
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
-            {/* ── Password ── */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Mot de passe<span className="text-red-500 ml-0.5" aria-hidden>*</span>
-                </label>
-                {mode === "login" && (
-                  <button
-                    type="button"
-                    onClick={() => { setForgotMode(true); setForgotEmail(fields.email); setForgotErr(""); setForgotSent(false) }}
-                    className="text-xs text-[#1e512d] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] rounded"
-                  >
-                    Mot de passe oublié ?
-                  </button>
+                {/* Register-only fields */}
+                {mode === "register" && (
+                  <>
+                    <div>
+                      <label htmlFor="fullName" className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                        Nom complet <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input id="fullName" type="text" autoComplete="name"
+                          value={fields.fullName} placeholder="Votre nom complet"
+                          onChange={e => handleChange("fullName", e.target.value)}
+                          onBlur={() => handleBlur("fullName")}
+                          className={inputCls(!!(touched.fullName && errors.fullName))} />
+                      </div>
+                      {touched.fullName && <FieldError msg={errors.fullName} />}
+                    </div>
+
+                    <div>
+                      <label htmlFor="orgName" className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                        Société <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input id="orgName" type="text" autoComplete="organization"
+                          value={fields.orgName} placeholder="Nom de votre entreprise"
+                          onChange={e => handleChange("orgName", e.target.value)}
+                          onBlur={() => handleBlur("orgName")}
+                          className={inputCls(!!(touched.orgName && errors.orgName))} />
+                      </div>
+                      {touched.orgName && <FieldError msg={errors.orgName} />}
+                    </div>
+                  </>
                 )}
-              </div>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                  aria-hidden
-                />
-                <input
-                  id="password"
-                  type={showPass ? "text" : "password"}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  value={fields.password}
-                  onChange={e => handleChange("password", e.target.value)}
-                  onBlur={() => handleBlur("password")}
-                  placeholder="Entrez votre mot de passe"
-                  className={inputCls(!!(touched.password && errors.password))}
-                  aria-required="true"
-                  aria-invalid={!!(touched.password && errors.password)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(p => !p)}
-                  aria-label={showPass ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
-                             transition-colors focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[#1e512d] rounded"
-                >
-                  {showPass
-                    ? <EyeOff className="w-4 h-4" aria-hidden />
-                    : <Eye    className="w-4 h-4" aria-hidden />}
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Adresse email <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input id="email" type="email" autoComplete="email"
+                      value={fields.email} placeholder="vous@entreprise.com"
+                      onChange={e => handleChange("email", e.target.value)}
+                      onBlur={() => handleBlur("email")}
+                      className={inputCls(!!(touched.email && errors.email))} />
+                  </div>
+                  {touched.email && <FieldError msg={errors.email} />}
+                </div>
+
+                {/* Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="password" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      Mot de passe <span className="text-red-500">*</span>
+                    </label>
+                    {mode === "login" && (
+                      <button type="button"
+                        onClick={() => { setForgotMode(true); setForgotEmail(fields.email); setForgotErr(""); setForgotSent(false) }}
+                        className="text-xs font-medium hover:underline"
+                        style={{ color: BLUE }}>
+                        Mot de passe oublié ?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input id="password" type={showPass ? "text" : "password"}
+                      autoComplete={mode === "login" ? "current-password" : "new-password"}
+                      value={fields.password} placeholder="••••••••"
+                      onChange={e => handleChange("password", e.target.value)}
+                      onBlur={() => handleBlur("password")}
+                      className={inputCls(!!(touched.password && errors.password))} />
+                    <button type="button" onClick={() => setShowPass(p => !p)}
+                      aria-label={showPass ? "Masquer" : "Afficher"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {touched.password && <FieldError msg={errors.password} />}
+                  {mode === "register" && <PasswordStrength value={fields.password} />}
+                </div>
+
+                {/* Confirm password */}
+                {mode === "register" && (
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                      Confirmer le mot de passe <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input id="confirmPassword" type={showConf ? "text" : "password"}
+                        autoComplete="new-password"
+                        value={fields.confirmPassword} placeholder="••••••••"
+                        onChange={e => handleChange("confirmPassword", e.target.value)}
+                        onBlur={() => handleBlur("confirmPassword")}
+                        className={`${inputCls(!!(touched.confirmPassword && errors.confirmPassword))} pr-16`} />
+                      <button type="button" onClick={() => setShowConf(p => !p)}
+                        aria-label={showConf ? "Masquer" : "Afficher"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showConf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {touched.confirmPassword && <FieldError msg={errors.confirmPassword} />}
+                  </div>
+                )}
+
+                {/* Remember me */}
+                {mode === "login" && (
+                  <div className="flex items-center gap-2.5">
+                    <input id="rememberMe" type="checkbox" checked={fields.rememberMe}
+                      onChange={e => set("rememberMe", e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 cursor-pointer"
+                      style={{ accentColor: BLUE }} />
+                    <label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer select-none">
+                      Se souvenir de moi
+                    </label>
+                  </div>
+                )}
+
+                {/* API error */}
+                {apiErr && (
+                  <div role="alert"
+                    className="flex items-start gap-2.5 text-sm text-red-700
+                               bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{apiErr}</span>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button type="submit" disabled={loading} aria-busy={loading}
+                  className="w-full font-bold py-3 rounded-xl text-sm text-white
+                             flex items-center justify-center gap-2 mt-1 transition-all duration-150
+                             active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    background: loading ? "#94a3b8" : `linear-gradient(135deg, ${BLUE} 0%, #2563eb 50%, ${ORANGE} 100%)`,
+                    boxShadow: loading ? "none" : "0 4px 14px rgba(37,99,235,0.35)",
+                  }}>
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />
+                      {mode === "login" ? "Connexion en cours…" : "Création du compte…"}</>
+                  ) : (
+                    <>{mode === "login" ? "Se connecter" : "Créer mon compte"}
+                      <ArrowRight className="w-4 h-4" /></>
+                  )}
                 </button>
-              </div>
-              {touched.password && <FieldError msg={errors.password} />}
-              {mode === "register" && <PasswordStrength value={fields.password} />}
-            </div>
 
-            {/* ── Confirm password (register) ── */}
-            {mode === "register" && (
-              <InputField
-                id="confirmPassword"
-                label="Confirmer le mot de passe"
-                error={errors.confirmPassword}
-                touched={touched.confirmPassword}
-                valid={!errors.confirmPassword && !!fields.confirmPassword && fields.confirmPassword === fields.password}
-              >
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                  aria-hidden
-                />
-                <input
-                  id="confirmPassword"
-                  type={showConf ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={fields.confirmPassword}
-                  onChange={e => handleChange("confirmPassword", e.target.value)}
-                  onBlur={() => handleBlur("confirmPassword")}
-                  placeholder="Confirmez votre mot de passe"
-                  className={`${inputCls(!!(touched.confirmPassword && errors.confirmPassword))} pr-16`}
-                  aria-required="true"
-                  aria-invalid={!!(touched.confirmPassword && errors.confirmPassword)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConf(p => !p)}
-                  aria-label={showConf ? "Masquer la confirmation" : "Afficher la confirmation"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
-                             transition-colors focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[#1e512d] rounded"
-                >
-                  {showConf
-                    ? <EyeOff className="w-4 h-4" aria-hidden />
-                    : <Eye    className="w-4 h-4" aria-hidden />}
-                </button>
-              </InputField>
+                {/* Security badge */}
+                <div className="flex items-center justify-center gap-1.5 pt-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-400">Connexion sécurisée · Données chiffrées TLS</span>
+                </div>
+              </form>
             )}
+          </div>
 
-            {/* ── Remember me (login) ── */}
-            {mode === "login" && (
-              <div className="flex items-center gap-2.5">
-                <input
-                  id="rememberMe"
-                  type="checkbox"
-                  checked={fields.rememberMe}
-                  onChange={e => set("rememberMe", e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-[#1e512d]
-                             accent-[#1e512d] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#1e512d]"
-                />
-                <label
-                  htmlFor="rememberMe"
-                  className="text-sm text-gray-600 cursor-pointer select-none"
-                >
-                  Se souvenir de moi
-                </label>
-              </div>
-            )}
-
-            {/* ── API error ── */}
-            {apiErr && (
-              <div
-                role="alert"
-                className="flex items-start gap-2.5 text-sm text-red-700
-                           bg-red-50 border border-red-200 rounded-xl px-4 py-3"
-              >
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden />
-                <span>{apiErr}</span>
-              </div>
-            )}
-
-            {/* ── Submit ── */}
-            <button
-              type="submit"
-              disabled={loading}
-              aria-busy={loading}
-              className="w-full font-semibold py-3 rounded-xl text-sm text-white
-                         flex items-center justify-center gap-2 mt-2 transition-all duration-150
-                         active:scale-[0.99] shadow-md
-                         disabled:opacity-60 disabled:cursor-not-allowed
-                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e512d] focus-visible:ring-offset-2"
-              style={{
-                background: "linear-gradient(135deg, #1e512d 0%, #ff751f 100%)",
-              }}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                  {mode === "login" ? "Connexion en cours…" : "Création du compte…"}
-                </>
-              ) : (
-                <>
-                  {mode === "login" ? "Se connecter" : "Créer un compte"}
-                  <ArrowRight className="w-4 h-4" aria-hidden />
-                </>
-              )}
-            </button>
-          </form>
-          )}
-
-          {/* ── Legal / switch ── */}
-          <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
-            {mode === "login" ? (
-              <>
-                En vous connectant, vous acceptez nos{" "}
-                <button type="button" className="text-[#1e512d] hover:underline">
-                  Conditions d'utilisation
-                </button>{" "}
-                et notre{" "}
-                <button type="button" className="text-[#1e512d] hover:underline">
-                  Politique de confidentialité
-                </button>
-                .<br className="hidden sm:block" />
-                <span className="mt-2 inline-block">
-                  Pas encore de compte ?{" "}
-                  <button
-                    type="button"
-                    onClick={() => switchMode("register")}
-                    className="text-[#1e512d] font-semibold hover:underline
-                               focus-visible:outline-none focus-visible:ring-2
-                               focus-visible:ring-[#1e512d] rounded"
-                  >
+          {/* Below card link */}
+          {!forgotMode && (
+            <p className="text-center text-sm text-slate-500 mt-5">
+              {mode === "login" ? (
+                <>Pas encore de compte ?{" "}
+                  <button type="button" onClick={() => switchMode("register")}
+                    className="font-semibold hover:underline" style={{ color: BLUE }}>
                     S'inscrire gratuitement
-                  </button>
-                </span>
-              </>
-            ) : (
-              <>
-                En créant un compte, vous acceptez nos{" "}
-                <button type="button" className="text-[#1e512d] hover:underline">
-                  Conditions d'utilisation
-                </button>.<br className="hidden sm:block" />
-                <span className="mt-2 inline-block">
-                  Déjà un compte ?{" "}
-                  <button
-                    type="button"
-                    onClick={() => switchMode("login")}
-                    className="text-[#1e512d] font-semibold hover:underline
-                               focus-visible:outline-none focus-visible:ring-2
-                               focus-visible:ring-[#1e512d] rounded"
-                  >
+                  </button></>
+              ) : (
+                <>Déjà un compte ?{" "}
+                  <button type="button" onClick={() => switchMode("login")}
+                    className="font-semibold hover:underline" style={{ color: BLUE }}>
                     Se connecter
-                  </button>
-                </span>
-              </>
-            )}
-          </p>
+                  </button></>
+              )}
+            </p>
+          )}
 
           {/* Mobile footer */}
-          <p className="lg:hidden text-center text-xs text-gray-300 mt-8">
+          <p className="lg:hidden text-center text-xs text-slate-400 mt-8">
             © {new Date().getFullYear()} ENGIPILOT — SaaS BTP Maroc
           </p>
         </div>
