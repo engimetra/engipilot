@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -172,9 +172,18 @@ const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
 export default function DashboardPage() {
   const router    = useRouter()
   const { user }  = useStore()
-  const now       = new Date()
-  const timeStr   = now.toLocaleTimeString("fr-MA", { hour: "2-digit", minute: "2-digit", hour12: false })
-  const dateStr   = now.toLocaleDateString("fr-MA", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+  const [timeStr, setTimeStr] = useState("")
+  const [dateStr, setDateStr] = useState("")
+  useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      setTimeStr(now.toLocaleTimeString("fr-MA", { hour: "2-digit", minute: "2-digit", hour12: false }))
+      setDateStr(now.toLocaleDateString("fr-MA", { weekday: "short", day: "numeric", month: "short", year: "numeric" }))
+    }
+    update()
+    const id = setInterval(update, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const [evmProjectId, setEvmProjectId] = useState<string | null>(null)
 
