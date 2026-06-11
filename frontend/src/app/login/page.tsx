@@ -261,7 +261,7 @@ export default function LoginPage() {
     if (!EMAIL_RE.test(forgotEmail)) { setForgotErr("Adresse email invalide"); return }
     setForgotLoading(true); setForgotErr("")
     try {
-      await fetch("/api/auth/forgot-password", {
+      await fetch("/api/v1/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -287,7 +287,7 @@ export default function LoginPage() {
 
     setLoading(true); setApiErr(null)
     try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register"
+      const endpoint = mode === "login" ? "/api/v1/auth/login" : "/api/v1/auth/register"
       const body = mode === "login"
         ? { email: fields.email.trim(), password: fields.password }
         : { email: fields.email.trim(), password: fields.password,
