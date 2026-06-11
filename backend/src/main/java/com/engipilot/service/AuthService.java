@@ -13,14 +13,17 @@ import com.engipilot.repository.UserRepository;
 import com.engipilot.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -32,6 +35,10 @@ public class AuthService {
     private final OrganisationRepository organisationRepository;
     private final PasswordEncoder        passwordEncoder;
     private final JwtUtil                jwtUtil;
+    private final RestTemplate           restTemplate;
+
+    @Value("${n8n.webhook.inscription:}")
+    private String n8nWebhookInscription;
 
     // ── LOGIN ──────────────────────────────────────────────────────────────
     @Transactional
@@ -102,6 +109,18 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user);
         log.info("Register OK — user:{} org:{}", user.getEmail(), org.getId());
+
+        // Appel webhook n8n pour email de bienvenue (non-bloquant)
+        if (n8nWebhookInscription != null && !n8nWebhookInscription.isBlank()) {
+            try {
+                restTemplate.postForEntity(n8nWebhookInscription,
+                    Map.of("email", user.getEmail(), "fullName", user.getFullName(),
+                           "organisationName", org.getNom()),
+                    Void.class);
+            } catch (Exception e) {
+                log.warn("Webhook n8n inscription échoué : {}", e.getMessage());
+            }
+        }
 
         return AuthResponse.of(token, user);
     }
