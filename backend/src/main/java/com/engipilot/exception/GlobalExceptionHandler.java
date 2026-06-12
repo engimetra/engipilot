@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(401, ex.getMessage(), LocalDateTime.now()));
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity.status(401)
+            .body(new ErrorResponse(401, ex.getMessage(), LocalDateTime.now()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(403)

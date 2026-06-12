@@ -7,6 +7,7 @@ import com.engipilot.dto.request.LoginRequest;
 import com.engipilot.dto.request.RegisterRequest;
 import com.engipilot.dto.response.AuthResponse;
 import com.engipilot.exception.ConflictException;
+import com.engipilot.exception.InvalidCredentialsException;
 import com.engipilot.exception.ResourceNotFoundException;
 import com.engipilot.repository.OrganisationRepository;
 import com.engipilot.repository.UserRepository;
@@ -14,7 +15,6 @@ import com.engipilot.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,13 +51,13 @@ public class AuthService {
                 log.warn("Tentative de login avec email inconnu : {}", request.email());
                 // BadCredentialsException et pas NotFoundException :
                 // ne pas révéler si l'email existe ou non (sécurité OWASP A07)
-                return new BadCredentialsException("Email ou mot de passe incorrect");
+                return new InvalidCredentialsException("Email ou mot de passe incorrect");
             });
 
         // 2. Vérifier BCrypt
         if (user.getPasswordHash() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             log.warn("Mot de passe incorrect pour : {}", request.email());
-            throw new BadCredentialsException("Email ou mot de passe incorrect");
+            throw new InvalidCredentialsException("Email ou mot de passe incorrect");
         }
 
         // 3. Vérifier que le compte n'est pas désactivé
