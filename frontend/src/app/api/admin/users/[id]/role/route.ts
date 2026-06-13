@@ -11,7 +11,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json()
     const res = await backendFetch(`/admin/users/${id}/role`, token, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
     const { payload, status } = await proxyResponse(res)
