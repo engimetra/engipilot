@@ -38,7 +38,7 @@ public class User implements UserDetails {
     @Builder.Default
     private Role role = Role.CHEF_PROJET;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "organisation_id", nullable = false)
     private Organisation organisation;
 

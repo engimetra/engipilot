@@ -287,7 +287,7 @@ export default function LoginPage() {
 
     setLoading(true); setApiErr(null)
     try {
-      const endpoint = mode === "login" ? "/api/v1/auth/login" : "/api/v1/auth/register"
+      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register"
       const body = mode === "login"
         ? { email: fields.email.trim(), password: fields.password }
         : { email: fields.email.trim(), password: fields.password,

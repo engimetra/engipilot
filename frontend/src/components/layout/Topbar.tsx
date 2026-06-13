@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   Bell, Search, Plus, LogOut, ChevronDown,
   AlertTriangle, CheckCircle2, Clock, Zap, X, ArrowRight, Menu,
@@ -56,17 +57,30 @@ const INIT_NOTIFS: QuickNotif[] = [
   { id:"n5", type:"BUDGET", title:"Rapport mensuel généré",   body:"Mai 2025 — Résidence Al Andalous",        time:"Il y a 3h",     read:true  },
 ]
 
+interface ApiProject { id: string; name: string; status: string }
+
 export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
-  const { user, logout } = useStore()
+  const { user, logout, projetActif, setProjetActif } = useStore()
   const role   = user?.role
   const router = useRouter()
   const pathname = usePathname()
 
-  const [notifs, setNotifs]   = useState<QuickNotif[]>(INIT_NOTIFS)
+  const [notifs, setNotifs]       = useState<QuickNotif[]>(INIT_NOTIFS)
   const [notifOpen, setNotifOpen] = useState(false)
   const [userOpen, setUserOpen]   = useState(false)
+  const [projOpen, setProjOpen]   = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const userRef  = useRef<HTMLDivElement>(null)
+  const projRef  = useRef<HTMLDivElement>(null)
+
+  const { data: projects = [] } = useQuery<ApiProject[]>({
+    queryKey: ["topbar-projects"],
+    queryFn:  () => fetch("/api/projects").then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const activeProject = projetActif ?? (projects[0] ? { id: projects[0].id, nom: projects[0].name } as never : null)
+  const activeLabel   = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? "Sélectionner projet"
 
   const unreadCount = notifs.filter(n => !n.read).length
 
@@ -78,6 +92,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
     function handler(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
       if (userRef.current  && !userRef.current.contains(e.target as Node))  setUserOpen(false)
+      if (projRef.current  && !projRef.current.contains(e.target as Node))  setProjOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -185,35 +200,38 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
       <div className="ml-auto flex items-center gap-1.5">
 
         {/* Project selector */}
-        <div
-          className="hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors hover:bg-muted cursor-pointer"
-          style={{
-            border: "1px solid var(--color-border)",
-            background: "var(--color-card)",
-          }}
-        >
-          <span
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ background: "var(--color-success)" }}
-          />
-          <span
-            style={{
-              fontSize: "12px",
-              color: "var(--color-foreground-2)",
-              fontWeight: 500,
-              maxWidth: "130px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+        <div className="relative hidden md:block" ref={projRef}>
+          <div
+            onClick={() => setProjOpen(v => !v)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors hover:bg-muted cursor-pointer"
+            style={{ border: "1px solid var(--color-border)", background: "var(--color-card)" }}
           >
-            Résidence Al Andalous
-          </span>
-          <ChevronDown style={{ width: "12px", height: "12px", color: "var(--color-muted-fg-2)", flexShrink: 0 }} />
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "var(--color-success)" }} />
+            <span style={{ fontSize: "12px", color: "var(--color-foreground-2)", fontWeight: 500, maxWidth: "130px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {activeLabel}
+            </span>
+            <ChevronDown style={{ width: "12px", height: "12px", color: "var(--color-muted-fg-2)", flexShrink: 0 }} />
+          </div>
+          {projOpen && projects.length > 0 && (
+            <div className="absolute left-0 top-full mt-1 overflow-hidden" style={{ minWidth: "200px", background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "10px", boxShadow: "var(--shadow-float)", zIndex: 50 }}>
+              {projects.map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => { setProjetActif({ id: p.id, nom: p.name } as never); setProjOpen(false) }}
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted transition-colors"
+                  style={{ fontSize: "12px", fontWeight: (projetActif as {id?: string} | null)?.id === p.id ? 700 : 500, color: "var(--color-foreground)" }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: p.status === "COMPLETED" ? "var(--color-muted-fg)" : "var(--color-success)" }} />
+                  {p.name}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* New button */}
         <button
+          onClick={() => router.push("/chantiers")}
           className="flex items-center gap-1.5 transition-all"
           style={{
             background: "var(--color-primary)",
