@@ -4,11 +4,11 @@ import createNextIntlPlugin from "next-intl/plugin"
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 const nextConfig: NextConfig = {
-  /* ── Standalone output for Docker ── */
+  /* ── Node.js packages for API routes (non-edge) ── */
   output: "standalone",
 
   /* ── Node.js packages for API routes (non-edge) ── */
-  serverExternalPackages: ["minio", "@prisma/client", "@prisma/adapter-pg", "pg"],
+  serverExternalPackages: ["minio"],
 
   /* ── Production compression ── */
   compress: true,
@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
 
   /* ── Tree-shake heavy packages ── */
   experimental: {
+    serverActions: {
+      allowedOrigins: ["engipilot.ma", "www.engipilot.ma", "209.38.231.154"],
+    },
     optimizePackageImports: [
       "lucide-react",
       "recharts",

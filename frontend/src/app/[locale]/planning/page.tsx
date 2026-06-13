@@ -61,7 +61,7 @@ export default function PlanningPage() {
   // ── Fetch projects list ───────────────────────────────────────────────────────
   const { data: projets = [] } = useQuery<ApiProject[]>({
     queryKey: ["projects"],
-    queryFn:  () => fetch("/api/projects").then(r => r.json()),
+    queryFn:  () => fetch("/api/projects").then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []),
   })
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function PlanningPage() {
   // ── Fetch Gantt data for selected project ─────────────────────────────────────
   const { data: gantt, isLoading: ganttLoading } = useQuery<GanttData>({
     queryKey: ["gantt", projetId],
-    queryFn:  () => fetch(`/api/projects/${projetId}/gantt`).then(r => r.json()),
+    queryFn:  () => fetch(`/api/projects/${projetId}/gantt`).then(r => r.ok ? r.json() : null).then(d => (d ?? null) as GanttData),
     enabled:  !!projetId,
     staleTime: 2 * 60_000,
   })

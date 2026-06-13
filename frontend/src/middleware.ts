@@ -4,11 +4,8 @@ import { routing } from "./i18n/routing"
 
 const intlMiddleware = createMiddleware(routing)
 
-// Paths outside [locale] routing — served directly, no intl rewrite
-const BYPASS_INTL = ["/login", "/register", "/api", "/_next", "/favicon.ico"]
-
-// Paths that don't require authentication
-const PUBLIC_SEGMENTS = ["login", "landing", "register", "onboarding"]
+const BYPASS_INTL = ["/login", "/register", "/reset-password", "/api", "/_next", "/favicon.ico"]
+const PUBLIC_SEGMENTS = ["login", "landing", "register", "onboarding", "reset-password"]
 
 function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname.includes(".")) return true
@@ -21,7 +18,6 @@ function isPublicPath(pathname: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Auth guard (before intl so redirect goes to /login, not /ar/login)
   if (!isPublicPath(pathname)) {
     const session    = request.cookies.get("engipilot_session")?.value
     const authHeader = request.headers.get("authorization")
@@ -30,7 +26,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Skip intl middleware for routes that live outside [locale] directory
   if (BYPASS_INTL.some(p => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next()
   }

@@ -103,10 +103,10 @@ export default function DocumentsPage() {
   // ── Fetch depuis l'API ────────────────────────────────────────────────────
   const { data: apiDocs = [], isLoading } = useQuery<ApiDoc[]>({
     queryKey: ["documents"],
-    queryFn:  () => fetch("/api/documents").then(r => r.json()),
+    queryFn:  () => fetch("/api/documents").then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []),
   })
 
-  const docs: Doc[] = apiDocs.map(apiDocToUi)
+  const docs: Doc[] = (Array.isArray(apiDocs) ? apiDocs : []).map(apiDocToUi)
 
   // ── Upload via API → MinIO + Prisma ───────────────────────────────────────
   const { mutateAsync: uploadDoc, isPending: uploading_ } = useMutation({

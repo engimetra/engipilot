@@ -97,9 +97,8 @@ function RegisterForm() {
         body:    JSON.stringify({
           email,
           password,
-          firstName: prenom,
-          lastName:  nom,
-          phone:     telephone || undefined,
+          fullName:         `${prenom} ${nom}`.trim(),
+          organisationName: entreprise || 'Non renseigné',
         }),
       })
       const data = await res.json()
@@ -112,10 +111,10 @@ function RegisterForm() {
       const u: Utilisateur = {
         id:              data.user.id,
         email:           data.user.email,
-        prenom:          data.user.firstName,
-        nom:             data.user.lastName,
+        prenom:          data.user.fullName?.split(" ")[0] ?? "",
+        nom:             data.user.fullName?.split(" ").slice(1).join(" ") ?? "",
         role:            "UTILISATEUR_STANDARD",
-        organisation_id: data.user.company.id,
+        organisation_id: data.user.organisationId,
         actif:           true,
         created_at:      new Date().toISOString(),
         updated_at:      new Date().toISOString(),

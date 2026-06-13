@@ -40,6 +40,12 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(400, "Corps de la requête illisible ou mal formé", LocalDateTime.now()));
     }
 
+    @ExceptionHandler(com.engipilot.exception.InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(com.engipilot.exception.InvalidCredentialsException ex) {
+        return ResponseEntity.status(401)
+            .body(new ErrorResponse(401, ex.getMessage(), LocalDateTime.now()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(403)
