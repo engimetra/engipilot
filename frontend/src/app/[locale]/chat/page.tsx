@@ -394,7 +394,7 @@ export default function ChatPage() {
               </button>
               <span className="text-[10px] text-muted-fg font-medium flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
-                {apiStatus === "ok" ? "GPT-4o-mini · Anti-hallucination" : "Mode hors-ligne"}
+                {apiStatus === "ok" ? "Claude · Anti-hallucination" : "Mode hors-ligne"}
               </span>
             </div>
           </div>

@@ -41,6 +41,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 export async function GET(): Promise<NextResponse> {
   return NextResponse.json({
     status: "ok", service: "ENGIPILOT Chat IA",
-    hasKey: Boolean(process.env.OPENAI_API_KEY),
+    hasKey: Boolean(process.env.ANTHROPIC_API_KEY),
   })
 }
