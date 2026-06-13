@@ -188,6 +188,11 @@ export default function DashboardPage() {
   const [evmProjectId, setEvmProjectId] = useState<string | null>(null)
   const [countdown, setCountdown] = useState(30)
 
+  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
+    queryKey: ["dashboard"],
+    queryFn:  fetchDashboard,
+  })
+
   useEffect(() => {
     setCountdown(30)
     const tick = setInterval(() => {
@@ -202,11 +207,6 @@ export default function DashboardPage() {
     return () => clearInterval(tick)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
-    queryKey: ["dashboard"],
-    queryFn:  fetchDashboard,
-  })
 
   const projects    = data?.projects ?? []
   const activeEvmId = evmProjectId ?? projects[0]?.id ?? null
