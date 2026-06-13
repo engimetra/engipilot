@@ -72,8 +72,8 @@ function ModalAddUser({ onClose, onAdd }: { onClose: () => void; onAdd: (u: ApiU
       const data = await adminFetch("/users", { method: "POST", body: JSON.stringify(form) })
       onAdd({ id: data.id, fullName: form.fullName, email: form.email, role: form.role, active: true })
     } catch (err: unknown) {
-      const msg = (err as {response?: {data?: {error?: string}}})?.response?.data?.error
-      setError(msg ?? "Erreur lors de la création")
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création"
+      setError(msg)
     } finally {
       setLoading(false)
     }
