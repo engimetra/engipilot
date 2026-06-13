@@ -119,7 +119,7 @@ function buildModules(d?: DashboardData) {
     {
       id: "strategic", label: "Strategic Control", color: "#635BFF", colorBg: "bg-primary/8",
       items: [
-        { href: "/dashboard",  icon: LayoutDashboard, name: "Global KPI Center",   desc: "Real-time performance",    badge: undefined,          danger: false },
+        { href: "/analytics",  icon: LayoutDashboard, name: "Global KPI Center",   desc: "Real-time performance",    badge: undefined,          danger: false },
         { href: "/analytics",  icon: BarChart3,        name: "Data Intelligence",   desc: "Advanced analytics & EVM", badge: undefined,          danger: false },
         { href: "/ia",         icon: Brain,            name: "AI Risk Monitor",     desc: "Predictive alerts",        badge: d ? d.alerts.filter(a=>!a.isRead).length || undefined : 3, danger: false },
       ],
@@ -186,6 +186,22 @@ export default function DashboardPage() {
   }, [])
 
   const [evmProjectId, setEvmProjectId] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState(30)
+
+  useEffect(() => {
+    setCountdown(30)
+    const tick = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          refetch()
+          return 30
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(tick)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
@@ -304,11 +320,27 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 rounded-full bg-primary" />
-            <h2 className="text-sm font-bold text-foreground">Indicateurs de Performance</h2>
+            <h2 className="text-sm font-bold text-foreground">Global KPI Center</h2>
+            <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
+              Real-time performance
+            </span>
           </div>
-          <span className="text-[10px] text-muted-fg font-medium uppercase tracking-wider">
-            {isLoading ? "Chargement…" : "Données réelles · Base de données"}
-          </span>
+          <div className="flex items-center gap-3">
+            {!isLoading && (
+              <span className="text-[10px] text-muted-fg font-medium flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />
+                Refresh dans {countdown}s
+              </span>
+            )}
+            <button
+              onClick={() => { refetch(); setCountdown(30) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-primary-hover transition-colors"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+              {isLoading ? "Chargement…" : "Actualiser"}
+            </button>
+          </div>
         </div>
         <KPIGrid data={data?.kpis} />
       </div>
