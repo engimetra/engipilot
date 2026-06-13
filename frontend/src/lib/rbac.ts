@@ -59,7 +59,23 @@ export const ROLE_PERMISSIONS: Record<RolePlateforme, Permission[]> = {
     "view:dashboard","view:chantiers","view:kanban","view:planning",
     "view:analytics","view:ia","view:chat","view:hse","view:qualite",
     "view:rapports","view:documents","view:equipes","view:notifications",
-    "view:approvisionnement","view:facturation","view:onboarding",
+    "view:approvisionnement","view:facturation","view:onboarding","view:admin","view:parametres",
+    "create:projet","edit:projet","delete:projet",
+    "create:chantier","edit:chantier","delete:chantier",
+    "create:tache","edit:tache","delete:tache","assign:tache",
+    "create:rapport","edit:rapport","validate:rapport",
+    "upload:document","delete:document",
+    "create:user","edit:user",
+    "export:pdf","export:excel",
+    "use:ia",
+  ],
+
+  // Rôle backend — même permissions qu'ADMIN_ENTREPRISE
+  ADMIN: [
+    "view:dashboard","view:chantiers","view:kanban","view:planning",
+    "view:analytics","view:ia","view:chat","view:hse","view:qualite",
+    "view:rapports","view:documents","view:equipes","view:notifications",
+    "view:approvisionnement","view:facturation","view:onboarding","view:admin","view:parametres",
     "create:projet","edit:projet","delete:projet",
     "create:chantier","edit:chantier","delete:chantier",
     "create:tache","edit:tache","delete:tache","assign:tache",
@@ -100,6 +116,12 @@ export const ROLE_PERMISSIONS: Record<RolePlateforme, Permission[]> = {
     "view:analytics","view:rapports","view:documents",
     "view:notifications",
     "export:pdf","export:excel",
+  ],
+
+  LECTEUR: [
+    "view:dashboard","view:chantiers","view:planning",
+    "view:rapports","view:documents","view:notifications",
+    "export:pdf",
   ],
 
   UTILISATEUR_STANDARD: [
@@ -144,8 +166,17 @@ export const ROLE_CONFIG: Record<RolePlateforme, {
   },
   ADMIN_ENTREPRISE: {
     label:       "Admin Entreprise",
+    shortLabel:  "ADMIN ENTREPRISE",
+    description: "Accès total + gestion utilisateurs et organisation",
+    color:       "text-danger",
+    bg:          "bg-danger/10",
+    ring:        "ring-danger/30",
+    tier:        "enterprise",
+  },
+  ADMIN: {
+    label:       "Admin",
     shortLabel:  "ADMIN",
-    description: "Gestion projets, équipes et budgets",
+    description: "Accès total + gestion des utilisateurs",
     color:       "text-danger",
     bg:          "bg-danger/10",
     ring:        "ring-danger/30",
@@ -176,6 +207,15 @@ export const ROLE_CONFIG: Record<RolePlateforme, {
     color:       "text-purple-600",
     bg:          "bg-purple-100",
     ring:        "ring-purple-200",
+    tier:        "readonly",
+  },
+  LECTEUR: {
+    label:       "Lecteur",
+    shortLabel:  "LECTEUR",
+    description: "Lecture seule sur tous les modules",
+    color:       "text-muted-fg",
+    bg:          "bg-muted",
+    ring:        "ring-border",
     tier:        "readonly",
   },
   UTILISATEUR_STANDARD: {
