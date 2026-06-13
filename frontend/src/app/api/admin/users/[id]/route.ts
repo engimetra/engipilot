@@ -3,11 +3,12 @@ import { backendFetch, getToken, proxyResponse } from "@/lib/api-client"
 
 export const dynamic = "force-dynamic"
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = getToken(req)
   if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  const { id } = await params
   try {
-    const res = await backendFetch(`/admin/users/${params.id}`, token, { method: "DELETE" })
+    const res = await backendFetch(`/admin/users/${id}`, token, { method: "DELETE" })
     const { payload, status } = await proxyResponse(res)
     return NextResponse.json(payload, { status })
   } catch (err) {
