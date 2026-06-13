@@ -1,112 +1,121 @@
 "use client"
-import { useState } from "react"
-import { Users, Building2, Shield, BarChart3, Settings, Trash2, Plus, CheckCircle, X, Search, MoreVertical, Crown } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Users, Shield, BarChart3, Trash2, Plus, CheckCircle, X, Search, MoreVertical, Crown, RefreshCw } from "lucide-react"
 import { ROLE_CONFIG } from "@/lib/rbac"
 import { RoleGuard } from "@/components/auth/RoleGuard"
 import type { RolePlateforme } from "@/types"
 
-type Status = "Actif" | "Inactif" | "En attente"
-
-interface AdminUser {
-  id: string; prenom: string; nom: string; email: string
-  role: RolePlateforme; statut: Status; chantiers: number; derniere_connexion: string
+// Appels via les routes proxy Next.js (pas d'appel direct au backend)
+async function adminFetch(path: string, options?: RequestInit) {
+  const res = await fetch(`/api/admin${path}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    credentials: "include",
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error ?? `Erreur ${res.status}`)
+  }
+  return res.json()
 }
 
-const ALL_ROLES: RolePlateforme[] = [
-  "SUPER_ADMIN", "ADMIN_ENTREPRISE", "CHEF_PROJET",
-  "CHEF_CHANTIER", "CONSULTANT", "UTILISATEUR_STANDARD",
-]
+const BACKEND_ROLES = ["ADMIN", "CHEF_PROJET", "CHEF_CHANTIER", "CONSULTANT", "LECTEUR"] as const
+type BackendRole = typeof BACKEND_ROLES[number]
 
-const INIT_USERS: AdminUser[] = [
-  { id:"u1", prenom:"Ismail",  nom:"AMZIL",    email:"ismail.amzil@engipilot.ma",  role:"SUPER_ADMIN",          statut:"Actif",   chantiers:0,  derniere_connexion:"En ligne"  },
-  { id:"u2", prenom:"Nadia",   nom:"Amrani",   email:"nadia.amrani@btpmaroc.ma",   role:"ADMIN_ENTREPRISE",     statut:"Actif",   chantiers:12, derniere_connexion:"En ligne"  },
-  { id:"u3", prenom:"Sara",    nom:"Bennani",  email:"sara.bennani@btpmaroc.ma",   role:"CHEF_PROJET",          statut:"Actif",   chantiers:5,  derniere_connexion:"Il y a 1h" },
-  { id:"u4", prenom:"Ahmed",   nom:"Khalil",   email:"ahmed.khalil@btpmaroc.ma",   role:"CHEF_CHANTIER",        statut:"Actif",   chantiers:3,  derniere_connexion:"Il y a 2h" },
-  { id:"u5", prenom:"Youssef", nom:"Chraibi",  email:"y.chraibi@consultant.ma",    role:"CONSULTANT",           statut:"Actif",   chantiers:2,  derniere_connexion:"Il y a 4h" },
-  { id:"u6", prenom:"Layla",   nom:"Mansouri", email:"layla.m@btpmaroc.ma",        role:"UTILISATEUR_STANDARD", statut:"Inactif", chantiers:1,  derniere_connexion:"Il y a 3j" },
-]
-
-const STATUS_COLORS: Record<Status, string> = {
-  "Actif":      "bg-success/10 text-success",
-  "Inactif":    "bg-muted text-muted-fg",
-  "En attente": "bg-warning/10 text-warning",
+interface ApiUser {
+  id: string
+  fullName: string
+  email: string
+  role: BackendRole
+  active: boolean
 }
 
-function Toast({ msg, onClose }: { readonly msg: string; readonly onClose: () => void }) {
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN:           "Admin",
+  ADMIN_ENTREPRISE:"Admin Entreprise",
+  CHEF_PROJET:     "Chef de Projet",
+  CHEF_CHANTIER:   "Chef de Chantier",
+  CONSULTANT:      "Consultant",
+  LECTEUR:         "Lecteur",
+}
+
+const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
+  ADMIN:            { bg: "#f5f3ff", color: "#7c3aed" },
+  ADMIN_ENTREPRISE: { bg: "#f5f3ff", color: "#6d28d9" },
+  CHEF_PROJET:      { bg: "#eff6ff", color: "#1d4ed8" },
+  CHEF_CHANTIER:    { bg: "#f0f9ff", color: "#0369a1" },
+  CONSULTANT:       { bg: "#f0fdfa", color: "#0f766e" },
+  LECTEUR:          { bg: "#f9fafb", color: "#6b7280" },
+}
+
+function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => void }) {
   return (
-    <div className="fixed bottom-5 right-5 z-50 bg-success text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-[pageEnter_0.2s_ease]">
-      <CheckCircle className="w-4 h-4" />
-      <span className="text-sm font-semibold">{msg}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 999, padding: "12px 18px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "10px", background: ok ? "#166534" : "#991b1b", color: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.18)" }}>
+      {ok ? <CheckCircle style={{ width: "16px", height: "16px" }} /> : <X style={{ width: "16px", height: "16px" }} />}
+      <span style={{ fontSize: "13px", fontWeight: 600 }}>{msg}</span>
+      <button onClick={onClose} style={{ marginLeft: "8px", background: "none", border: "none", color: "#fff", cursor: "pointer", opacity: 0.7 }}><X style={{ width: "14px", height: "14px" }} /></button>
     </div>
   )
 }
 
-function RoleBadge({ role }: { readonly role: RolePlateforme }) {
-  const cfg   = ROLE_CONFIG[role]
-  const isSA  = role === "SUPER_ADMIN"
-  const cls   = isSA ? "bg-[#635BFF]/10 text-[#635BFF]" : `${cfg.bg} ${cfg.color}`
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${cls}`}>
-      {isSA && <Crown className="w-2.5 h-2.5" />}
-      {cfg.shortLabel}
-    </span>
-  )
-}
+function ModalAddUser({ onClose, onAdd }: { onClose: () => void; onAdd: (u: ApiUser) => void }) {
+  const [form, setForm] = useState({ fullName: "", email: "", password: "", role: "CHEF_CHANTIER" as BackendRole })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-function ModalAddUser({ onClose, onAdd }: { readonly onClose: () => void; readonly onAdd: (u: AdminUser) => void }) {
-  const [form, setForm] = useState({ prenom: "", nom: "", email: "", role: "CHEF_CHANTIER" as RolePlateforme })
-
-  function submit() {
-    onAdd({
-      id: `u${Date.now()}`,
-      prenom: form.prenom, nom: form.nom, email: form.email,
-      role: form.role, statut: "En attente",
-      chantiers: 0, derniere_connexion: "Jamais",
-    })
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    if (form.password.length < 8) { setError("Le mot de passe doit comporter au moins 8 caractères"); return }
+    setLoading(true)
+    try {
+      const data = await adminFetch("/users", { method: "POST", body: JSON.stringify(form) })
+      onAdd({ id: data.id, fullName: form.fullName, email: form.email, role: form.role, active: true })
+    } catch (err: unknown) {
+      const msg = (err as {response?: {data?: {error?: string}}})?.response?.data?.error
+      setError(msg ?? "Erreur lors de la création")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      role="presentation"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      onKeyDown={e => { if (e.key === "Escape") onClose() }}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-border">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-base font-bold text-foreground">Inviter un utilisateur</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-fg"><X className="w-4 h-4" /></button>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{ background: "#fff", borderRadius: "20px", width: "100%", maxWidth: "440px", boxShadow: "0 8px 40px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%)" }}>
+          <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>Créer un utilisateur</h2>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "8px", padding: "4px", cursor: "pointer", color: "#fff" }}><X style={{ width: "16px", height: "16px" }} /></button>
         </div>
-        <form onSubmit={e => { e.preventDefault(); submit() }} className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="add-prenom" className="text-xs font-semibold text-muted-fg block mb-1">Prénom</label>
-              <input id="add-prenom" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
-                placeholder="Karim" required className="input" />
-            </div>
-            <div>
-              <label htmlFor="add-nom" className="text-xs font-semibold text-muted-fg block mb-1">Nom</label>
-              <input id="add-nom" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                placeholder="Benali" required className="input" />
-            </div>
+        <form onSubmit={submit} style={{ padding: "24px", display: "grid", gap: "16px" }}>
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Nom complet</label>
+            <input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
+              placeholder="Prénom Nom" required className="input" style={{ width: "100%" }} />
           </div>
           <div>
-            <label htmlFor="add-email" className="text-xs font-semibold text-muted-fg block mb-1">Email</label>
-            <input id="add-email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="utilisateur@entreprise.ma" required className="input" />
+            <label style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</label>
+            <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              placeholder="utilisateur@entreprise.ma" required className="input" style={{ width: "100%" }} />
           </div>
           <div>
-            <label htmlFor="add-role" className="text-xs font-semibold text-muted-fg block mb-1">Rôle</label>
-            <select id="add-role" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as RolePlateforme }))} className="input">
-              {ALL_ROLES.filter(r => r !== "SUPER_ADMIN").map(r =>
-                <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>
-              )}
+            <label style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Mot de passe temporaire</label>
+            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              placeholder="Minimum 8 caractères" required className="input" style={{ width: "100%" }} />
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Rôle</label>
+            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as BackendRole }))} className="input" style={{ width: "100%" }}>
+              {BACKEND_ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           </div>
-          <div className="flex gap-2 pt-2 justify-end">
+          {error && <p style={{ fontSize: "12px", color: "#dc2626", background: "#fee2e2", padding: "8px 12px", borderRadius: "8px" }}>{error}</p>}
+          <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
             <button type="button" onClick={onClose} className="btn-outline">Annuler</button>
-            <button type="submit" className="btn-primary"><Plus className="w-4 h-4" /> Inviter</button>
+            <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 20px", background: loading ? "#93c5fd" : "#1d4ed8", color: "#fff", border: "none", borderRadius: "10px", fontSize: "13px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
+              {loading ? <RefreshCw style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} /> : <Plus style={{ width: "14px", height: "14px" }} />}
+              {loading ? "Création..." : "Créer le compte"}
+            </button>
           </div>
         </form>
       </div>
@@ -115,201 +124,190 @@ function ModalAddUser({ onClose, onAdd }: { readonly onClose: () => void; readon
 }
 
 function AdminPageContent() {
-  const [users, setUsers] = useState<AdminUser[]>(INIT_USERS)
-  const [search, setSearch] = useState("")
-  const [filterRole, setFilterRole] = useState<RolePlateforme | "">("")
-  const [showAdd, setShowAdd] = useState(false)
-  const [toast, setToast] = useState("")
+  const [users, setUsers]       = useState<ApiUser[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState("")
+  const [filterRole, setFilter] = useState("")
+  const [showAdd, setShowAdd]   = useState(false)
+  const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
-  function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(""), 3000) }
+  function showToast(msg: string, ok = true) { setToast({ msg, ok }); setTimeout(() => setToast(null), 3500) }
 
-  function toggleStatus(id: string) {
-    setUsers(prev => prev.map(u => u.id === id
-      ? { ...u, statut: u.statut === "Actif" ? "Inactif" : "Actif" }
-      : u
-    ))
-    showToast("Statut utilisateur mis à jour")
+  const loadUsers = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await adminFetch("/users")
+      setUsers(data)
+    } catch { /* silence */ } finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { loadUsers() }, [loadUsers])
+
+  async function changeRole(id: string, role: string) {
+    await adminFetch(`/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) })
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: role as BackendRole } : u))
+    showToast("Rôle mis à jour")
     setMenuOpen(null)
   }
 
-  function deleteUser(id: string) {
+  async function deactivateUser(id: string) {
+    await adminFetch(`/users/${id}`, { method: "DELETE" })
     setUsers(prev => prev.filter(u => u.id !== id))
-    showToast("Utilisateur supprimé")
+    showToast("Utilisateur désactivé")
     setMenuOpen(null)
-  }
-
-  function addUser(u: AdminUser) {
-    setUsers(prev => [u, ...prev])
-    setShowAdd(false)
-    showToast(`Invitation envoyée à ${u.email}`)
   }
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase()
-    const matchSearch = !q || `${u.prenom} ${u.nom} ${u.email}`.toLowerCase().includes(q)
+    const matchSearch = !q || `${u.fullName} ${u.email}`.toLowerCase().includes(q)
     const matchRole = !filterRole || u.role === filterRole
     return matchSearch && matchRole
   })
 
-  const stats = [
-    { label: "Utilisateurs actifs",  value: users.filter(u => u.statut === "Actif").length, icon: Users,     color: "text-primary",   bg: "bg-primary/10"   },
-    { label: "Chantiers supervisés", value: 12,                                              icon: Building2, color: "text-success",   bg: "bg-success/10"   },
-    { label: "Rôles configurés",     value: ALL_ROLES.length,                                icon: Shield,    color: "text-warning",   bg: "bg-warning/10"   },
-    { label: "Requêtes IA ce mois",  value: "847",                                           icon: BarChart3, color: "text-[#635BFF]", bg: "bg-[#635BFF]/10" },
-  ]
+  const initials = (name: string) => name.split(" ").filter(Boolean).map(p => p[0]).join("").slice(0, 2).toUpperCase()
 
   return (
     <div className="space-y-6 page-enter">
-      {toast && <Toast msg={toast} onClose={() => setToast("")} />}
-      {showAdd && <ModalAddUser onClose={() => setShowAdd(false)} onAdd={addUser} />}
+      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
+      {showAdd && <ModalAddUser onClose={() => setShowAdd(false)} onAdd={u => { setUsers(p => [u, ...p]); setShowAdd(false); showToast(`Compte créé pour ${u.email}`) }} />}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <h1 className="page-title">Administration</h1>
-          <p className="text-sm text-muted-fg mt-0.5">Gestion des utilisateurs, rôles et permissions de la plateforme</p>
+          <p style={{ fontSize: "13px", color: "var(--color-muted-fg)", marginTop: "4px" }}>Gestion des utilisateurs, rôles et permissions</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="btn-primary">
-          <Plus className="w-4 h-4" /> Inviter un utilisateur
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={loadUsers} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", fontWeight: 600, color: "#475569", cursor: "pointer" }}>
+            <RefreshCw style={{ width: "14px", height: "14px" }} /> Actualiser
+          </button>
+          <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", background: "#1d4ed8", color: "#fff", border: "none", borderRadius: "10px", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(29,78,216,0.3)" }}>
+            <Plus style={{ width: "14px", height: "14px" }} /> Créer un utilisateur
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {stats.map(s => (
-          <div key={s.label} className="bg-white border border-border rounded-xl p-4 shadow-card flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${s.bg}`}>
-              <s.icon className={`w-5 h-5 ${s.color}`} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+        {[
+          { label: "Utilisateurs actifs",  value: users.filter(u => u.active).length, icon: Users,     color: "#1d4ed8", bg: "#eff6ff" },
+          { label: "Rôles disponibles",    value: BACKEND_ROLES.length,               icon: Shield,    color: "#7c3aed", bg: "#f5f3ff" },
+          { label: "Admins",               value: users.filter(u => u.role === "ADMIN").length, icon: Crown, color: "#d97706", bg: "#fffbeb" },
+          { label: "Consultants",          value: users.filter(u => u.role === "CONSULTANT").length, icon: BarChart3, color: "#0f766e", bg: "#f0fdfa" },
+        ].map(s => (
+          <div key={s.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px", display: "flex", alignItems: "center", gap: "14px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <s.icon style={{ width: "20px", height: "20px", color: s.color }} />
             </div>
             <div>
-              <p className="text-xl font-black text-foreground">{s.value}</p>
-              <p className="text-xs text-muted-fg">{s.label}</p>
+              <p style={{ fontSize: "22px", fontWeight: 900, color: "#1e293b", lineHeight: 1 }}>{loading ? "—" : s.value}</p>
+              <p style={{ fontSize: "11.5px", color: "#64748b", marginTop: "3px" }}>{s.label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white border border-border rounded-lg px-3 py-2 flex-1 max-w-xs">
-          <Search className="w-4 h-4 text-muted-fg flex-shrink-0" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un utilisateur..."
-            className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-fg" />
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 14px", flex: 1, maxWidth: "320px" }}>
+          <Search style={{ width: "15px", height: "15px", color: "#94a3b8", flexShrink: 0 }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un utilisateur..."
+            style={{ background: "transparent", fontSize: "13px", outline: "none", flex: 1, color: "#1e293b" }} />
         </div>
-        <select value={filterRole} onChange={e => setFilterRole(e.target.value as RolePlateforme | "")}
-          className="bg-white border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none">
+        <select value={filterRole} onChange={e => setFilter(e.target.value)}
+          style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 14px", fontSize: "13px", color: "#475569", outline: "none" }}>
           <option value="">Tous les rôles</option>
-          {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
+          {BACKEND_ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>
-        <span className="text-xs text-muted-fg ml-auto">{filtered.length} utilisateur{filtered.length > 1 ? "s" : ""}</span>
+        <span style={{ fontSize: "12px", color: "#94a3b8", marginLeft: "auto" }}>{filtered.length} utilisateur{filtered.length > 1 ? "s" : ""}</span>
       </div>
 
-      {/* Users table */}
-      <div className="bg-white border border-border rounded-xl shadow-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-fg uppercase tracking-wider">Utilisateur</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-fg uppercase tracking-wider">Rôle</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-fg uppercase tracking-wider">Statut</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-fg uppercase tracking-wider">Chantiers</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-fg uppercase tracking-wider">Dernière connexion</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(u => {
-              const cfg      = ROLE_CONFIG[u.role]
-              const isSA     = u.role === "SUPER_ADMIN"
-              const avatarCls = isSA
-                ? "bg-gradient-to-br from-[#635BFF] to-[#8B5CF6] text-white ring-purple-300/50"
-                : `${cfg.bg} ${cfg.color} ${cfg.ring}`
-              return (
-                <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ring-1 ${avatarCls}`}>
-                        {u.prenom[0]}{u.nom[0]}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{u.prenom} {u.nom}</p>
-                        <p className="text-xs text-muted-fg">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[u.statut]}`}>{u.statut}</span>
-                  </td>
-                  <td className="px-4 py-3 text-foreground font-medium">{u.chantiers}</td>
-                  <td className="px-4 py-3 text-muted-fg text-xs">{u.derniere_connexion}</td>
-                  <td className="px-4 py-3">
-                    <div className="relative">
-                      <button
-                        onClick={() => setMenuOpen(menuOpen === u.id ? null : u.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-fg transition-colors"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                      {menuOpen === u.id && (
-                        <div className="absolute right-0 top-8 z-10 bg-white border border-border rounded-xl shadow-lg w-48 overflow-hidden">
-                          <button onClick={() => { showToast(`Rôle de ${u.prenom} modifié`); setMenuOpen(null) }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-muted text-foreground transition-colors">
-                            <Settings className="w-3.5 h-3.5 text-muted-fg" /> Modifier le rôle
-                          </button>
-                          {u.role !== "SUPER_ADMIN" && (
-                            <button onClick={() => toggleStatus(u.id)}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-muted text-foreground transition-colors">
-                              <CheckCircle className="w-3.5 h-3.5 text-muted-fg" />
-                              {u.statut === "Actif" ? "Désactiver" : "Activer"}
-                            </button>
-                          )}
-                          {u.role !== "SUPER_ADMIN" && (
-                            <>
-                              <div className="h-px bg-border my-1" />
-                              <button onClick={() => deleteUser(u.id)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-danger/5 text-danger transition-colors">
-                                <Trash2 className="w-3.5 h-3.5" /> Supprimer
-                              </button>
-                            </>
-                          )}
+      {/* Table */}
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        {loading ? (
+          <div style={{ padding: "48px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Chargement...</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #f1f5f9", background: "#f8fafc" }}>
+                {["Utilisateur", "Rôle", "Statut", "Actions"].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(u => {
+                const rc = ROLE_COLORS[u.role] ?? { bg: "#f1f5f9", color: "#64748b" }
+                return (
+                  <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: `linear-gradient(135deg, ${rc.color} 0%, #0ea5e9 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                          {initials(u.fullName)}
                         </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="py-12 text-center text-muted-fg text-sm">Aucun utilisateur trouvé</div>
+                        <div>
+                          <p style={{ fontWeight: 700, color: "#1e293b" }}>{u.fullName}</p>
+                          <p style={{ fontSize: "11.5px", color: "#94a3b8" }}>{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontSize: "11.5px", fontWeight: 700, background: rc.bg, color: rc.color, padding: "3px 10px", borderRadius: "99px" }}>
+                        {ROLE_LABELS[u.role] ?? u.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontSize: "11.5px", fontWeight: 600, background: u.active ? "#dcfce7" : "#fee2e2", color: u.active ? "#166534" : "#dc2626", padding: "3px 10px", borderRadius: "99px" }}>
+                        {u.active ? "Actif" : "Inactif"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ position: "relative", display: "inline-block" }}>
+                        <button onClick={() => setMenuOpen(menuOpen === u.id ? null : u.id)}
+                          style={{ width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", color: "#64748b" }}>
+                          <MoreVertical style={{ width: "14px", height: "14px" }} />
+                        </button>
+                        {menuOpen === u.id && (
+                          <div style={{ position: "absolute", right: 0, top: "36px", zIndex: 20, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", width: "200px", overflow: "hidden" }}>
+                            <div style={{ padding: "6px", borderBottom: "1px solid #f1f5f9" }}>
+                              <p style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", padding: "4px 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Changer le rôle</p>
+                              {BACKEND_ROLES.filter(r => r !== u.role).map(r => (
+                                <button key={r} onClick={() => changeRole(u.id, r)}
+                                  style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", border: "none", background: "transparent", cursor: "pointer", fontSize: "12.5px", color: "#1e293b", fontWeight: 500, borderRadius: "8px" }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                                >
+                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: ROLE_COLORS[r]?.color ?? "#94a3b8", flexShrink: 0 }} />
+                                  {ROLE_LABELS[r]}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ padding: "6px" }}>
+                              <button onClick={() => deactivateUser(u.id)}
+                                style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", border: "none", background: "transparent", cursor: "pointer", fontSize: "12.5px", color: "#dc2626", fontWeight: 600, borderRadius: "8px" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "#fee2e2")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                              >
+                                <Trash2 style={{ width: "13px", height: "13px" }} /> Désactiver
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         )}
-      </div>
-
-      {/* System settings */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { icon: Shield,   title: "Sécurité & Accès",   desc: "2FA, sessions actives, logs d'audit",       action: "Configurer" },
-          { icon: Settings, title: "Paramètres système", desc: "Langue, fuseau horaire, format date",        action: "Modifier"   },
-          { icon: BarChart3,title: "Logs & Activité",    desc: "Historique des connexions et actions admin", action: "Consulter"  },
-        ].map(card => (
-          <div key={card.title} className="bg-white border border-border rounded-xl p-5 shadow-card flex flex-col gap-3">
-            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-              <card.icon className="w-4 h-4 text-muted-fg" />
-            </div>
-            <div>
-              <p className="font-bold text-sm text-foreground">{card.title}</p>
-              <p className="text-xs text-muted-fg mt-0.5">{card.desc}</p>
-            </div>
-            <button onClick={() => showToast(`${card.title} — fonctionnalité disponible`)}
-              className="btn-outline text-xs self-start">
-              {card.action} →
-            </button>
-          </div>
-        ))}
+        {!loading && filtered.length === 0 && (
+          <div style={{ padding: "48px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Aucun utilisateur trouvé</div>
+        )}
       </div>
     </div>
   )
