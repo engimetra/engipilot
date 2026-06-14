@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Search, Plus, Filter, ChevronUp, ChevronDown, ExternalLink, X, RefreshCw, Pencil, Trash2, AlertTriangle } from "lucide-react"
+import { Search, Plus, Filter, ChevronUp, ChevronDown, ExternalLink, X, RefreshCw, Pencil, Trash2, AlertTriangle, Upload } from "lucide-react"
 import Link from "next/link"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -141,6 +141,12 @@ export default function ChantiersPage() {
   const [editForm, setEditForm]           = useState(FORM_INIT)
   const [editFormError, setEditFormError] = useState<string | null>(null)
   const [deleteId, setDeleteId]           = useState<string | null>(null)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importFile, setImportFile]           = useState<File | null>(null)
+  const [importPreview, setImportPreview]     = useState<Record<string, string>[]>([])
+  const [importError, setImportError]         = useState<string | null>(null)
+  const [importLoading, setImportLoading]     = useState(false)
+  const [importDone, setImportDone]           = useState<number | null>(null)
 
   const { data: projects = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["projects"],
@@ -288,6 +294,84 @@ export default function ChantiersPage() {
     })
   }
 
+  function parseCSV(text: string): Record<string, string>[] {
+    const lines = text.replace(/\r/g, "").split("\n").filter(l => l.trim())
+    if (lines.length < 2) return []
+    const sep = lines[0].includes(";") ? ";" : ","
+    const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g, "").trim())
+    return lines.slice(1).map(line => {
+      const vals = line.split(sep).map(v => v.replace(/^"|"$/g, "").trim())
+      return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]))
+    })
+  }
+
+  function handleImportFile(file: File) {
+    setImportFile(file)
+    setImportError(null)
+    setImportDone(null)
+    const reader = new FileReader()
+    reader.onload = e => {
+      const text = e.target?.result as string
+      const rows = parseCSV(text)
+      if (rows.length === 0) { setImportError("Fichier vide ou format invalide"); return }
+      setImportPreview(rows.slice(0, 3))
+    }
+    reader.readAsText(file, "utf-8")
+  }
+
+  async function handleImportSubmit() {
+    if (!importFile) return
+    setImportLoading(true)
+    setImportError(null)
+    const reader = new FileReader()
+    reader.onload = async e => {
+      try {
+        const rows = parseCSV(e.target?.result as string)
+        let created = 0
+        for (const row of rows) {
+          const nom = row["Nom Chantier"] || row["nom_chantier"]
+          const debut = row["Date Début"] || row["date_debut"]
+          const fin = row["Date Fin Prévue"] || row["date_fin_prevue"]
+          const budget = row["Budget Initial (MAD)"] || row["budget_initial"]
+          if (!nom || !debut || !fin || !budget) continue
+          const parseDate = (d: string) => {
+            const parts = d.split("/")
+            if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`
+            return d
+          }
+          const statusMap: Record<string, string> = {
+            "En cours": "ACTIVE", "Planifié": "DRAFT", "En pause": "PAUSED",
+            "Terminé": "COMPLETED", "Annulé": "CANCELLED",
+          }
+          const typeMap: Record<string, string> = {
+            "Résidentiel": "RESIDENTIAL", "Industriel": "INDUSTRIAL",
+            "Infrastructure": "INFRASTRUCTURE", "Tertiaire": "COMMERCIAL",
+            "Commercial": "COMMERCIAL", "Éducatif": "EDUCATIONAL",
+            "Hospitalier": "HOSPITAL", "Touristique": "TOURISM",
+          }
+          await createProject({
+            name:          nom,
+            startDate:     parseDate(debut),
+            endDate:       parseDate(fin),
+            budgetInitial: Number(budget.replace(/\s/g, "")),
+            status:        statusMap[row["Statut"] || row["statut"]] ?? "ACTIVE",
+            type:          typeMap[row["Type Projet"] || row["type_projet"]] ?? "CONSTRUCTION",
+            city:          row["Ville"] || row["ville"] || undefined,
+            clientName:    row["Client"] || row["client"] || undefined,
+          })
+          created++
+        }
+        setImportDone(created)
+        queryClient.invalidateQueries({ queryKey: ["projects"] })
+      } catch (err) {
+        setImportError((err as Error).message)
+      } finally {
+        setImportLoading(false)
+      }
+    }
+    reader.readAsText(importFile, "utf-8")
+  }
+
   return (
     <div className="space-y-5 page-enter">
       {/* Header */}
@@ -305,6 +389,13 @@ export default function ChantiersPage() {
             title="Rafraîchir"
           >
             <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => { setShowImportModal(true); setImportFile(null); setImportPreview([]); setImportError(null); setImportDone(null) }}
+            className="flex items-center gap-2 border border-border rounded-lg bg-white hover:bg-muted transition-colors text-sm font-semibold px-3 py-2 shadow-card"
+          >
+            <Upload className="w-4 h-4" />
+            Importer
           </button>
           <button className="btn-primary" onClick={() => setShowModal(true)}>
             <Plus className="w-4 h-4" strokeWidth={2.5} />
@@ -843,6 +934,76 @@ export default function ChantiersPage() {
                   : <><Trash2 className="w-4 h-4" /> Supprimer</>
                 }
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import Modal ────────────────────────────────────────────────── */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-card border rounded-xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-base flex items-center gap-2"><Upload className="w-4 h-4" /> Importer des chantiers</h2>
+              <button onClick={() => setShowImportModal(false)}><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {importDone !== null ? (
+                <div className="text-center py-6">
+                  <div className="text-4xl mb-3">✅</div>
+                  <p className="font-bold text-lg">{importDone} chantier{importDone !== 1 ? "s" : ""} importé{importDone !== 1 ? "s" : ""}</p>
+                  <p className="text-sm text-muted-fg mt-1">La liste a été mise à jour.</p>
+                  <button onClick={() => setShowImportModal(false)} className="mt-4 btn-primary">Fermer</button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    onClick={() => document.getElementById("csv-file-input")?.click()}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
+                  >
+                    <input id="csv-file-input" type="file" accept=".csv,.xlsx,.xls" className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }} />
+                    <Upload className="w-8 h-8 mx-auto text-muted-fg mb-2" />
+                    {importFile ? (
+                      <p className="font-semibold text-sm">{importFile.name}</p>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-sm">Glissez votre fichier ici</p>
+                        <p className="text-xs text-muted-fg mt-1">CSV ou Excel · Séparateur point-virgule (;)</p>
+                      </>
+                    )}
+                  </div>
+
+                  {importPreview.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-fg mb-2">Aperçu ({importPreview.length} lignes)</p>
+                      <div className="overflow-x-auto rounded-lg border text-xs">
+                        <table className="w-full">
+                          <thead className="bg-muted/50">
+                            <tr>{Object.keys(importPreview[0]).slice(0,4).map(k => <th key={k} className="text-left px-3 py-2 font-semibold text-muted-fg whitespace-nowrap">{k}</th>)}<th className="px-3 py-2 text-muted-fg">…</th></tr>
+                          </thead>
+                          <tbody>{importPreview.map((row, i) => <tr key={i} className="border-t">{Object.values(row).slice(0,4).map((v,j) => <td key={j} className="px-3 py-2 whitespace-nowrap font-mono">{v||<span className="text-muted-fg italic">vide</span>}</td>)}<td className="px-3 py-2 text-muted-fg">…</td></tr>)}</tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {importError && <p className="text-xs text-danger bg-danger/10 px-3 py-2 rounded-lg">{importError}</p>}
+
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button onClick={() => setShowImportModal(false)} className="px-4 py-2 text-sm border rounded-lg hover:bg-muted transition-colors">Annuler</button>
+                    <button
+                      onClick={handleImportSubmit}
+                      disabled={!importFile || importLoading}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importLoading ? "Import en cours…" : "Importer"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
