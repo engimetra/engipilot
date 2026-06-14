@@ -65,7 +65,7 @@ const STEPS = [
 const RESOURCES = [
   { icon: "📖", nom: "Guide complet ENGIPILOT", tag: "PDF", href: "/guide-engipilot" },
   { icon: "🎬", nom: "Tutoriel vidéo — 12 min", tag: "Vidéo", href: null },
-  { icon: "📊", nom: "Modèle import chantiers", tag: "Excel", href: null },
+  { icon: "📊", nom: "Modèle import chantiers", tag: "Excel", href: "/modele-import-chantiers" },
   { icon: "📱", nom: "Guide app mobile terrain", tag: "PDF", href: null },
   { icon: "🎧", nom: "Contacter le support", tag: "Support", href: "mailto:support@engipilot.ma" },
 ]
