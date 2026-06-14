@@ -295,7 +295,9 @@ export default function ChantiersPage() {
   }
 
   function parseCSV(text: string): Record<string, string>[] {
-    const lines = text.replace(/\r/g, "").split("\n").filter(l => l.trim())
+    // Strip UTF-8 BOM added by Excel when saving CSV
+    const clean = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text
+    const lines = clean.replace(/\r/g, "").split("\n").filter(l => l.trim())
     if (lines.length < 2) return []
     const sep = lines[0].includes(";") ? ";" : ","
     const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g, "").trim())
@@ -305,18 +307,34 @@ export default function ChantiersPage() {
     })
   }
 
+  // Flexible column lookup: try exact label, then snake_case key, then accent-stripped match
+  function getCol(row: Record<string, string>, label: string, key: string): string {
+    if (row[label] !== undefined && row[label] !== "") return row[label]
+    if (row[key]   !== undefined && row[key]   !== "") return row[key]
+    const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim()
+    const n = norm(label)
+    const found = Object.entries(row).find(([k]) => norm(k) === n)
+    return found?.[1] ?? ""
+  }
+
+  function decodeFileText(buffer: ArrayBuffer): string {
+    const utf8 = new TextDecoder("utf-8").decode(buffer)
+    if (utf8.includes("�")) return new TextDecoder("windows-1252").decode(buffer)
+    return utf8
+  }
+
   function handleImportFile(file: File) {
     setImportFile(file)
     setImportError(null)
     setImportDone(null)
     const reader = new FileReader()
     reader.onload = e => {
-      const text = e.target?.result as string
+      const text = decodeFileText(e.target?.result as ArrayBuffer)
       const rows = parseCSV(text)
       if (rows.length === 0) { setImportError("Fichier vide ou format invalide"); return }
-      setImportPreview(rows.slice(0, 3))
+      setImportPreview(rows)
     }
-    reader.readAsText(file, "utf-8")
+    reader.readAsArrayBuffer(file)
   }
 
   async function handleImportSubmit() {
@@ -326,13 +344,13 @@ export default function ChantiersPage() {
     const reader = new FileReader()
     reader.onload = async e => {
       try {
-        const rows = parseCSV(e.target?.result as string)
+        const rows = parseCSV(decodeFileText(e.target?.result as ArrayBuffer))
         let created = 0
         for (const row of rows) {
-          const nom = row["Nom Chantier"] || row["nom_chantier"]
-          const debut = row["Date Début"] || row["date_debut"]
-          const fin = row["Date Fin Prévue"] || row["date_fin_prevue"]
-          const budget = row["Budget Initial (MAD)"] || row["budget_initial"]
+          const nom    = getCol(row, "Nom Chantier",         "nom_chantier")
+          const debut  = getCol(row, "Date Début",           "date_debut")
+          const fin    = getCol(row, "Date Fin Prévue",      "date_fin_prevue")
+          const budget = getCol(row, "Budget Initial (MAD)", "budget_initial")
           if (!nom || !debut || !fin || !budget) continue
           const parseDate = (d: string) => {
             const parts = d.split("/")
@@ -354,10 +372,10 @@ export default function ChantiersPage() {
             startDate:     parseDate(debut),
             endDate:       parseDate(fin),
             budgetInitial: Number(budget.replace(/\s/g, "")),
-            status:        statusMap[row["Statut"] || row["statut"]] ?? "ACTIVE",
-            type:          typeMap[row["Type Projet"] || row["type_projet"]] ?? "CONSTRUCTION",
-            city:          row["Ville"] || row["ville"] || undefined,
-            clientName:    row["Client"] || row["client"] || undefined,
+            status:        statusMap[getCol(row, "Statut",     "statut")]     ?? "ACTIVE",
+            type:          typeMap[getCol(row,   "Type Projet", "type_projet")] ?? "CONSTRUCTION",
+            city:          getCol(row, "Ville",  "ville")  || undefined,
+            clientName:    getCol(row, "Client", "client") || undefined,
           })
           created++
         }
@@ -369,7 +387,7 @@ export default function ChantiersPage() {
         setImportLoading(false)
       }
     }
-    reader.readAsText(importFile, "utf-8")
+    reader.readAsArrayBuffer(importFile)
   }
 
   return (
@@ -978,10 +996,10 @@ export default function ChantiersPage() {
 
                   {importPreview.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-muted-fg mb-2">Aperçu ({importPreview.length} lignes)</p>
-                      <div className="overflow-x-auto rounded-lg border text-xs">
+                      <p className="text-xs font-semibold text-muted-fg mb-2">{importPreview.length} ligne{importPreview.length > 1 ? "s" : ""} détectée{importPreview.length > 1 ? "s" : ""}</p>
+                      <div className="overflow-x-auto rounded-lg border text-xs max-h-48 overflow-y-auto">
                         <table className="w-full">
-                          <thead className="bg-muted/50">
+                          <thead className="bg-muted/50 sticky top-0">
                             <tr>{Object.keys(importPreview[0]).slice(0,4).map(k => <th key={k} className="text-left px-3 py-2 font-semibold text-muted-fg whitespace-nowrap">{k}</th>)}<th className="px-3 py-2 text-muted-fg">…</th></tr>
                           </thead>
                           <tbody>{importPreview.map((row, i) => <tr key={i} className="border-t">{Object.values(row).slice(0,4).map((v,j) => <td key={j} className="px-3 py-2 whitespace-nowrap font-mono">{v||<span className="text-muted-fg italic">vide</span>}</td>)}<td className="px-3 py-2 text-muted-fg">…</td></tr>)}</tbody>

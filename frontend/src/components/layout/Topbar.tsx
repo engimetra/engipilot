@@ -234,19 +234,19 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
           onClick={() => router.push("/chantiers")}
           className="flex items-center gap-1.5 transition-all"
           style={{
-            background: "var(--color-primary)",
+            background: "#2563eb",
             color: "#fff",
             fontSize: "12px",
             fontWeight: 600,
             padding: "6px 12px",
             borderRadius: "8px",
             border: "none",
-            boxShadow: "0 1px 2px rgba(30,81,45,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+            boxShadow: "0 1px 2px rgba(37,99,235,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
             cursor: "pointer",
             letterSpacing: "-0.01em",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "var(--color-primary-hover)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "var(--color-primary)")}
+          onMouseEnter={e => (e.currentTarget.style.background = "#1d4ed8")}
+          onMouseLeave={e => (e.currentTarget.style.background = "#2563eb")}
         >
           <Plus style={{ width: "13px", height: "13px" }} strokeWidth={2.5} />
           <span className="hidden sm:inline">Nouveau</span>
@@ -377,10 +377,10 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                       style={{
                         padding: "10px 16px",
                         borderBottom: "1px solid var(--color-border-subtle)",
-                        background: !n.read ? "rgba(30,81,45,0.02)" : "transparent",
+                        background: !n.read ? "#dbeafe" : "#f8fafc",
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "var(--color-muted)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = !n.read ? "rgba(30,81,45,0.02)" : "transparent")}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#bfdbfe")}
+                      onMouseLeave={e => (e.currentTarget.style.background = !n.read ? "#dbeafe" : "#f8fafc")}
                     >
                       <div
                         className="flex items-center justify-center rounded-xl flex-shrink-0 mt-0.5"
