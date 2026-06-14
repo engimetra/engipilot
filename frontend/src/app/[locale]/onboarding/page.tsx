@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useLocale } from "next-intl"
+import { useState } from "react"
 
 const STEPS = [
   {
@@ -62,10 +63,10 @@ const STEPS = [
 ]
 
 const RESOURCES = [
-  { icon: "📖", nom: "Guide complet ENGIPILOT", tag: "PDF", href: "/docs/guide-engipilot.pdf" },
-  { icon: "🎬", nom: "Tutoriel vidéo — 12 min", tag: "Vidéo", href: "#" },
-  { icon: "📊", nom: "Modèle import chantiers", tag: "Excel", href: "/docs/modele-import-chantiers.xlsx" },
-  { icon: "📱", nom: "Guide app mobile terrain", tag: "PDF", href: "/docs/guide-mobile.pdf" },
+  { icon: "📖", nom: "Guide complet ENGIPILOT", tag: "PDF", href: "/guide-engipilot" },
+  { icon: "🎬", nom: "Tutoriel vidéo — 12 min", tag: "Vidéo", href: null },
+  { icon: "📊", nom: "Modèle import chantiers", tag: "Excel", href: null },
+  { icon: "📱", nom: "Guide app mobile terrain", tag: "PDF", href: null },
   { icon: "🎧", nom: "Contacter le support", tag: "Support", href: "mailto:support@engipilot.ma" },
 ]
 
@@ -74,13 +75,35 @@ export default function OnboardingPage() {
   const locale = useLocale()
   const done = STEPS.filter(s => s.done).length
   const pct = Math.round(done / STEPS.length * 100)
+  const [toast, setToast] = useState<string | null>(null)
 
   function navigate(href: string) {
     router.push(`/${locale}${href}`)
   }
 
+  function handleResource(href: string | null, nom: string) {
+    if (!href) {
+      setToast(`📄 "${nom}" sera disponible prochainement.`)
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    if (href.startsWith("mailto:")) {
+      window.location.href = href
+    } else if (href.startsWith("/")) {
+      router.push(`/${locale}${href}`)
+    } else {
+      window.open(href, "_blank", "noopener,noreferrer")
+    }
+  }
+
   return (
     <div className="space-y-5 max-w-3xl">
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg border border-white/10 animate-in fade-in slide-in-from-bottom-2">
+          {toast}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">Onboarding — Démarrage</h1>
@@ -142,17 +165,17 @@ export default function OnboardingPage() {
           <div className="bg-card border rounded-xl p-5">
             <h3 className="font-bold text-sm mb-3">Ressources de démarrage</h3>
             {RESOURCES.map(r => (
-              <a
+              <button
                 key={r.nom}
-                href={r.href}
-                target={r.href.startsWith("http") || r.href.startsWith("mailto") ? "_blank" : "_self"}
-                rel="noopener noreferrer"
+                onClick={() => handleResource(r.href, r.nom)}
                 className="w-full flex items-center gap-3 p-2.5 bg-muted rounded-lg mb-1.5 hover:bg-muted/60 transition-colors text-left"
               >
                 <span className="text-lg">{r.icon}</span>
                 <span className="flex-1 text-sm">{r.nom}</span>
-                <span className="text-xs bg-card border px-1.5 py-0.5 rounded">{r.tag}</span>
-              </a>
+                <span className={`text-xs px-1.5 py-0.5 rounded border ${r.href ? "bg-card" : "bg-muted/60 text-muted-fg"}`}>
+                  {r.href ? r.tag : "Bientôt"}
+                </span>
+              </button>
             ))}
           </div>
 
