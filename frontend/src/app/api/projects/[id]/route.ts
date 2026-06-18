@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const { id } = await params
 
   try {
-    const res              = await backendFetch(`/projects/${id}`, token)
+    const res              = await backendFetch(`/projets/${id}`, token)
     const { payload, status } = await proxyResponse(res)
     return NextResponse.json(payload, { status })
   } catch (err) {
@@ -26,10 +26,23 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const { id } = await params
 
   try {
-    const body             = await req.json()
-    const res              = await backendFetch(`/projects/${id}`, token, {
-      method: "PATCH",
-      body:   JSON.stringify(body),
+    const body = await req.json()
+    const backendBody = {
+      codeProjet:         body.reference   ?? body.codeProjet,
+      nom:                body.name        ?? body.nom,
+      budgetPrevisionnel: body.budgetInitial ?? body.budgetPrevisionnel,
+      dateDebut:          body.startDate   ?? body.dateDebut,
+      dateFinPrevue:      body.endDate     ?? body.dateFinPrevue,
+      ville:              body.city        ?? body.ville        ?? null,
+      client:             body.clientName  ?? body.client       ?? null,
+      description:        body.description ?? null,
+      chefChantier:       body.chefChantier ?? null,
+      status:             body.status      ?? null,
+      type:               body.type        ?? null,
+    }
+    const res = await backendFetch(`/projets/${id}`, token, {
+      method: "PUT",
+      body:   JSON.stringify(backendBody),
     })
     const { payload, status } = await proxyResponse(res)
     return NextResponse.json(payload, { status })
@@ -45,7 +58,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   const { id } = await params
 
   try {
-    const res              = await backendFetch(`/projects/${id}`, token, { method: "DELETE" })
+    const res              = await backendFetch(`/projets/${id}`, token, { method: "DELETE" })
     const { payload, status } = await proxyResponse(res)
     return NextResponse.json(payload, { status })
   } catch (err) {
