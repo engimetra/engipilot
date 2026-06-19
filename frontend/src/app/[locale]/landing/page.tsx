@@ -349,7 +349,7 @@ export default function LandingPage() {
                       {item.dropdown.columns.flatMap(c => c.items).map((it) => (
                         <button
                           key={it.title}
-                          onClick={() => { setMobileOpen(false); if (it.scroll) scroll(it.scroll); }}
+                          onClick={() => { setMobileOpen(false); if (it.href) router.push(it.href); else if (it.scroll) scroll(it.scroll); }}
                           className="w-full flex items-center gap-2 px-2 py-2 text-sm text-gray-600 hover:text-[#1e512d] rounded-lg hover:bg-[#F0F7F2] transition-colors text-left"
                         >
                           <span>{it.icon}</span> {it.title}
