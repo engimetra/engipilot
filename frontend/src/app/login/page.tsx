@@ -12,9 +12,10 @@ import type { RolePlateforme, Utilisateur } from "@/types"
 /* ─── constants ────────────────────────────────────────────────────────────── */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const BLUE  = "#1E3A8A"
-const NAVY  = "#0F172A"
-const ORANGE = "#F97316"
+const GREEN      = "#1e512d"
+const GREEN_DARK = "#174024"
+const DARK_BG    = "#0B1A0F"
+const ORANGE     = "#ff751f"
 
 type Mode = "login" | "register"
 
@@ -68,8 +69,8 @@ function BlueprintIllustration() {
       {/* Building A — main tower */}
       <rect x="60" y="120" width="120" height="280" rx="3" fill="none"
         stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-      <rect x="60" y="120" width="120" height="30" rx="3" fill="rgba(249,115,22,0.15)"
-        stroke={ORANGE} strokeWidth="1.5" />
+      <rect x="60" y="120" width="120" height="30" rx="3" fill="rgba(255,117,31,0.15)"
+        stroke="#ff751f" strokeWidth="1.5" />
       {/* Windows grid */}
       {[0,1,2,3,4].map(row => [0,1,2].map(col => (
         <rect key={`wa${row}${col}`}
@@ -78,7 +79,7 @@ function BlueprintIllustration() {
       )))}
       {/* Door */}
       <rect x="105" y="352" width="30" height="48" rx="2"
-        fill="rgba(249,115,22,0.2)" stroke={ORANGE} strokeWidth="1.5" />
+        fill="rgba(249,115,22,0.2)" stroke="#ff751f" strokeWidth="1.5" />
 
       {/* Building B — mid-rise */}
       <rect x="220" y="180" width="90" height="220" rx="3" fill="none"
@@ -106,29 +107,29 @@ function BlueprintIllustration() {
       <line x1="390" y1="60" x2="408" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
       <line x1="490" y1="60" x2="472" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
       {/* Hook */}
-      <line x1="470" y1="60" x2="470" y2="140" stroke={ORANGE} strokeWidth="1.5" strokeDasharray="4 3" />
-      <rect x="462" y="138" width="16" height="12" rx="2" fill="none" stroke={ORANGE} strokeWidth="1.5" />
+      <line x1="470" y1="60" x2="470" y2="140" stroke="#ff751f" strokeWidth="1.5" strokeDasharray="4 3" />
+      <rect x="462" y="138" width="16" height="12" rx="2" fill="none" stroke="#ff751f" strokeWidth="1.5" />
 
       {/* Ground */}
       <line x1="0" y1="400" x2="520" y2="400" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
 
       {/* Dimension lines */}
-      <line x1="60" y1="415" x2="180" y2="415" stroke={ORANGE} strokeWidth="1" markerEnd="url(#arr)" />
-      <text x="110" y="412" fill={ORANGE} fontSize="9" textAnchor="middle" fontFamily="monospace">12.0 m</text>
+      <line x1="60" y1="415" x2="180" y2="415" stroke="#ff751f" strokeWidth="1" markerEnd="url(#arr)" />
+      <text x="110" y="412" fill="#ff751f" fontSize="9" textAnchor="middle" fontFamily="monospace">12.0 m</text>
 
       {/* Measurement box */}
       <rect x="340" y="60" width="80" height="52" rx="4"
-        fill="rgba(30,58,138,0.4)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+        fill="rgba(30,81,45,0.4)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
       <text x="380" y="78" fill="rgba(255,255,255,0.9)" fontSize="8" textAnchor="middle" fontFamily="monospace">PROJET R+8</text>
-      <text x="380" y="91" fill={ORANGE} fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ENGIPILOT</text>
+      <text x="380" y="91" fill="#ff751f" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ENGIPILOT</text>
       <text x="380" y="104" fill="rgba(255,255,255,0.5)" fontSize="7" textAnchor="middle" fontFamily="monospace">v2.4 — 2025</text>
 
       {/* Cross markers */}
       {[[50,110],[210,170],[340,250]].map(([cx,cy], i) => (
         <g key={i}>
-          <line x1={cx-6} y1={cy} x2={cx+6} y2={cy} stroke={ORANGE} strokeWidth="1" opacity=".6" />
-          <line x1={cx} y1={cy-6} x2={cx} y2={cy+6} stroke={ORANGE} strokeWidth="1" opacity=".6" />
-          <circle cx={cx} cy={cy} r="2" fill={ORANGE} opacity=".6" />
+          <line x1={cx-6} y1={cy} x2={cx+6} y2={cy} stroke="#ff751f" strokeWidth="1" opacity=".6" />
+          <line x1={cx} y1={cy-6} x2={cx} y2={cy+6} stroke="#ff751f" strokeWidth="1" opacity=".6" />
+          <circle cx={cx} cy={cy} r="2" fill="#ff751f" opacity=".6" />
         </g>
       ))}
     </svg>
@@ -140,8 +141,8 @@ function Feature({ icon: Icon, text }: { icon: React.ElementType; text: string }
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)" }}>
-        <Icon className="w-4 h-4" style={{ color: ORANGE }} />
+        style={{ background: "rgba(30,81,45,0.2)", border: "1px solid rgba(30,81,45,0.35)" }}>
+        <Icon className="w-4 h-4" style={{ color: "#7aba8c" }} />
       </div>
       <span className="text-white/70 text-sm">{text}</span>
     </div>
@@ -193,7 +194,7 @@ const inputCls = (err: boolean) =>
   inputBase +
   (err
     ? " border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-    : " border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100")
+    : " border-gray-200 focus:border-[#1e512d] focus:ring-2 focus:ring-[#E4F0E7]")
 
 /* ─── Page ─────────────────────────────────────────────────────────────────── */
 export default function LoginPage() {
@@ -331,7 +332,7 @@ export default function LoginPage() {
       <div
         className="relative lg:w-[55%] flex flex-col justify-between overflow-hidden
                    px-8 py-10 lg:px-14 lg:py-12 min-h-[320px] lg:min-h-screen"
-        style={{ background: `linear-gradient(160deg, ${NAVY} 0%, #0d2260 60%, #1a1040 100%)` }}
+        style={{ background: `linear-gradient(160deg, ${DARK_BG} 0%, #133020 55%, #0f2318 100%)` }}
       >
         {/* subtle grid overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-40"
@@ -342,15 +343,15 @@ export default function LoginPage() {
 
         {/* orange glow */}
         <div className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at bottom left, rgba(249,115,22,0.12) 0%, transparent 65%)" }} />
+          style={{ background: "radial-gradient(ellipse at bottom left, rgba(255,117,31,0.14) 0%, transparent 65%)" }} />
         <div className="absolute top-0 right-0 w-72 h-72 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at top right, rgba(30,58,138,0.5) 0%, transparent 65%)" }} />
+          style={{ background: "radial-gradient(ellipse at top right, rgba(30,81,45,0.5) 0%, transparent 65%)" }} />
 
         {/* top: logo */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12 lg:mb-16">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: ORANGE, boxShadow: "0 4px 14px rgba(249,115,22,0.4)" }}>
+              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 100%)`, boxShadow: "0 4px 14px rgba(30,81,45,0.45)" }}>
               <HardHat className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
             <div>
@@ -365,7 +366,7 @@ export default function LoginPage() {
           <h1 className="text-3xl lg:text-4xl font-black text-white leading-[1.15] mb-4 tracking-tight">
             La plateforme intelligente<br />
             <span style={{ color: ORANGE }}>pour piloter vos projets</span><br />
-            de construction
+            <span style={{ color: "rgba(255,255,255,0.85)" }}>de construction</span>
           </h1>
           <p className="text-white/55 text-sm lg:text-base leading-relaxed max-w-md mb-10">
             Supervision en temps réel, IA prédictive et gestion HSE —
@@ -392,15 +393,15 @@ export default function LoginPage() {
       </div>
 
       {/* ══ RIGHT PANEL ═════════════════════════════════════════════════════════ */}
-      <div className="lg:w-[45%] flex items-center justify-center px-6 py-14 bg-slate-50">
+      <div className="lg:w-[45%] flex items-center justify-center px-6 py-14" style={{ background: "#F7F9FC" }}>
         <div className="w-full max-w-[400px]">
 
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/80 border border-slate-100 p-8">
+          <div className="bg-white rounded-2xl p-8" style={{ boxShadow: "0 4px 32px rgba(30,81,45,0.10)", border: "1px solid #E4F0E7" }}>
 
             {/* Header */}
             <div className="mb-7">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-2xl font-black tracking-tight" style={{ color: "#0B132B" }}>
                 {forgotMode ? "Réinitialiser le mot de passe" : mode === "login" ? "Connexion" : "Créer un compte"}
               </h2>
               <p className="text-slate-500 text-sm mt-1">
@@ -420,7 +421,7 @@ export default function LoginPage() {
                   <button key={m} type="button" onClick={() => switchMode(m)}
                     className="flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
                     style={mode === m
-                      ? { background: "white", color: BLUE, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                      ? { background: "white", color: GREEN, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
                       : { color: "#64748b" }}>
                     {m === "login" ? "Connexion" : "Inscription"}
                   </button>
@@ -443,7 +444,7 @@ export default function LoginPage() {
                   <button type="button"
                     onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail("") }}
                     className="text-sm font-semibold mt-2 hover:underline"
-                    style={{ color: BLUE }}>
+                    style={{ color: GREEN }}>
                     ← Retour à la connexion
                   </button>
                 </div>
@@ -463,7 +464,7 @@ export default function LoginPage() {
                   <button type="submit" disabled={forgotLoading}
                     className="w-full py-2.5 rounded-xl text-white font-semibold text-sm
                                flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
-                    style={{ background: `linear-gradient(135deg, ${BLUE}, ${ORANGE})` }}>
+                    style={{ background: `linear-gradient(135deg, ${GREEN}, ${ORANGE})` }}>
                     {forgotLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                     Envoyer le lien
                   </button>
@@ -540,7 +541,7 @@ export default function LoginPage() {
                       <button type="button"
                         onClick={() => { setForgotMode(true); setForgotEmail(fields.email); setForgotErr(""); setForgotSent(false) }}
                         className="text-xs font-medium hover:underline"
-                        style={{ color: BLUE }}>
+                        style={{ color: GREEN }}>
                         Mot de passe oublié ?
                       </button>
                     )}
@@ -593,7 +594,7 @@ export default function LoginPage() {
                     <input id="rememberMe" type="checkbox" checked={fields.rememberMe}
                       onChange={e => set("rememberMe", e.target.checked)}
                       className="w-4 h-4 rounded border-slate-300 cursor-pointer"
-                      style={{ accentColor: BLUE }} />
+                      style={{ accentColor: GREEN }} />
                     <label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer select-none">
                       Se souvenir de moi
                     </label>
@@ -616,8 +617,8 @@ export default function LoginPage() {
                              flex items-center justify-center gap-2 mt-1 transition-all duration-150
                              active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{
-                    background: loading ? "#94a3b8" : `linear-gradient(135deg, ${BLUE} 0%, #2563eb 50%, ${ORANGE} 100%)`,
-                    boxShadow: loading ? "none" : "0 4px 14px rgba(37,99,235,0.35)",
+                    background: loading ? "#94a3b8" : `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 40%, ${ORANGE} 100%)`,
+                    boxShadow: loading ? "none" : "0 4px 14px rgba(30,81,45,0.38)",
                   }}>
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" />
@@ -643,13 +644,13 @@ export default function LoginPage() {
               {mode === "login" ? (
                 <>Pas encore de compte ?{" "}
                   <button type="button" onClick={() => switchMode("register")}
-                    className="font-semibold hover:underline" style={{ color: BLUE }}>
+                    className="font-semibold hover:underline" style={{ color: GREEN }}>
                     S'inscrire gratuitement
                   </button></>
               ) : (
                 <>Déjà un compte ?{" "}
                   <button type="button" onClick={() => switchMode("login")}
-                    className="font-semibold hover:underline" style={{ color: BLUE }}>
+                    className="font-semibold hover:underline" style={{ color: GREEN }}>
                     Se connecter
                   </button></>
               )}
