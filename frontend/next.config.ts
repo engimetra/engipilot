@@ -46,6 +46,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "http",  hostname: "localhost", port: "9000" },
       { protocol: "https", hostname: "cdn.engipilot.ma" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "plus.unsplash.com" },
     ],
   },
 
@@ -68,7 +70,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://cdn.engipilot.ma http://localhost:9000",
+              "img-src 'self' data: blob: https://cdn.engipilot.ma http://localhost:9000 https://images.unsplash.com https://plus.unsplash.com",
               "connect-src 'self' https://api.openai.com wss: ws:",
               "frame-ancestors 'none'",
             ].join("; "),

@@ -441,62 +441,47 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Dashboard mockup */}
+          {/* Hero image — real construction site */}
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-[#1e512d]/10 to-[#ff751f]/10 rounded-[48px] blur-2xl" />
-            <div className="relative bg-white rounded-[28px] shadow-2xl border border-gray-100 p-6 overflow-hidden">
-              {/* Top bar */}
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-                <div className="flex-1 bg-gray-100 h-6 rounded-lg ml-2" />
+            {/* Glow halo */}
+            <div className="absolute -inset-4 bg-gradient-to-br from-[#1e512d]/15 to-[#ff751f]/15 rounded-[48px] blur-3xl" />
+
+            <div className="relative rounded-[28px] overflow-hidden shadow-2xl border border-gray-100" style={{ aspectRatio: "4/3" }}>
+              {/* Real photo */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1100&q=80&fit=crop&crop=center"
+                alt="Équipe ingénieurs sur chantier"
+                className="w-full h-full object-cover"
+              />
+              {/* Gradient overlay — bottom fade for legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1A0F]/70 via-transparent to-transparent" />
+
+              {/* Top-left badge */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-[#1e512d] animate-pulse" />
+                <span className="text-[11px] font-bold text-[#0B132B]">ENGIPILOT — Live</span>
               </div>
 
-              <div className="grid grid-cols-4 gap-3">
+              {/* Floating KPI cards at the bottom */}
+              <div className="absolute bottom-4 left-4 right-4 grid grid-cols-2 gap-2">
                 {[
-                  { label: "Avancement", value: "72%",  color: "#1e512d" },
-                  { label: "Budget",     value: "64%",  color: "#ff751f" },
-                  { label: "Tâches",     value: "128",  color: "#6366f1" },
-                  { label: "Incidents",  value: "7",    color: "#ef4444" },
+                  { label: "Avancement global", value: "72%",   color: "#1e512d", icon: "📈" },
+                  { label: "Budget consommé",   value: "64%",   color: "#ff751f", icon: "💰" },
+                  { label: "Tâches actives",    value: "128",   color: "#6366f1", icon: "📋" },
+                  { label: "Alertes HSE",       value: "7",     color: "#ef4444", icon: "🦺" },
                 ].map((k) => (
-                  <div key={k.label} className="bg-[#F7F9FC] rounded-2xl p-4">
-                    <p className="text-gray-400 text-[10px] font-medium uppercase tracking-wide">{k.label}</p>
-                    <h3 className="text-3xl font-black mt-1" style={{ color: k.color }}>{k.value}</h3>
+                  <div
+                    key={k.label}
+                    className="bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-md flex items-center gap-2.5"
+                  >
+                    <span className="text-lg leading-none">{k.icon}</span>
+                    <div>
+                      <p className="text-[9px] text-gray-400 font-medium uppercase tracking-wide leading-none mb-0.5">{k.label}</p>
+                      <p className="text-lg font-black leading-none" style={{ color: k.color }}>{k.value}</p>
+                    </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="bg-[#F7F9FC] rounded-2xl p-5 h-52">
-                  <h4 className="font-bold text-sm mb-4 text-gray-700">Avancement des projets</h4>
-                  <div className="flex items-end gap-2 h-32">
-                    {[20, 40, 35, 60, 70, 85, 55].map((h, i) => (
-                      <div
-                        key={i}
-                        className="rounded-t-lg flex-1 transition-all"
-                        style={{ height: `${h}%`, background: i % 2 === 0 ? "#1e512d" : "#ff751f", opacity: 0.85 + i * 0.02 }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="bg-[#F7F9FC] rounded-2xl p-5 h-52 flex flex-col gap-3">
-                  <h4 className="font-bold text-sm text-gray-700">État des chantiers</h4>
-                  {[
-                    { label: "En cours",    pct: 65, color: "#1e512d" },
-                    { label: "À risque",    pct: 20, color: "#ff751f" },
-                    { label: "Complétés",   pct: 15, color: "#6366f1" },
-                  ].map((s) => (
-                    <div key={s.label}>
-                      <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                        <span>{s.label}</span><span className="font-semibold">{s.pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: s.color }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>

@@ -52,90 +52,6 @@ const toRole = (raw: string): RolePlateforme => {
   return map[raw] ?? "UTILISATEUR_STANDARD"
 }
 
-/* ─── Blueprint SVG illustration ───────────────────────────────────────────── */
-function BlueprintIllustration() {
-  return (
-    <svg viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" aria-hidden>
-      {/* Grid */}
-      {Array.from({ length: 11 }, (_, i) => (
-        <line key={`v${i}`} x1={i * 52} y1="0" x2={i * 52} y2="420"
-          stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-      ))}
-      {Array.from({ length: 9 }, (_, i) => (
-        <line key={`h${i}`} x1="0" y1={i * 52} x2="520" y2={i * 52}
-          stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-      ))}
-
-      {/* Building A — main tower */}
-      <rect x="60" y="120" width="120" height="280" rx="3" fill="none"
-        stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-      <rect x="60" y="120" width="120" height="30" rx="3" fill="rgba(255,117,31,0.15)"
-        stroke="#ff751f" strokeWidth="1.5" />
-      {/* Windows grid */}
-      {[0,1,2,3,4].map(row => [0,1,2].map(col => (
-        <rect key={`wa${row}${col}`}
-          x={75 + col * 36} y={168 + row * 42} width="22" height="28" rx="2"
-          fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
-      )))}
-      {/* Door */}
-      <rect x="105" y="352" width="30" height="48" rx="2"
-        fill="rgba(249,115,22,0.2)" stroke="#ff751f" strokeWidth="1.5" />
-
-      {/* Building B — mid-rise */}
-      <rect x="220" y="180" width="90" height="220" rx="3" fill="none"
-        stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-      {[0,1,2,3].map(row => [0,1].map(col => (
-        <rect key={`wb${row}${col}`}
-          x={232 + col * 40} y={200 + row * 44} width="24" height="30" rx="2"
-          fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-      )))}
-      <rect x="247" y="352" width="26" height="48" rx="2"
-        fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-
-      {/* Building C — short */}
-      <rect x="350" y="260" width="70" height="140" rx="3" fill="none"
-        stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
-      {[0,1].map(row => [0,1].map(col => (
-        <rect key={`wc${row}${col}`}
-          x={360 + col * 32} y={278 + row * 44} width="18" height="24" rx="2"
-          fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-      )))}
-
-      {/* Crane */}
-      <line x1="430" y1="60" x2="430" y2="260" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
-      <line x1="390" y1="60" x2="490" y2="60" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
-      <line x1="390" y1="60" x2="408" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-      <line x1="490" y1="60" x2="472" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-      {/* Hook */}
-      <line x1="470" y1="60" x2="470" y2="140" stroke="#ff751f" strokeWidth="1.5" strokeDasharray="4 3" />
-      <rect x="462" y="138" width="16" height="12" rx="2" fill="none" stroke="#ff751f" strokeWidth="1.5" />
-
-      {/* Ground */}
-      <line x1="0" y1="400" x2="520" y2="400" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-
-      {/* Dimension lines */}
-      <line x1="60" y1="415" x2="180" y2="415" stroke="#ff751f" strokeWidth="1" markerEnd="url(#arr)" />
-      <text x="110" y="412" fill="#ff751f" fontSize="9" textAnchor="middle" fontFamily="monospace">12.0 m</text>
-
-      {/* Measurement box */}
-      <rect x="340" y="60" width="80" height="52" rx="4"
-        fill="rgba(30,81,45,0.4)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-      <text x="380" y="78" fill="rgba(255,255,255,0.9)" fontSize="8" textAnchor="middle" fontFamily="monospace">PROJET R+8</text>
-      <text x="380" y="91" fill="#ff751f" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ENGIPILOT</text>
-      <text x="380" y="104" fill="rgba(255,255,255,0.5)" fontSize="7" textAnchor="middle" fontFamily="monospace">v2.4 — 2025</text>
-
-      {/* Cross markers */}
-      {[[50,110],[210,170],[340,250]].map(([cx,cy], i) => (
-        <g key={i}>
-          <line x1={cx-6} y1={cy} x2={cx+6} y2={cy} stroke="#ff751f" strokeWidth="1" opacity=".6" />
-          <line x1={cx} y1={cy-6} x2={cx} y2={cy+6} stroke="#ff751f" strokeWidth="1" opacity=".6" />
-          <circle cx={cx} cy={cy} r="2" fill="#ff751f" opacity=".6" />
-        </g>
-      ))}
-    </svg>
-  )
-}
-
 /* ─── Feature pill ─────────────────────────────────────────────────────────── */
 function Feature({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
@@ -381,10 +297,30 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* bottom: illustration */}
+        {/* bottom: real construction photo */}
         <div className="relative z-10 hidden lg:block">
-          <div className="h-52 opacity-70">
-            <BlueprintIllustration />
+          <div className="relative rounded-2xl overflow-hidden h-52">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=900&q=75&fit=crop&crop=center"
+              alt="Chantier de construction aérien"
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay so text remains readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1A0F]/80 via-[#0B1A0F]/30 to-transparent" />
+            {/* Floating stats */}
+            <div className="absolute bottom-3 left-4 right-4 flex gap-3">
+              {[
+                { label: "Chantiers actifs", value: "2 400+" },
+                { label: "Pays couverts",    value: "15" },
+                { label: "Réduction retards",value: "34%" },
+              ].map(s => (
+                <div key={s.label} className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/15">
+                  <p className="text-[9px] text-white/50 uppercase tracking-wider">{s.label}</p>
+                  <p className="text-sm font-black text-white">{s.value}</p>
+                </div>
+              ))}
+            </div>
           </div>
           <p className="text-white/25 text-xs mt-4">
             © {new Date().getFullYear()} ENGIPILOT — SaaS BTP Maroc · Tous droits réservés
