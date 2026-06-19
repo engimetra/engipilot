@@ -85,7 +85,7 @@ async function fetchProjects(): Promise<ApiProject[]> {
 
 async function createProject(data: {
   name: string; startDate: string; endDate: string; budgetInitial: number;
-  status: string; type: string; city?: string; clientName?: string;
+  status: string; type: string; city?: string; clientName?: string; reference?: string;
 }) {
   const res = await fetch("/api/projects", {
     method:  "POST",
@@ -122,7 +122,7 @@ async function deleteProject(id: string) {
 type SortKey = "nom" | "avancement" | "budget" | "fin" | null
 
 const FORM_INIT = {
-  nom: "", clientName: "", budget: "", debut: "", fin: "",
+  nom: "", code: "", clientName: "", budget: "", debut: "", fin: "",
   status: "ACTIVE", type: "CONSTRUCTION", city: "",
 }
 
@@ -284,6 +284,7 @@ export default function ChantiersPage() {
 
     mutation.mutate({
       name:          form.nom.trim(),
+      reference:     form.code.trim() || undefined,
       startDate:     form.debut,
       endDate:       form.fin,
       budgetInitial: Number(form.budget),
@@ -684,16 +685,27 @@ export default function ChantiersPage() {
                 </div>
               )}
 
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  Nom du chantier <span className="text-danger">*</span>
-                </label>
-                <input
-                  value={form.nom}
-                  onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                  placeholder="Ex: Résidence Les Orangers"
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">Code Chantier</label>
+                  <input
+                    value={form.code}
+                    onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
+                    placeholder="Ex: CH-2024-001"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                    Nom du chantier <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    value={form.nom}
+                    onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+                    placeholder="Ex: Résidence Les Orangers"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
