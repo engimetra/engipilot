@@ -10,7 +10,7 @@ type NavItem = {
   dropdown?: {
     columns: {
       heading?: string;
-      items: { icon: string; title: string; desc: string; scroll?: string }[];
+      items: { icon: string; title: string; desc: string; scroll?: string; href?: string }[];
     }[];
   };
 };
@@ -24,25 +24,25 @@ const NAV: NavItem[] = [
         {
           heading: "Planification",
           items: [
-            { icon: "📅", title: "Gestion de projets",  desc: "Pilotez chaque chantier de A à Z",     scroll: "features" },
-            { icon: "📊", title: "Planning & Gantt",    desc: "Visualisez délais et dépendances",      scroll: "features" },
-            { icon: "📋", title: "Tâches & Kanban",     desc: "Collaborez avec vos équipes",           scroll: "features" },
+            { icon: "📅", title: "Gestion de projets",  desc: "Pilotez chaque chantier de A à Z",     href: "/chantiers" },
+            { icon: "📊", title: "Planning & Gantt",    desc: "Visualisez délais et dépendances",      href: "/planning" },
+            { icon: "📋", title: "Tâches & Kanban",     desc: "Collaborez avec vos équipes",           href: "/kanban" },
           ],
         },
         {
           heading: "Contrôle",
           items: [
-            { icon: "📈", title: "Rapports & BI",       desc: "Tableaux de bord en temps réel",        scroll: "features" },
-            { icon: "✅", title: "Qualité",             desc: "Inspections et non-conformités",        scroll: "features" },
-            { icon: "🦺", title: "HSE",                 desc: "Sécurité et incidents",                 scroll: "features" },
+            { icon: "📈", title: "Rapports & BI",       desc: "Tableaux de bord en temps réel",        href: "/rapports" },
+            { icon: "✅", title: "Qualité",             desc: "Inspections et non-conformités",        href: "/qualite" },
+            { icon: "🦺", title: "HSE",                 desc: "Sécurité et incidents",                 href: "/hse" },
           ],
         },
         {
           heading: "IA & Analyse",
           items: [
-            { icon: "🔮", title: "Prédiction IA",       desc: "Anticiper retards et dérives",          scroll: "features" },
-            { icon: "💰", title: "Optimisation coûts",  desc: "Réduire les surcoûts de 34 %",         scroll: "features" },
-            { icon: "🤝", title: "Assistant intelligent",desc: "Copilote IA pour vos décisions",       scroll: "features" },
+            { icon: "🔮", title: "Prédiction IA",       desc: "Anticiper retards et dérives",          href: "/analytics" },
+            { icon: "💰", title: "Optimisation coûts",  desc: "Réduire les surcoûts de 34 %",         href: "/analytics" },
+            { icon: "🤝", title: "Assistant intelligent",desc: "Copilote IA pour vos décisions",       href: "/chat" },
           ],
         },
       ],
@@ -55,17 +55,17 @@ const NAV: NavItem[] = [
         {
           heading: "Opérations",
           items: [
-            { icon: "📄", title: "Documents",         desc: "GED centralisée et sécurisée",      scroll: "modules" },
-            { icon: "👥", title: "Équipes & RH",      desc: "Ressources et compétences",         scroll: "modules" },
-            { icon: "📦", title: "Approvisionnement", desc: "Achats, stocks, fournisseurs",      scroll: "modules" },
+            { icon: "📄", title: "Documents",         desc: "GED centralisée et sécurisée",      href: "/documents" },
+            { icon: "👥", title: "Équipes & RH",      desc: "Ressources et compétences",         href: "/equipes" },
+            { icon: "📦", title: "Approvisionnement", desc: "Achats, stocks, fournisseurs",      href: "/approvisionnement" },
           ],
         },
         {
           heading: "Finance",
           items: [
-            { icon: "💰", title: "Facturation",       desc: "Suivi financier multi-projets",     scroll: "modules" },
-            { icon: "📊", title: "EVM & KPIs",        desc: "Indicateurs de valeur acquise",     scroll: "modules" },
-            { icon: "📉", title: "Budget & Coûts",    desc: "Contrôle budgétaire en direct",     scroll: "modules" },
+            { icon: "💰", title: "Facturation",       desc: "Suivi financier multi-projets",     href: "/facturation" },
+            { icon: "📊", title: "EVM & KPIs",        desc: "Indicateurs de valeur acquise",     href: "/analytics" },
+            { icon: "📉", title: "Budget & Coûts",    desc: "Contrôle budgétaire en direct",     href: "/analytics" },
           ],
         },
       ],
@@ -78,17 +78,17 @@ const NAV: NavItem[] = [
         {
           heading: "Par type de projet",
           items: [
-            { icon: "🏗️", title: "Génie civil",         desc: "Routes, ponts, ouvrages d'art",  scroll: "solutions" },
-            { icon: "🏢", title: "Bâtiment",            desc: "Résidentiel et tertiaire",        scroll: "solutions" },
-            { icon: "⚡", title: "Énergie & Industrie", desc: "Centrales, usines, réseaux",      scroll: "solutions" },
+            { icon: "🏗️", title: "Génie civil",         desc: "Routes, ponts, ouvrages d'art",  href: "/chantiers" },
+            { icon: "🏢", title: "Bâtiment",            desc: "Résidentiel et tertiaire",        href: "/chantiers" },
+            { icon: "⚡", title: "Énergie & Industrie", desc: "Centrales, usines, réseaux",      href: "/chantiers" },
           ],
         },
         {
           heading: "Par département",
           items: [
-            { icon: "👷", title: "Conducteurs de travaux", desc: "Suivi terrain en temps réel",  scroll: "solutions" },
-            { icon: "📐", title: "BET & Ingénierie",       desc: "Études, plans, livrables",      scroll: "solutions" },
-            { icon: "🏦", title: "Direction générale",     desc: "Vision globale et reporting",   scroll: "solutions" },
+            { icon: "👷", title: "Conducteurs de travaux", desc: "Suivi terrain en temps réel",  href: "/dashboard" },
+            { icon: "📐", title: "BET & Ingénierie",       desc: "Études, plans, livrables",      href: "/documents" },
+            { icon: "🏦", title: "Direction générale",     desc: "Vision globale et reporting",   href: "/analytics" },
           ],
         },
       ],
@@ -119,9 +119,11 @@ function NavDropdown({ item, onClose }: { item: NavItem; onClose: () => void }) 
   if (!item.dropdown) return null;
   const { columns } = item.dropdown;
 
-  function go(scroll?: string) {
+  function go(scroll?: string, href?: string) {
     onClose();
-    if (scroll) {
+    if (href) {
+      router.push(href);
+    } else if (scroll) {
       setTimeout(() => document.getElementById(scroll)?.scrollIntoView({ behavior: "smooth" }), 50);
     }
   }
@@ -145,7 +147,7 @@ function NavDropdown({ item, onClose }: { item: NavItem; onClose: () => void }) 
                 {col.items.map((it) => (
                   <button
                     key={it.title}
-                    onClick={() => go(it.scroll)}
+                    onClick={() => go(it.scroll, it.href)}
                     className="w-full flex items-start gap-3 p-3 rounded-xl hover:bg-[#F0F7F2] group transition-colors text-left"
                   >
                     <span className="text-2xl leading-none mt-0.5 flex-shrink-0">{it.icon}</span>
