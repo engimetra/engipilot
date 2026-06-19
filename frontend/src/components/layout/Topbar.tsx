@@ -10,25 +10,46 @@ import { useStore } from "@/store/useStore"
 import { useRouter } from "next/navigation"
 import { Link, usePathname } from "@/i18n/navigation"
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher"
+import { useTranslations } from "next-intl"
 
-const PAGE_LABELS: Record<string, { label: string; emoji: string }> = {
-  "/dashboard":     { label: "Dashboard",      emoji: "📊" },
-  "/chantiers":     { label: "Chantiers",       emoji: "🏗️" },
-  "/kanban":        { label: "Kanban",          emoji: "📋" },
-  "/planning":      { label: "Planning",        emoji: "📅" },
-  "/analytics":     { label: "Analytics",       emoji: "📈" },
-  "/ia":            { label: "Module IA",       emoji: "🤖" },
-  "/chat":          { label: "Chat IA",         emoji: "💬" },
-  "/hse":           { label: "HSE",             emoji: "🦺" },
-  "/qualite":       { label: "Qualité",         emoji: "✅" },
-  "/rapports":      { label: "Rapports",        emoji: "📄" },
-  "/documents":     { label: "Documents",       emoji: "📁" },
-  "/equipes":       { label: "Équipes",         emoji: "👥" },
-  "/notifications": { label: "Notifications",   emoji: "🔔" },
-  "/parametres":    { label: "Paramètres",      emoji: "⚙️" },
-  "/facturation":   { label: "Facturation",     emoji: "💳" },
-  "/onboarding":    { label: "Onboarding",      emoji: "🚀" },
-  "/admin":         { label: "Administration",  emoji: "🛡️" },
+const PAGE_EMOJIS: Record<string, string> = {
+  "/dashboard":     "📊",
+  "/chantiers":     "🏗️",
+  "/kanban":        "📋",
+  "/planning":      "📅",
+  "/analytics":     "📈",
+  "/ia":            "🤖",
+  "/chat":          "💬",
+  "/hse":           "🦺",
+  "/qualite":       "✅",
+  "/rapports":      "📄",
+  "/documents":     "📁",
+  "/equipes":       "👥",
+  "/notifications": "🔔",
+  "/parametres":    "⚙️",
+  "/facturation":   "💳",
+  "/onboarding":    "🚀",
+  "/admin":         "🛡️",
+}
+
+const SEGMENT_TO_PAGE_KEY: Record<string, string> = {
+  "/dashboard":     "dashboard",
+  "/chantiers":     "chantiers",
+  "/kanban":        "kanban",
+  "/planning":      "planning",
+  "/analytics":     "analytics",
+  "/ia":            "ia",
+  "/chat":          "chat",
+  "/hse":           "hse",
+  "/qualite":       "qualite",
+  "/rapports":      "rapports",
+  "/documents":     "documents",
+  "/equipes":       "equipes",
+  "/notifications": "notifications",
+  "/parametres":    "parametres",
+  "/facturation":   "facturation",
+  "/onboarding":    "onboarding",
+  "/admin":         "admin",
 }
 
 type NotifType = "RETARD" | "BUDGET" | "HSE" | "IA"
@@ -64,6 +85,8 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const role   = user?.role
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations("topbar")
+  const tPages = useTranslations("pages")
 
   const [notifs, setNotifs]       = useState<QuickNotif[]>(INIT_NOTIFS)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -80,12 +103,14 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   })
 
   const activeProject = projetActif ?? (projects[0] ? { id: projects[0].id, nom: projects[0].name } as never : null)
-  const activeLabel   = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? "Sélectionner projet"
+  const activeLabel   = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? t("selectProject")
 
   const unreadCount = notifs.filter(n => !n.read).length
 
-  const segment  = "/" + (pathname.split("/")[1] ?? "")
-  const pageMeta = PAGE_LABELS[segment]
+  const segment   = "/" + (pathname.split("/")[1] ?? "")
+  const pageKey   = SEGMENT_TO_PAGE_KEY[segment]
+  const pageLabel = pageKey ? tPages(pageKey as Parameters<typeof tPages>[0]) : null
+  const pageEmoji = PAGE_EMOJIS[segment]
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -134,14 +159,14 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
         <Link
-          href="/landing"
+          href="/accueil"
           className="flex items-center gap-1.5 transition-colors rounded-lg px-2 py-1 hover:bg-muted"
           style={{ color: "var(--color-muted-fg)", fontSize: "13px", fontWeight: 500 }}
         >
           <Layers style={{ width: "13px", height: "13px" }} />
           <span className="hidden sm:inline">ENGIPILOT</span>
         </Link>
-        {pageMeta && (
+        {pageLabel && (
           <>
             <span style={{ color: "var(--color-muted-fg)", fontSize: "16px", lineHeight: 1, userSelect: "none" }}>/</span>
             <span
@@ -152,7 +177,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                 letterSpacing: "-0.01em",
               }}
             >
-              {pageMeta.label}
+              {pageEmoji && <span className="mr-1">{pageEmoji}</span>}{pageLabel}
             </span>
           </>
         )}
@@ -169,7 +194,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
       >
         <Search style={{ width: "13px", height: "13px", color: "var(--color-muted-fg-2)", flexShrink: 0 }} />
         <input
-          placeholder="Rechercher..."
+          placeholder={t("search")}
           style={{
             background: "transparent",
             fontSize: "13px",
@@ -249,7 +274,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
           onMouseLeave={e => (e.currentTarget.style.background = "#2563eb")}
         >
           <Plus style={{ width: "13px", height: "13px" }} strokeWidth={2.5} />
-          <span className="hidden sm:inline">Nouveau</span>
+          <span className="hidden sm:inline">{t("new")}</span>
         </button>
 
         {/* Language switcher */}
@@ -264,7 +289,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
             className="w-1.5 h-1.5 rounded-full"
             style={{ background: "var(--color-success)", animation: "pulse-dot 2s ease-in-out infinite" }}
           />
-          En ligne
+          {t("online")}
         </div>
 
         {/* ── Notifications ── */}
@@ -328,7 +353,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
               >
                 <div className="flex items-center gap-2">
                   <Bell style={{ width: "13px", height: "13px", color: "var(--color-foreground)" }} />
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-foreground)" }}>Notifications</span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-foreground)" }}>{t("notifications")}</span>
                   {unreadCount > 0 && (
                     <span
                       style={{
@@ -351,7 +376,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                       style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-primary)", padding: "3px 8px", borderRadius: "6px", cursor: "pointer" }}
                       className="hover:bg-primary/5 transition-colors"
                     >
-                      Tout lire
+                      {t("markAllRead")}
                     </button>
                   )}
                   <button
@@ -432,7 +457,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                   className="flex items-center justify-center gap-1.5 transition-colors"
                   style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-primary)" }}
                 >
-                  Voir toutes les notifications
+                  {t("viewAll")}
                   <ArrowRight style={{ width: "13px", height: "13px" }} />
                 </Link>
               </div>
@@ -536,7 +561,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                   className="flex items-center gap-2.5 w-full rounded-lg px-2.5 py-2 hover:bg-muted transition-colors"
                   style={{ fontSize: "12.5px", color: "var(--color-foreground-2)", fontWeight: 500 }}
                 >
-                  Paramètres
+                  {t("settings")}
                 </Link>
                 <button
                   onClick={() => { logout(); router.push("/login") }}
@@ -544,7 +569,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
                   style={{ fontSize: "12.5px", color: "var(--color-danger)", fontWeight: 500 }}
                 >
                   <LogOut style={{ width: "13px", height: "13px" }} />
-                  Déconnexion
+                  {t("logout")}
                 </button>
               </div>
             </div>
