@@ -1,0 +1,36 @@
+# ================================================================
+# ENGIPILOT — Tests de charge k6
+# Vérifie la résistance du backend sous charge simulée
+# Déclenchement : push sur main uniquement
+# ================================================================
+name: Tests de charge — k6
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+
+  # ── Tests de charge k6 ─────────────────────────────────────────
+  k6:
+    name: Tests de charge k6
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Lancer les tests de charge k6
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/load-test.js
+          # Paramètres passés au script k6
+          flags: --out json=k6-results.json
+
+      - name: Upload résultats k6
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultats-k6-${{ github.sha }}
+          path: k6-results.json
+          retention-days: 14

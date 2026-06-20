@@ -1,0 +1,87 @@
+# ================================================================
+# ENGIPILOT — Analyse de sécurité statique
+# CodeQL : analyse du code source Java, JavaScript/TypeScript, Python
+# Semgrep : analyse SAST multi-langage
+# Déclenchement : push main/develop, PR vers main, hebdomadaire
+# ================================================================
+name: Sécurité — CodeQL & Semgrep
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Chaque lundi à 03h00 UTC
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+
+  # ── Analyse CodeQL ─────────────────────────────────────────────
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [java, javascript, python]
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Initialisation de CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      # Compilation Java nécessaire pour l'analyse CodeQL
+      - name: Configuration Java 21 (Temurin)
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilation automatique (CodeQL)
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Exécution de l'analyse CodeQL
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql-${{ matrix.language }}
+
+  # ── Analyse Semgrep SAST ───────────────────────────────────────
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Lancer Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          # Règles de sécurité standards OWASP et autres
+          config: >-
+            p/owasp-top-ten
+            p/java
+            p/javascript
+            p/python
+            p/typescript
+          generateSarif: '1'
+
+      - name: Upload rapport Semgrep (SARIF)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
