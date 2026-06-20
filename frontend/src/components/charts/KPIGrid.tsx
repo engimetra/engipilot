@@ -1,5 +1,6 @@
 "use client"
-import { Building2, TrendingUp, TrendingDown, Wallet, Clock, ShieldAlert, Bell } from "lucide-react"
+import Link from "next/link"
+import { Building2, TrendingUp, TrendingDown, Wallet, Clock, ShieldAlert, Bell, ArrowUpRight } from "lucide-react"
 
 export interface DashboardKpis {
   totalProjects:  number
@@ -25,6 +26,7 @@ interface KPICardProps {
   accentBg:   string
   accentText: string
   sparkline?: number[]
+  href:       string
 }
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
@@ -46,27 +48,29 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   )
 }
 
-function KPICard({ icon: Icon, label, sublabel, value, delta, deltaUp, accent, accentBg, accentText, sparkline }: KPICardProps) {
+function KPICard({ icon: Icon, label, sublabel, value, delta, deltaUp, accent, accentBg, accentText, sparkline, href }: KPICardProps) {
   return (
-    <div className="group relative bg-white border border-border rounded-2xl p-5 hover:shadow-card-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
-      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: accent }} />
+    <Link href={href} className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-card-md hover:-translate-y-0.5 hover:border-primary/25 transition-all duration-200 overflow-hidden block">
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentBg}`}>
-          <Icon className={accentText} strokeWidth={2} style={{ width: 18, height: 18 }} />
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${accentBg}`}>
+          <Icon className={accentText} strokeWidth={2} style={{ width: 15, height: 15 }} />
         </div>
-        {sparkline && <Sparkline data={sparkline} color={accent} />}
+        <div className="flex items-center gap-1">
+          {sparkline && <Sparkline data={sparkline} color={accent} />}
+          <ArrowUpRight className="w-3 h-3 text-muted-fg/30 group-hover:text-primary transition-colors ml-1" />
+        </div>
       </div>
-      <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-[10px] text-muted-fg/60 mb-2 leading-none">{sublabel}</p>
-      <p className="text-2xl font-black tracking-tight text-foreground">{value}</p>
+      <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-0.5 truncate">{label}</p>
+      <p className="text-[10px] text-muted-fg/50 mb-2 leading-none truncate">{sublabel}</p>
+      <p className="text-xl font-bold tracking-tight text-foreground tabular-nums group-hover:text-primary transition-colors">{value}</p>
       {delta && (
-        <div className={`mt-2.5 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full
+        <div className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md
           ${deltaUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-          {deltaUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          {deltaUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
           {delta}
         </div>
       )}
-    </div>
+    </Link>
   )
 }
 
@@ -74,12 +78,12 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
   if (!data) {
     // Fallback statique si pas encore chargé
     return [
-      { icon: Building2,  label: "Active Projects",  sublabel: "Company sites",      value: "—",   accent: "#635BFF", accentBg: "bg-primary/10", accentText: "text-primary",  sparkline: [1,1,1,1,1,1,1,1] },
-      { icon: TrendingUp, label: "Global Progress",  sublabel: "Portfolio average",  value: "—",   accent: "#FDAB3D", accentBg: "bg-warning/10", accentText: "text-warning",  sparkline: [1,1,1,1,1,1,1,1] },
-      { icon: Wallet,     label: "Budget Consumed",  sublabel: "Across all projects",value: "—",   accent: "#E2445C", accentBg: "bg-danger/10",  accentText: "text-danger",   sparkline: [1,1,1,1,1,1,1,1] },
-      { icon: Clock,      label: "Critical Delays",  sublabel: "Sites requiring action",value: "—", accent: "#E2445C", accentBg: "bg-danger/10",  accentText: "text-danger",   sparkline: [1,1,1,1,1,1,1,1] },
-      { icon: ShieldAlert,label: "HSE Incidents",    sublabel: "Open incidents",     value: "—",   accent: "#14b8a6", accentBg: "bg-teal/10",    accentText: "text-teal",     sparkline: [1,1,1,1,1,1,1,1] },
-      { icon: Bell,       label: "Notifications",    sublabel: "Non lues",           value: "—",   accent: "#8b5cf6", accentBg: "bg-purple/10",  accentText: "text-purple",   sparkline: [1,1,1,1,1,1,1,1] },
+      { icon: Building2,  label: "Active Projects",  sublabel: "Company sites",         value: "—", accent: "#635BFF", accentBg: "bg-primary/10", accentText: "text-primary",  sparkline: [1,1,1,1,1,1,1,1], href: "/chantiers" },
+      { icon: TrendingUp, label: "Global Progress",  sublabel: "Portfolio average",      value: "—", accent: "#FDAB3D", accentBg: "bg-warning/10", accentText: "text-warning",  sparkline: [1,1,1,1,1,1,1,1], href: "/analytics" },
+      { icon: Wallet,     label: "Budget Consumed",  sublabel: "Across all projects",    value: "—", accent: "#E2445C", accentBg: "bg-danger/10",  accentText: "text-danger",   sparkline: [1,1,1,1,1,1,1,1], href: "/analytics" },
+      { icon: Clock,      label: "Critical Delays",  sublabel: "Sites requiring action", value: "—", accent: "#E2445C", accentBg: "bg-danger/10",  accentText: "text-danger",   sparkline: [1,1,1,1,1,1,1,1], href: "/planning" },
+      { icon: ShieldAlert,label: "HSE Incidents",    sublabel: "Open incidents",         value: "—", accent: "#14b8a6", accentBg: "bg-teal/10",    accentText: "text-teal",     sparkline: [1,1,1,1,1,1,1,1], href: "/hse" },
+      { icon: Bell,       label: "Notifications",    sublabel: "Non lues",               value: "—", accent: "#8b5cf6", accentBg: "bg-purple/10",  accentText: "text-purple",   sparkline: [1,1,1,1,1,1,1,1], href: "/notifications" },
     ]
   }
 
@@ -96,6 +100,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-primary/10",
       accentText: "text-primary",
       sparkline:  [1, 1, 1, 2, 2, 2, 3, data.activeProjects].map(v => Math.max(v, 1)),
+      href:       "/chantiers",
     },
     {
       icon:       TrendingUp,
@@ -108,6 +113,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-warning/10",
       accentText: "text-warning",
       sparkline:  [data.avgProgress - 8, data.avgProgress - 6, data.avgProgress - 4, data.avgProgress - 2, data.avgProgress].map(v => Math.max(v, 1)),
+      href:       "/analytics",
     },
     {
       icon:       Wallet,
@@ -120,6 +126,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-danger/10",
       accentText: "text-danger",
       sparkline:  [data.budgetPct - 12, data.budgetPct - 9, data.budgetPct - 6, data.budgetPct - 3, data.budgetPct].map(v => Math.max(v, 1)),
+      href:       "/analytics",
     },
     {
       icon:       Clock,
@@ -132,6 +139,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-danger/10",
       accentText: "text-danger",
       sparkline:  [0, 0, 0, 0, 0, 0, 0, Math.max(data.criticalDelays, 0)].map(v => Math.max(v, 1)),
+      href:       "/planning",
     },
     {
       icon:       ShieldAlert,
@@ -144,6 +152,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-teal/10",
       accentText: "text-teal",
       sparkline:  [0, 0, 0, 0, 0, 0, 0, Math.max(data.incidentCount, 0)].map(v => Math.max(v, 1)),
+      href:       "/hse",
     },
     {
       icon:       Bell,
@@ -156,6 +165,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
       accentBg:   "bg-purple/10",
       accentText: "text-purple",
       sparkline:  [0, 0, 0, 0, 0, 0, 0, Math.max(data.notifCount, 0)].map(v => Math.max(v, 1)),
+      href:       "/notifications",
     },
   ]
 }
@@ -163,7 +173,7 @@ function buildKpis(data?: DashboardKpis): KPICardProps[] {
 export function KPIGrid({ data }: { data?: DashboardKpis }) {
   const kpis = buildKpis(data)
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
       {kpis.map(kpi => <KPICard key={kpi.label} {...kpi} />)}
     </div>
   )

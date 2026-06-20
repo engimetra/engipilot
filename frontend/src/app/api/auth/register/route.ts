@@ -20,8 +20,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { user, token } = (json.data ?? json) as { user: unknown; token: string }
+    const plan = body.plan ?? null
 
-    const response = NextResponse.json({ user }, { status: 201 })
+    const response = NextResponse.json({ user, ...(plan ? { plan } : {}) }, { status: 201 })
     response.cookies.set("engipilot_session", token, {
       httpOnly: true,
       secure:   process.env.NODE_ENV === "production",

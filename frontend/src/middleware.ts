@@ -4,11 +4,15 @@ import { routing } from "./i18n/routing"
 
 const intlMiddleware = createMiddleware(routing)
 
-// Paths outside [locale] routing — served directly, no intl rewrite
-const BYPASS_INTL = ["/login", "/register", "/api", "/_next", "/favicon.ico"]
+const BYPASS_INTL = ["/login", "/register", "/reset-password", "/api", "/_next", "/favicon.ico"]
+const PUBLIC_SEGMENTS = ["login", "landing", "accueil", "register", "onboarding", "reset-password"]
 
-// Paths that don't require authentication
-const PUBLIC_SEGMENTS = ["login", "landing", "register", "onboarding"]
+const ALLOWED_ORIGINS = [
+  "https://engipilot.ma",
+  "https://www.engipilot.ma",
+  "https://209.38.231.154",
+  "http://209.38.231.154",
+]
 
 function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname.includes(".")) return true
@@ -20,8 +24,31 @@ function isPublicPath(pathname: string): boolean {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const origin = request.headers.get("origin") ?? ""
 
-  // Auth guard (before intl so redirect goes to /login, not /ar/login)
+  /* ── CORS preflight for API routes ── */
+  if (pathname.startsWith("/api") && request.method === "OPTIONS") {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin":  ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+      },
+    })
+  }
+
+  /* ── CORS headers for API routes ── */
+  if (pathname.startsWith("/api")) {
+    const response = NextResponse.next()
+    const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+    response.headers.set("Access-Control-Allow-Origin", allowedOrigin)
+    response.headers.set("Access-Control-Allow-Credentials", "true")
+    return response
+  }
+
+  /* ── Auth guard ── */
   if (!isPublicPath(pathname)) {
     const session    = request.cookies.get("engipilot_session")?.value
     const authHeader = request.headers.get("authorization")
@@ -30,7 +57,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Skip intl middleware for routes that live outside [locale] directory
   if (BYPASS_INTL.some(p => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next()
   }

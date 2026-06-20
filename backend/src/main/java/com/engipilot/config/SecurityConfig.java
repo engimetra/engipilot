@@ -30,7 +30,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
     // Définir CORS_ALLOWED_ORIGINS en production (ex: "https://app.engipilot.com")
-    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:80}")
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:80,http://localhost:8080}")
     private String allowedOriginsRaw;
 
     @Bean

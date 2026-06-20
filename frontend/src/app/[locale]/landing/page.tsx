@@ -26,7 +26,7 @@ export default function LandingPage() {
     { label: "Fonctionnalités", action: () => scrollTo("features")  },
     { label: "Modules",         action: () => scrollTo("modules")   },
     { label: "Solutions",       action: () => scrollTo("solutions") },
-    { label: "Tarifs",          action: () => scrollTo("tarifs")    },
+    { label: "Tarifs",          action: () => router.push("/pricing") },
     { label: "Ressources",      action: () => scrollTo("ressources")},
     { label: "À propos",        action: () => scrollTo("a-propos")  },
   ];
@@ -247,64 +247,69 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {[
               {
-                name: "Starter", price: "Gratuit", sub: "pour toujours",
-                features: ["3 chantiers", "Dashboard & KPIs", "Rapports journaliers", "1 utilisateur"],
-                cta: "Commencer gratuitement", highlight: false,
+                name: "Starter", price: "499 MAD", sub: "/ mois",
+                features: ["3 utilisateurs", "5 projets actifs", "Chat IA intégré", "Dashboard & KPIs de base", "Rapports journaliers"],
+                cta: "Démarrer l'essai gratuit", highlight: false, href: "/register?plan=starter", isEnterprise: false,
               },
               {
                 name: "Pro", price: "1 490 MAD", sub: "/ mois",
-                features: ["20 chantiers", "KPIs EVM complets", "Module IA prédictif", "25 utilisateurs", "Support 24/7"],
-                cta: "Démarrer l'essai gratuit", highlight: true,
+                features: ["15 utilisateurs", "Projets illimités", "IA avancée & prédictive", "KPIs EVM complets", "Rapports avancés PDF/Excel", "Support prioritaire 24/7"],
+                cta: "Démarrer l'essai gratuit", highlight: true, href: "/register?plan=pro", isEnterprise: false,
               },
               {
                 name: "Enterprise", price: "Sur devis", sub: "",
-                features: ["Chantiers illimités", "IA personnalisée", "API complète", "Utilisateurs illimités", "Account manager"],
-                cta: "Nous contacter", highlight: false,
+                features: ["Utilisateurs illimités", "Projets illimités", "Accès API complet", "IA personnalisée", "SLA 99,9 % garanti", "Support dédié & account manager"],
+                cta: "Nous contacter", highlight: false, href: "mailto:contact@engipilot.ma", isEnterprise: true,
               },
             ].map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-3xl p-10 border flex flex-col gap-6 ${
-                  plan.highlight
-                    ? "bg-blue-600 text-white border-blue-600 shadow-2xl scale-105"
-                    : "bg-white border-gray-200"
+                className={`relative rounded-2xl border transition-all hover:-translate-y-1 flex flex-col h-full ${
+                  plan.highlight ? "shadow-2xl scale-[1.03]" : "bg-white border-gray-200 shadow-sm hover:shadow-lg"
                 }`}
               >
-                <div>
-                  <h3 className={`text-2xl font-black ${plan.highlight ? "text-white" : ""}`}>{plan.name}</h3>
-                  <div className="mt-3">
-                    <span className={`text-4xl font-black ${plan.highlight ? "text-white" : "text-blue-600"}`}>
-                      {plan.price}
-                    </span>
-                    {plan.sub && (
-                      <span className={`text-sm ml-1 ${plan.highlight ? "text-blue-100" : "text-gray-500"}`}>
-                        {plan.sub}
-                      </span>
-                    )}
+                {plan.highlight && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E3A8A] rounded-2xl" />
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap z-10">
+                      ⭐ RECOMMANDÉ
+                    </div>
+                  </>
+                )}
+                <div className="relative p-8 flex flex-col flex-1 justify-between">
+                  <div>
+                    <h3 className={`text-xl font-black ${plan.highlight ? "text-white" : "text-[#0F172A]"}`}>{plan.name}</h3>
+                    <div className="mt-2 flex items-end gap-1 mb-5">
+                      <span className={`text-3xl font-black ${plan.highlight ? "text-white" : "text-[#2563EB]"}`}>{plan.price}</span>
+                      {plan.sub && <span className={`text-sm mb-0.5 ${plan.highlight ? "text-white/60" : "text-gray-400"}`}>{plan.sub}</span>}
+                    </div>
+                    <ul className="space-y-2.5 mb-6">
+                      {plan.features.map((f) => (
+                        <li key={f} className={`flex items-center gap-2.5 text-sm ${plan.highlight ? "text-white/80" : "text-[#475569]"}`}>
+                          <svg className={`w-4 h-4 flex-shrink-0 ${plan.highlight ? "text-blue-200" : "text-[#2563EB]"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
+                  <a
+                    href={plan.href}
+                    className={`block w-full py-3.5 rounded-xl font-bold text-sm text-center transition-all shadow-md ${
+                      plan.highlight
+                        ? "bg-white text-[#2563EB] hover:bg-blue-50"
+                        : plan.isEnterprise
+                          ? "bg-[#0F172A] text-white hover:bg-[#1E3A8A]"
+                          : "bg-[#2563EB] text-white hover:bg-[#1E3A8A]"
+                    }`}
+                  >
+                    {plan.cta}
+                  </a>
                 </div>
-
-                <ul className="space-y-3 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className={`flex items-center gap-2 text-sm ${plan.highlight ? "text-blue-100" : "text-gray-600"}`}>
-                      <span className={plan.highlight ? "text-white" : "text-blue-600"}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => router.push("/login")}
-                  className={`w-full py-4 rounded-2xl font-bold transition ${
-                    plan.highlight
-                      ? "bg-white text-blue-600 hover:bg-blue-50"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  {plan.cta}
-                </button>
               </div>
             ))}
           </div>
@@ -431,7 +436,7 @@ export default function LandingPage() {
             { title: "Produit",    links: [
               { label: "Fonctionnalités", action: () => scrollTo("features")   },
               { label: "Modules",         action: () => scrollTo("modules")    },
-              { label: "Tarifs",          action: () => scrollTo("tarifs")     },
+              { label: "Tarifs",          action: () => router.push("/pricing") },
               { label: "Mises à jour",    action: () => scrollTo("hero")       },
             ]},
             { title: "Solutions",  links: [

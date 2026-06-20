@@ -22,7 +22,7 @@ interface UIMessage {
 
 /* ═══════════════════════ CONFIG ════════════════════════════ */
 const MODES: { id: ChatMode; label: string; icon: React.ElementType; color: string; desc: string }[] = [
-  { id: "chat",    label: "Chat libre",       icon: MessageSquare, color: "#635BFF", desc: "Assistant conversationnel"  },
+  { id: "chat",    label: "Chat libre",       icon: MessageSquare, color: "#1e512d", desc: "Assistant conversationnel"  },
   { id: "pv",      label: "Générer PV",       icon: FileText,      color: "#14b8a6", desc: "PV réunion automatique"     },
   { id: "rapport", label: "Résumé Rapport",   icon: BarChart3,     color: "#8b5cf6", desc: "Synthèse et analyse"        },
   { id: "risques", label: "Détection Risques",icon: AlertTriangle, color: "#E2445C", desc: "Scan risques en temps réel" },
@@ -252,9 +252,9 @@ export default function ChatPage() {
 
       {/* ══ HEADER ══ */}
       <div className="flex-shrink-0 relative rounded-2xl overflow-hidden border border-border mb-4"
-        style={{ background: "linear-gradient(135deg, #635BFF08 0%, #ffffff 40%, #8b5cf608 100%)" }}>
+        style={{ background: "linear-gradient(135deg, #1e512d08 0%, #ffffff 40%, #ff751f08 100%)" }}>
         <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage: "linear-gradient(#635BFF 1px,transparent 1px),linear-gradient(90deg,#635BFF 1px,transparent 1px)", backgroundSize: "32px 32px" }} />
+          style={{ backgroundImage: "linear-gradient(#1e512d 1px,transparent 1px),linear-gradient(90deg,#1e512d 1px,transparent 1px)", backgroundSize: "32px 32px" }} />
         <div className="relative px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-3 flex-1">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm flex-shrink-0">
@@ -394,7 +394,7 @@ export default function ChatPage() {
               </button>
               <span className="text-[10px] text-muted-fg font-medium flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
-                {apiStatus === "ok" ? "GPT-4o-mini · Anti-hallucination" : "Mode hors-ligne"}
+                {apiStatus === "ok" ? "Claude · Anti-hallucination" : "Mode hors-ligne"}
               </span>
             </div>
           </div>

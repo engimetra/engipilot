@@ -1,0 +1,54 @@
+# Helm values pour kube-prometheus-stack
+# Installation : helm install monitoring prometheus-community/kube-prometheus-stack -f prometheus-values.yaml -n monitoring
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    additionalScrapeConfigs:
+      - job_name: engipilot-backend
+        static_configs:
+          - targets: ['backend.engipilot.svc.cluster.local:8080']
+        metrics_path: /actuator/prometheus
+      - job_name: engipilot-ia
+        static_configs:
+          - targets: ['ia.engipilot.svc.cluster.local:8000']
+        metrics_path: /metrics
+      - job_name: engipilot-frontend
+        static_configs:
+          - targets: ['frontend.engipilot.svc.cluster.local:3000']
+        metrics_path: /metrics
+
+grafana:
+  enabled: true
+  adminPassword: "${GRAFANA_ADMIN_PASSWORD}"
+  persistence:
+    enabled: true
+    size: 5Gi
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: engipilot
+          folder: ENGIPILOT
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/engipilot
+
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: email
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+    receivers:
+      - name: email
+        email_configs:
+          - to: contact@engipilot.ma
+            from: alerts@engipilot.ma
+            smarthost: smtp.gmail.com:587

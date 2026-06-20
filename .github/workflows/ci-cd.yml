@@ -258,6 +258,88 @@ jobs:
           docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
           docker push ${{ env.IMAGE_PREFIX }}/frontend:latest
 
+  # ── Build Multi-Architecture + SBOM ───────────────────────────
+  build-multiarch:
+    name: Build Multi-Arch (amd64 + arm64) + SBOM
+    needs: [test-backend, test-frontend, test-ia]
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write   # Pour l'attestation SBOM
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configuration QEMU (émulation ARM64)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Configuration Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login au registry GitHub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build multi-arch — Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}-multiarch
+            ${{ env.IMAGE_PREFIX }}/backend:multiarch-latest
+
+      - name: Générer SBOM — Backend
+        uses: anchore/sbom-action@v0.17.2
+        with:
+          image: ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}-multiarch
+          format: spdx-json
+          artifact-name: sbom-backend-${{ github.sha }}.spdx.json
+          upload-artifact-retention: 30
+
+      - name: Build multi-arch — IA
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ia
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/ia:${{ github.sha }}-multiarch
+            ${{ env.IMAGE_PREFIX }}/ia:multiarch-latest
+
+      - name: Générer SBOM — IA
+        uses: anchore/sbom-action@v0.17.2
+        with:
+          image: ${{ env.IMAGE_PREFIX }}/ia:${{ github.sha }}-multiarch
+          format: spdx-json
+          artifact-name: sbom-ia-${{ github.sha }}.spdx.json
+          upload-artifact-retention: 30
+
+      - name: Build multi-arch — Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}-multiarch
+            ${{ env.IMAGE_PREFIX }}/frontend:multiarch-latest
+
+      - name: Générer SBOM — Frontend
+        uses: anchore/sbom-action@v0.17.2
+        with:
+          image: ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}-multiarch
+          format: spdx-json
+          artifact-name: sbom-frontend-${{ github.sha }}.spdx.json
+          upload-artifact-retention: 30
+
   # ── Déploiement sur DigitalOcean Droplet (user dédié, pas root) ─
   deploy:
     name: Déploiement DigitalOcean Droplet (user dédié, pas root)

@@ -18,6 +18,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - engipilot-net
 
   redis:
     image: redis:7.4.2-alpine3.21
@@ -31,6 +33,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - engipilot-net
 
   backend:
     build: ./backend
@@ -45,6 +49,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - engipilot-net
 
   ia-service:
     build: ./ia
@@ -54,6 +60,8 @@ services:
       - .env
     expose:
       - "8001"
+    networks:
+      - engipilot-net
 
   frontend:
     build:
@@ -61,19 +69,17 @@ services:
       dockerfile: Dockerfile.prod
     container_name: engipilot-frontend
     restart: unless-stopped
-
-    # ✅ FIX CRITIQUE : variables disponibles dans Next.js build
     env_file:
       - .env
-
     environment:
       NODE_ENV: production
-
     expose:
       - "3000"
     depends_on:
       - backend
       - ia-service
+    networks:
+      - engipilot-net
 
   nginx:
     image: nginx:1.27.3-alpine
@@ -89,7 +95,13 @@ services:
       - backend
       - frontend
       - ia-service
+    networks:
+      - engipilot-net
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  engipilot-net:
+    driver: bridge

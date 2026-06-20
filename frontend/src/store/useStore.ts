@@ -45,7 +45,7 @@ export const useStore = create<AppState>()(
       can:    (perm)  => hasPermission(get().user?.role, perm),
       canAny: (perms) => hasAnyPermission(get().user?.role, perms),
       isSuperAdmin: () => get().user?.role === "SUPER_ADMIN",
-      isAdmin:      () => ["SUPER_ADMIN", "ADMIN_ENTREPRISE"].includes(get().user?.role ?? ""),
+      isAdmin:      () => ["SUPER_ADMIN", "ADMIN_ENTREPRISE", "ADMIN"].includes(get().user?.role ?? ""),
     }),
     {
       name:       "engipilot-store",

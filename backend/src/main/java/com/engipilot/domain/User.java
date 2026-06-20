@@ -38,7 +38,7 @@ public class User implements UserDetails {
     @Builder.Default
     private Role role = Role.CHEF_PROJET;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "organisation_id", nullable = false)
     private Organisation organisation;
 
@@ -48,6 +48,12 @@ public class User implements UserDetails {
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

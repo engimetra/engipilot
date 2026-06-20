@@ -1,0 +1,61 @@
+# ================================================================
+# ENGIPILOT — Tests End-to-End Playwright
+# Vérifie que les pages critiques se chargent correctement
+# Déclenchement : push main/develop, PR vers main
+# ================================================================
+name: Tests E2E — Playwright
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── Tests Playwright ───────────────────────────────────────────
+  playwright:
+    name: Tests Playwright (Node 22 + pnpm)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Configuration Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Activation de pnpm via Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Installation des dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Installation des navigateurs Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Construction de l'application Next.js
+        run: pnpm build
+        env:
+          # Variables minimales pour le build statique
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+
+      - name: Lancer les tests E2E
+        run: pnpm exec playwright test
+        env:
+          CI: true
+
+      - name: Upload rapport Playwright
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapport-playwright-${{ github.sha }}
+          path: frontend/playwright-report/
+          retention-days: 7

@@ -2,14 +2,16 @@ import { Router } from "express"
 import { AuthController } from "./auth.controller"
 import { authenticate } from "@/middlewares/auth.middleware"
 import { validate } from "@/middlewares/validate.middleware"
-import { RegisterDto, LoginDto, RefreshTokenDto, ChangePasswordDto } from "./auth.dto"
+import { RegisterDto, LoginDto, RefreshTokenDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from "./auth.dto"
 
 const router = Router()
 
 // Public
-router.post("/register",      validate(RegisterDto),      AuthController.register)
-router.post("/login",         validate(LoginDto),          AuthController.login)
-router.post("/refresh",       validate(RefreshTokenDto),   AuthController.refresh)
+router.post("/register",        validate(RegisterDto),        AuthController.register)
+router.post("/login",           validate(LoginDto),           AuthController.login)
+router.post("/refresh",         validate(RefreshTokenDto),    AuthController.refresh)
+router.post("/forgot-password", validate(ForgotPasswordDto),  AuthController.forgotPassword)
+router.post("/reset-password",  validate(ResetPasswordDto),   AuthController.resetPassword)
 
 // Protected
 router.get( "/me",            authenticate,                AuthController.me)

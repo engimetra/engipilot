@@ -1,0 +1,96 @@
+# ================================================================
+# ENGIPILOT — Qualité de code SonarQube
+# Analyse statique : couverture, duplications, code smells
+# Déclenchement : push main/develop, PR vers main
+# ================================================================
+name: Qualité — SonarQube
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── Analyse SonarQube Backend (Java) ───────────────────────────
+  sonar-backend:
+    name: SonarQube — Backend Java
+    runs-on: ubuntu-22.04
+    continue-on-error: true   # Non bloquant si SonarQube non configuré
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0      # Historique complet pour l'analyse de blame
+
+      - name: Configuration Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilation + tests + couverture JaCoCo
+        working-directory: backend
+        run: ./mvnw verify -q
+        env:
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+          JWT_SECRET: test_secret_key_minimum_32_characters_here!
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9099
+
+      - name: Analyse SonarQube — Backend
+        uses: sonarsource/sonarqube-scan-action@v3
+        with:
+          projectBaseDir: backend
+          args: >
+            -Dsonar.projectKey=engipilot-backend
+            -Dsonar.projectName=ENGIPILOT Backend
+            -Dsonar.java.coveragePlugin=jacoco
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+            -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  # ── Analyse SonarQube Frontend (TypeScript) ────────────────────
+  sonar-frontend:
+    name: SonarQube — Frontend TypeScript
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configuration Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Activation pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Installation des dépendances
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Tests avec couverture
+        working-directory: frontend
+        run: pnpm test -- --coverage
+
+      - name: Analyse SonarQube — Frontend
+        uses: sonarsource/sonarqube-scan-action@v3
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=engipilot-frontend
+            -Dsonar.projectName=ENGIPILOT Frontend
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

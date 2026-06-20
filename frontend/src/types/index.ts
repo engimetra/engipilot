@@ -5,10 +5,12 @@
 // ── Enums / union types ─────────────────────────────────────────
 export type RolePlateforme =
   | "SUPER_ADMIN"          // Ismail AMZIL — accès total plateforme
-  | "ADMIN_ENTREPRISE"     // Gestion projets, équipes, budgets
+  | "ADMIN_ENTREPRISE"     // Gestion projets, équipes, budgets (alias ADMIN)
+  | "ADMIN"                // Accès total + gestion utilisateurs (backend role)
   | "CHEF_PROJET"          // Gestion projets assignés
   | "CHEF_CHANTIER"        // Terrain, rapports, HSE
   | "CONSULTANT"           // Lecture seule + exports
+  | "LECTEUR"              // Lecture seule minimale
   | "UTILISATEUR_STANDARD" // Accès limité aux projets assignés
 
 export type PlanAbonnement  = "STARTER" | "PRO" | "BUSINESS" | "ENTERPRISE"

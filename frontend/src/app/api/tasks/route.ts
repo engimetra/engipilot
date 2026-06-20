@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok) return NextResponse.json({ error: (json as { message?: string }).message ?? "Erreur backend" }, { status: res.status })
 
-    const tasks: BackendTask[] = (json.data ?? json) as BackendTask[]
+    const raw = (json.data ?? json) as BackendTask[] | { content?: BackendTask[] }
+    const tasks: BackendTask[] = Array.isArray(raw) ? raw : (raw as { content?: BackendTask[] }).content ?? []
 
     const membersMap: Record<string, { name: string; initials: string; color: string }> = {}
     let colorIdx = 0

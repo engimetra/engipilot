@@ -68,7 +68,8 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok) return NextResponse.json({ error: (json as { message?: string }).message ?? "Erreur backend" }, { status: res.status })
 
-    const items = (json.data ?? json) as Record<string, unknown>[]
+    const raw = (json.data ?? json) as Record<string, unknown>[] | { content?: Record<string, unknown>[] }
+    const items = Array.isArray(raw) ? raw : (raw as { content?: Record<string, unknown>[] }).content ?? []
     return NextResponse.json(items.map(toUI))
   } catch (err) {
     console.error("[proxy GET /incidents]", err)

@@ -3,17 +3,17 @@ import { useState } from "react"
 import { CheckCircle, Download, X, ExternalLink } from "lucide-react"
 
 const PLANS = [
-  { nom:"Starter", prix:"0", periode:"Gratuit", actif:false, features:[
-    {ok:true,t:"3 chantiers max"},{ok:true,t:"Dashboard basique"},{ok:true,t:"Rapports journaliers"},
-    {ok:false,t:"KPIs EVM avancés"},{ok:false,t:"Module IA"},{ok:false,t:"Export PDF"},
+  { nom:"Starter", prix:"499 MAD", periode:"/ mois", actif:false, features:[
+    {ok:true,t:"3 utilisateurs"},{ok:true,t:"5 projets actifs"},{ok:true,t:"Chat IA intégré"},
+    {ok:true,t:"Dashboard & KPIs de base"},{ok:true,t:"Rapports journaliers"},{ok:false,t:"Support email"},
   ]},
-  { nom:"Pro", prix:"1 490 MAD", periode:"/ mois · annuel", actif:true, features:[
-    {ok:true,t:"20 chantiers"},{ok:true,t:"KPIs EVM complets"},{ok:true,t:"Module IA prédictions"},
-    {ok:true,t:"Export PDF illimité"},{ok:true,t:"Kanban + Gantt"},{ok:true,t:"Support prioritaire"},
+  { nom:"Pro", prix:"1 490 MAD", periode:"/ mois", actif:true, features:[
+    {ok:true,t:"15 utilisateurs"},{ok:true,t:"Projets illimités"},{ok:true,t:"IA avancée & prédictive"},
+    {ok:true,t:"KPIs EVM complets"},{ok:true,t:"Rapports avancés PDF/Excel"},{ok:true,t:"Support prioritaire 24/7"},
   ]},
-  { nom:"Enterprise", prix:"Sur devis", periode:"Multi-organisations", actif:false, features:[
-    {ok:true,t:"Chantiers illimités"},{ok:true,t:"Multi-tenant SaaS"},{ok:true,t:"IA personnalisée"},
-    {ok:true,t:"API accès complet"},{ok:true,t:"SSO + SAML"},{ok:true,t:"SLA 99.9%"},
+  { nom:"Enterprise", prix:"Sur devis", periode:"", actif:false, features:[
+    {ok:true,t:"Utilisateurs illimités"},{ok:true,t:"Projets illimités"},{ok:true,t:"Accès API complet"},
+    {ok:true,t:"IA personnalisée"},{ok:true,t:"SLA 99,9 % garanti"},{ok:true,t:"Support dédié & account manager"},
   ]},
 ]
 

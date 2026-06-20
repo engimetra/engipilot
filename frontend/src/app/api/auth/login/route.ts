@@ -10,16 +10,21 @@ export async function POST(req: NextRequest) {
       method: "POST",
       body:   JSON.stringify(body),
     })
-    const json = await res.json() as { success?: boolean; data?: { user: unknown; token: string }; message?: string }
+    const json = await res.json() as { token?: string; tokenType?: string; user?: unknown; message?: string; error?: string }
 
     if (!res.ok) {
       return NextResponse.json(
-        { error: json.message ?? "Identifiants incorrects" },
+        { error: json.message ?? json.error ?? "Identifiants incorrects" },
         { status: res.status },
       )
     }
 
-    const { user, token } = (json.data ?? json) as { user: unknown; token: string }
+    const token = json.token ?? ""
+    const user  = json.user ?? null
+
+    if (!token) {
+      return NextResponse.json({ error: "Token absent dans la réponse du serveur" }, { status: 502 })
+    }
 
     const response = NextResponse.json({ user })
     response.cookies.set("engipilot_session", token, {

@@ -1,9 +1,10 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslations, useLocale } from "next-intl"
 import { ChartSkeleton, KPICardSkeleton } from "@/components/ui/Skeleton"
 import type { DashboardKpis } from "@/components/charts/KPIGrid"
 import type { DashboardAlert } from "@/components/ia/AlertesPanel"
@@ -119,7 +120,7 @@ function buildModules(d?: DashboardData) {
     {
       id: "strategic", label: "Strategic Control", color: "#635BFF", colorBg: "bg-primary/8",
       items: [
-        { href: "/dashboard",  icon: LayoutDashboard, name: "Global KPI Center",   desc: "Real-time performance",    badge: undefined,          danger: false },
+        { href: "/analytics",  icon: LayoutDashboard, name: "Global KPI Center",   desc: "Real-time performance",    badge: undefined,          danger: false },
         { href: "/analytics",  icon: BarChart3,        name: "Data Intelligence",   desc: "Advanced analytics & EVM", badge: undefined,          danger: false },
         { href: "/ia",         icon: Brain,            name: "AI Risk Monitor",     desc: "Predictive alerts",        badge: d ? d.alerts.filter(a=>!a.isRead).length || undefined : 3, danger: false },
       ],
@@ -172,16 +173,56 @@ const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
 export default function DashboardPage() {
   const router    = useRouter()
   const { user }  = useStore()
-  const now       = new Date()
-  const timeStr   = now.toLocaleTimeString("fr-MA", { hour: "2-digit", minute: "2-digit", hour12: false })
-  const dateStr   = now.toLocaleDateString("fr-MA", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+  const t         = useTranslations("dashboard")
+  const locale    = useLocale()
+  const [timeStr, setTimeStr] = useState("")
+  const [dateStr, setDateStr] = useState("")
+  useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      const loc = locale === "ar" ? "ar-MA" : locale === "en" ? "en-GB" : "fr-MA"
+      setTimeStr(now.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", hour12: false }))
+      setDateStr(now.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "short", year: "numeric" }))
+    }
+    update()
+    const id = setInterval(update, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const [evmProjectId, setEvmProjectId] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState(30)
 
   const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn:  fetchDashboard,
   })
+
+  useEffect(() => {
+    setCountdown(30)
+    const tick = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          refetch()
+          return 30
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(tick)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const projects    = data?.projects ?? []
+  const activeEvmId = evmProjectId ?? projects[0]?.id ?? null
+
+  const { data: evm, isLoading: evmLoading } = useQuery<EvmData>({
+    queryKey:  ["evm", activeEvmId],
+    queryFn:   () => fetchEvmKpis(activeEvmId!),
+    enabled:   !!activeEvmId,
+    staleTime: 2 * 60 * 1000,
+  })
+
+  const modules = buildModules(data)
 
   if (isError) {
     return (
@@ -190,31 +231,20 @@ export default function DashboardPage() {
           <RefreshCw className="w-6 h-6 text-danger" />
         </div>
         <div>
-          <p className="font-bold text-foreground">Impossible de charger le dashboard</p>
+          <p className="font-bold text-foreground">{t("errorLoad")}</p>
           <p className="text-sm text-muted-fg mt-1">
-            {error instanceof Error ? error.message : "Erreur de connexion au serveur"}
+            {error instanceof Error ? error.message : t("errorServer")}
           </p>
         </div>
         <button
           onClick={() => refetch()}
           className="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-primary-hover transition-colors"
         >
-          <RefreshCw className="w-4 h-4" /> Réessayer
+          <RefreshCw className="w-4 h-4" /> {t("retry")}
         </button>
       </div>
     )
   }
-
-  const modules        = buildModules(data)
-  const projects       = data?.projects ?? []
-  const activeEvmId    = evmProjectId ?? projects[0]?.id ?? null
-
-  const { data: evm, isLoading: evmLoading } = useQuery<EvmData>({
-    queryKey:  ["evm", activeEvmId],
-    queryFn:   () => fetchEvmKpis(activeEvmId!),
-    enabled:   !!activeEvmId,
-    staleTime: 2 * 60 * 1000,
-  })
 
   return (
     <div className="space-y-6 page-enter">
@@ -235,21 +265,21 @@ export default function DashboardPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full">
-                <Globe className="w-3 h-3" /> Multi-country support
+                <Globe className="w-3 h-3" /> {t("badgeMultiCountry")}
               </span>
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-purple/10 text-purple border border-purple/20 px-2.5 py-1 rounded-full">
-                <Brain className="w-3 h-3" /> AI-powered analytics
+                <Brain className="w-3 h-3" /> {t("badgeAI")}
               </span>
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-teal/10 text-teal border border-teal/20 px-2.5 py-1 rounded-full">
-                <Zap className="w-3 h-3" /> Enterprise-ready
+                <Zap className="w-3 h-3" /> {t("badgeEnterprise")}
               </span>
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-foreground tracking-tight leading-tight mb-1">
-              Global Construction Intelligence Platform
+              {t("platformTitle")}
             </h1>
             <p className="text-sm text-muted-fg max-w-xl leading-relaxed">
-              Supervision IA unifiée pour vos projets de construction.
-              {user?.prenom ? <span className="text-foreground font-medium"> · Bienvenue, {user.prenom}.</span> : ""}
+              {t("platformSubtitle")}
+              {user?.prenom ? <span className="text-foreground font-medium"> {t("welcomeUser")} {user.prenom}.</span> : ""}
             </p>
           </div>
           <div className="flex flex-col gap-3 lg:items-end flex-shrink-0">
@@ -260,7 +290,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full">
                 <Activity className="w-3 h-3" />
-                {isLoading ? "…" : `${projects.length} projets actifs`}
+                {isLoading ? "…" : `${projects.length} ${t("activeProjects")}`}
               </div>
               <div className="text-xs text-muted-fg font-medium">{dateStr}</div>
             </div>
@@ -269,18 +299,18 @@ export default function DashboardPage() {
                 onClick={() => router.push("/chantiers")}
                 className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
               >
-                Gérer les chantiers <ArrowUpRight className="w-3.5 h-3.5" />
+                {t("manageProjects")} <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => router.push("/ia")}
                 className="flex items-center gap-1.5 bg-white hover:bg-muted border border-border text-foreground text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
               >
-                <Brain className="w-3.5 h-3.5 text-primary" /> Analyse IA
+                <Brain className="w-3.5 h-3.5 text-primary" /> {t("aiAnalysis")}
               </button>
               <button
                 onClick={() => refetch()}
                 className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-border hover:bg-muted transition-colors text-muted-fg"
-                title="Rafraîchir"
+                title={t("refresh")}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
               </button>
@@ -294,11 +324,27 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 rounded-full bg-primary" />
-            <h2 className="text-sm font-bold text-foreground">Indicateurs de Performance</h2>
+            <h2 className="text-sm font-bold text-foreground">{t("kpiSection")}</h2>
+            <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
+              {t("kpiRealtime")}
+            </span>
           </div>
-          <span className="text-[10px] text-muted-fg font-medium uppercase tracking-wider">
-            {isLoading ? "Chargement…" : "Données réelles · Base de données"}
-          </span>
+          <div className="flex items-center gap-3">
+            {!isLoading && (
+              <span className="text-[10px] text-muted-fg font-medium flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />
+                {t("refresh")} {countdown}s
+              </span>
+            )}
+            <button
+              onClick={() => { refetch(); setCountdown(30) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-primary-hover transition-colors"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+              {isLoading ? "…" : t("refresh")}
+            </button>
+          </div>
         </div>
         <KPIGrid data={data?.kpis} />
       </div>
@@ -309,7 +355,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-1 h-4 rounded-full bg-teal" />
-              <h2 className="text-sm font-bold text-foreground">Analyse EVM par Chantier</h2>
+              <h2 className="text-sm font-bold text-foreground">{t("evmSection")}</h2>
               <span className="text-[10px] font-bold bg-teal/10 text-teal border border-teal/20 px-2 py-0.5 rounded-full">
                 Earned Value Management
               </span>
@@ -338,7 +384,7 @@ export default function DashboardPage() {
                     exportEvmPDF(pdfData)
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg bg-white hover:bg-muted transition-colors text-foreground shadow-card"
-                  title="Exporter EVM en PDF"
+                  title={t("exportPDF")}
                 >
                   <Download className="w-3.5 h-3.5" /> PDF
                 </button>
@@ -381,7 +427,7 @@ export default function DashboardPage() {
                     up:    evm.spi !== null && evm.spi >= 1,
                     color: evm.spi !== null && evm.spi >= 1 ? "#00C875" : "#E2445C",
                     badge: evm.spi !== null
-                      ? evm.spi >= 1 ? "En avance" : evm.spi >= 0.9 ? "Léger retard" : "Retard critique"
+                      ? evm.spi >= 1 ? t("spiAhead") : evm.spi >= 0.9 ? t("spiSlightDelay") : t("spiCritical")
                       : "—",
                   },
                   {
@@ -390,7 +436,7 @@ export default function DashboardPage() {
                     up:    evm.cpi !== null && evm.cpi >= 1,
                     color: evm.cpi !== null && evm.cpi >= 1 ? "#00C875" : "#E2445C",
                     badge: evm.cpi !== null
-                      ? evm.cpi >= 1 ? "Sous budget" : evm.cpi >= 0.9 ? "Léger dépassement" : "Dépassement critique"
+                      ? evm.cpi >= 1 ? t("cpiUnder") : evm.cpi >= 0.9 ? t("cpiSlightOver") : t("cpiCritical")
                       : "—",
                   },
                   {
@@ -398,14 +444,14 @@ export default function DashboardPage() {
                     val:   (evm.cv >= 0 ? "+" : "-") + formatBudget(Math.abs(evm.cv)),
                     up:    evm.cv >= 0,
                     color: evm.cv >= 0 ? "#00C875" : "#E2445C",
-                    badge: evm.cv >= 0 ? "Économie" : "Dépassement",
+                    badge: evm.cv >= 0 ? t("cvSaving") : t("cvOverrun"),
                   },
                   {
                     label: "SV", sub: "Schedule Variance",
                     val:   (evm.sv >= 0 ? "+" : "-") + formatBudget(Math.abs(evm.sv)),
                     up:    evm.sv >= 0,
                     color: evm.sv >= 0 ? "#00C875" : "#E2445C",
-                    badge: evm.sv >= 0 ? "En avance" : "En retard",
+                    badge: evm.sv >= 0 ? t("svAhead") : t("svDelay"),
                   },
                 ].map(k => (
                   <div key={k.label} className="bg-white border border-border rounded-xl p-4 shadow-card">
@@ -432,9 +478,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 rounded-full bg-teal" />
-            <h2 className="text-sm font-bold text-foreground">Modules Plateforme</h2>
+            <h2 className="text-sm font-bold text-foreground">{t("modulesSection")}</h2>
           </div>
-          <span className="text-[10px] text-muted-fg font-medium uppercase tracking-wider">4 catégories · 13 modules</span>
+          <span className="text-[10px] text-muted-fg font-medium uppercase tracking-wider">{t("modulesSubtitle")}</span>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           {modules.map(cat => (
@@ -485,10 +531,10 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 rounded-full bg-purple" />
-            <h2 className="text-sm font-bold text-foreground">Projets Actifs</h2>
+            <h2 className="text-sm font-bold text-foreground">{t("activeProjectsTitle")}</h2>
             {!isLoading && (
               <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                {projects.length} projet{projects.length !== 1 ? "s" : ""} · données réelles
+                {projects.length} · {t("realData")}
               </span>
             )}
           </div>
@@ -496,7 +542,7 @@ export default function DashboardPage() {
             onClick={() => router.push("/chantiers")}
             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
           >
-            Voir tous <ArrowUpRight className="w-3.5 h-3.5" />
+            {t("viewAll")} <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -514,7 +560,7 @@ export default function DashboardPage() {
 
         {!isLoading && projects.length === 0 && (
           <div className="bg-white border border-border rounded-2xl p-8 text-center text-muted-fg text-sm">
-            Aucun projet actif. <button onClick={() => router.push("/chantiers")} className="text-primary font-semibold hover:underline">Créez votre premier projet</button>.
+            {t("noProjects")} <button onClick={() => router.push("/chantiers")} className="text-primary font-semibold hover:underline">{t("createFirst")}</button>.
           </div>
         )}
 
@@ -564,7 +610,7 @@ export default function DashboardPage() {
 
                 <div className="mb-3">
                   <div className="flex justify-between text-[10px] mb-1.5">
-                    <span className="text-muted-fg font-medium">Avancement global</span>
+                    <span className="text-muted-fg font-medium">{t("globalProgress")}</span>
                     <span className="font-black text-foreground">{progress}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -604,7 +650,7 @@ export default function DashboardPage() {
 
                 <div className="flex items-center justify-between pt-2.5 border-t border-border">
                   <div>
-                    <p className="text-[8px] text-muted-fg">Budget initial</p>
+                    <p className="text-[8px] text-muted-fg">{t("initialBudget")}</p>
                     <p className="text-xs font-bold text-foreground">{formatBudget(p.budgetInitial)}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-fg/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -619,7 +665,7 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <div className="w-1 h-4 rounded-full bg-warning" />
-          <h2 className="text-sm font-bold text-foreground">Analytics & Intelligence</h2>
+          <h2 className="text-sm font-bold text-foreground">{t("analyticsTitle")}</h2>
         </div>
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           <div className="xl:col-span-2">
@@ -637,35 +683,35 @@ export default function DashboardPage() {
 
         <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-bold text-sm text-foreground">Statut du Portfolio</h3>
+            <h3 className="font-bold text-sm text-foreground">{t("portfolioTitle")}</h3>
             <button
               onClick={() => router.push("/analytics")}
               className="text-[10px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
             >
-              Rapport complet <ArrowUpRight className="w-3 h-3" />
+              {t("fullReport")} <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
-          <p className="text-xs text-muted-fg mb-5">Répartition de vos projets actifs</p>
+          <p className="text-xs text-muted-fg mb-5">{t("portfolioSubtitle")}</p>
 
           <div className="space-y-4">
             {[
               {
-                label: "En bonne voie", count: data?.portfolio.onTrack ?? 0,
+                label: t("portfolioOnTrack"), count: data?.portfolio.onTrack ?? 0,
                 color: "bg-primary", bar: "#635BFF", text: "text-primary",
                 pct: data ? Math.round((data.portfolio.onTrack / Math.max(data.projects.length, 1)) * 100) : 0,
               },
               {
-                label: "En avance",    count: data?.portfolio.ahead ?? 0,
+                label: t("portfolioAhead"),   count: data?.portfolio.ahead ?? 0,
                 color: "bg-success",  bar: "#00C875", text: "text-success",
                 pct: data ? Math.round((data.portfolio.ahead / Math.max(data.projects.length, 1)) * 100) : 0,
               },
               {
-                label: "À risque",     count: data?.portfolio.atRisk ?? 0,
+                label: t("portfolioAtRisk"),  count: data?.portfolio.atRisk ?? 0,
                 color: "bg-warning",  bar: "#FDAB3D", text: "text-warning",
                 pct: data ? Math.round((data.portfolio.atRisk / Math.max(data.projects.length, 1)) * 100) : 0,
               },
               {
-                label: "Critique",     count: data?.portfolio.critical ?? 0,
+                label: t("portfolioCritical"), count: data?.portfolio.critical ?? 0,
                 color: "bg-danger",   bar: "#E2445C", text: "text-danger",
                 pct: data ? Math.round((data.portfolio.critical / Math.max(data.projects.length, 1)) * 100) : 0,
               },
@@ -692,9 +738,9 @@ export default function DashboardPage() {
 
           <div className="mt-5 pt-4 border-t border-border grid grid-cols-3 gap-3">
             {[
-              { val: data ? String(data.projects.length) : "—", label: "Projets total",    color: "text-primary" },
-              { val: data ? `${data.kpis.avgProgress}%`  : "—", label: "Avancement moyen", color: "text-success" },
-              { val: data?.kpis.avgSpi !== null && data?.kpis.avgSpi !== undefined ? data.kpis.avgSpi.toFixed(2) : "—", label: "SPI moyen", color: "text-teal" },
+              { val: data ? String(data.projects.length) : "—", label: t("totalProjectsStat"),  color: "text-primary" },
+              { val: data ? `${data.kpis.avgProgress}%`  : "—", label: t("avgProgressStat"),    color: "text-success" },
+              { val: data?.kpis.avgSpi !== null && data?.kpis.avgSpi !== undefined ? data.kpis.avgSpi.toFixed(2) : "—", label: t("avgSpiStat"), color: "text-teal" },
             ].map(m => (
               <div key={m.label} className="text-center bg-muted/50 rounded-xl py-2.5 px-2">
                 <p className={`text-base font-black ${m.color}`}>{m.val}</p>

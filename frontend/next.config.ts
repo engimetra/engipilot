@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   /* ── Standalone output for Docker ── */
   output: "standalone",
 
+
   /* ── Node.js packages for API routes (non-edge) ── */
   serverExternalPackages: ["minio", "@prisma/client", "@prisma/adapter-pg", "pg"],
 
@@ -17,6 +18,14 @@ const nextConfig: NextConfig = {
 
   /* ── Tree-shake heavy packages ── */
   experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "engipilot.ma",
+        "www.engipilot.ma",
+        "209.38.231.154",
+        "localhost:3000",
+      ],
+    },
     optimizePackageImports: [
       "lucide-react",
       "recharts",
@@ -37,6 +46,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "http",  hostname: "localhost", port: "9000" },
       { protocol: "https", hostname: "cdn.engipilot.ma" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "plus.unsplash.com" },
     ],
   },
 
@@ -56,10 +67,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://cdn.engipilot.ma http://localhost:9000",
+              "img-src 'self' data: blob: https://cdn.engipilot.ma http://localhost:9000 https://images.unsplash.com https://plus.unsplash.com",
               "connect-src 'self' https://api.openai.com wss: ws:",
               "frame-ancestors 'none'",
             ].join("; "),

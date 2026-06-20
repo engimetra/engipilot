@@ -1,54 +1,57 @@
 /* ─────────────────────────────────────────────────────────────
    ENGIPILOT — AI Service
-   Abstraction LLM : OpenAI → facilement swappable vers Anthropic,
-   Mistral, Azure OpenAI ou tout autre fournisseur.
+   Anthropic Claude (claude-opus-4-8)
 ───────────────────────────────────────────────────────────── */
 import type { ChatMessage, ChatRequest, ChatResponse, LLMJsonResponse } from "@/types/chat"
 import { buildSystemMessage, ENGIPILOT_CONTEXT } from "./prompt.engine"
 import { ConversationMemory } from "./memory"
 
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions"
-const MODEL      = process.env.OPENAI_MODEL  ?? "gpt-4o-mini"
-const TIMEOUT_MS = 30_000
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+const MODEL         = process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8"
+const TIMEOUT_MS    = 30_000
 
 /* ══════════════════════════════════════════════════════════════
-   LLM CALL — compatible avec tout provider OpenAI-like
+   LLM CALL — Anthropic Messages API
 ══════════════════════════════════════════════════════════════ */
 async function callLLM(messages: ChatMessage[]): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY
+  const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw Object.assign(new Error("Clé API non configurée"), { code: "NO_API_KEY" })
+
+  /* Anthropic sépare le message système du tableau de messages */
+  const systemParts = messages.filter(m => m.role === "system").map(m => m.content)
+  const conversation = messages.filter(m => m.role !== "system")
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
   try {
-    const res = await fetch(OPENAI_URL, {
+    const res = await fetch(ANTHROPIC_URL, {
       method:  "POST",
       signal:  controller.signal,
       headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type":      "application/json",
+        "x-api-key":         apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model:           MODEL,
-        messages,
-        temperature:     0.3,       // bas = réponses déterministes, anti-hallucination
-        max_tokens:      1500,
-        response_format: { type: "json_object" },
+        model:      MODEL,
+        max_tokens: 1500,
+        system:     systemParts.join("\n\n"),
+        messages:   conversation,
       }),
     })
 
-    if (res.status === 429) throw Object.assign(new Error("Rate limit OpenAI"), { code: "RATE_LIMIT" })
+    if (res.status === 429) throw Object.assign(new Error("Rate limit Anthropic"), { code: "RATE_LIMIT" })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
       throw Object.assign(
-        new Error(err?.error?.message ?? `OpenAI HTTP ${res.status}`),
+        new Error(err?.error?.message ?? `Anthropic HTTP ${res.status}`),
         { code: "LLM_ERROR" }
       )
     }
 
     const data = await res.json()
-    return data.choices?.[0]?.message?.content ?? ""
+    return data.content?.[0]?.text ?? ""
   } finally {
     clearTimeout(timer)
   }
@@ -125,7 +128,7 @@ Rapport généré en mode hors-ligne. Connectez votre clé API pour une analyse 
 • SPI : — · CPI : — · EAC : —
 
 **RECOMMANDATION**
-→ Configurez \`OPENAI_API_KEY\` dans \`.env.local\` pour activer l'analyse IA complète`
+→ Configurez \`ANTHROPIC_API_KEY\` dans \`.env.local\` pour activer l'analyse IA complète`
   } else if (mode === "risques") {
     content = `## Analyse de Risques
 
@@ -175,7 +178,7 @@ CPI = 0.74 → EAC projeté 283M MAD vs BAT 210M (+34.8%)
 → Révision BAT avec maître d'ouvrage
 → Gel des dépenses non critiques
 
-_Mode hors-ligne — Configurez OPENAI_API_KEY pour l'analyse complète_`
+_Mode hors-ligne — Configurez ANTHROPIC_API_KEY pour l'analyse complète_`
     } else {
       content = `## ENGIPILOT Copilot — Mode hors-ligne
 
@@ -183,7 +186,7 @@ Je fonctionne actuellement sans connexion au service IA.
 
 **Pour activer l'IA complète :**
 1. Obtenez une clé API sur platform.openai.com
-2. Ajoutez \`OPENAI_API_KEY=sk-...\` dans \`.env.local\`
+2. Ajoutez \`ANTHROPIC_API_KEY=sk-...\` dans \`.env.local\`
 3. Redémarrez le serveur
 
 **En attendant, je peux vous aider sur :**
@@ -196,7 +199,7 @@ Je fonctionne actuellement sans connexion au service IA.
   return {
     content,
     confidence: 65,
-    warning:    "⚠️ Mode hors-ligne — Clé API non configurée. Configurez OPENAI_API_KEY pour l'IA complète.",
+    warning:    "⚠️ Mode hors-ligne — Clé API non configurée. Configurez ANTHROPIC_API_KEY pour l'IA complète.",
     sources:    ["ENGIPILOT Offline"],
     mode,
   }
@@ -209,7 +212,7 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
   const { messages, mode } = request
 
   /* Pas de clé API → fallback immédiat */
-  if (!process.env.OPENAI_API_KEY) return fallbackResponse(request)
+  if (!process.env.ANTHROPIC_API_KEY) return fallbackResponse(request)
 
   /* Construction de la liste de messages envoyée au LLM :
      1. Message système (rôle + instructions + mode)

@@ -54,7 +54,8 @@ export default function KanbanPage() {
   const projet = projects.find(p => p.id === effectiveProjectId)
 
   return (
-    <div className="flex flex-col gap-5 page-enter" style={{ height:"calc(100vh - 56px - 48px)" }}>
+    <div className="flex flex-col gap-4 sm:gap-5 page-enter min-h-0 flex-1"
+      style={{ height: "calc(100dvh - 3.5rem - 1.5rem)" }}>
 
       {/* ══ HEADER ══ */}
       <div className="flex-shrink-0 relative rounded-2xl overflow-hidden border border-border"
