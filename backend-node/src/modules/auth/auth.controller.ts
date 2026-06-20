@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express"
 import { AuthRequest } from "@/shared/types"
 import { sendSuccess, sendCreated, sendError } from "@/shared/utils/response"
 import { AuthService } from "./auth.service"
-import { RegisterInput, LoginInput, RefreshInput, ChangePassInput } from "./auth.dto"
+import { RegisterInput, LoginInput, RefreshInput, ChangePassInput, ForgotPassInput, ResetPassInput } from "./auth.dto"
 
 export const AuthController = {
 
@@ -49,5 +49,25 @@ export const AuthController = {
 
   async logout(_req: AuthRequest, res: Response): Promise<void> {
     sendSuccess(res, null, "Déconnexion réussie")
+  },
+
+  async forgotPassword(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body as ForgotPassInput
+      const result = await AuthService.forgotPassword(email)
+      sendSuccess(res, result)
+    } catch (err) { next(err) }
+  },
+
+  async resetPassword(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token, newPassword } = req.body as ResetPassInput
+      const result = await AuthService.resetPassword(token, newPassword)
+      sendSuccess(res, result)
+    } catch (err) {
+      const e = err as { status?: number; message?: string }
+      if (e.status === 400) { sendError(res, e.message ?? "Token invalide", 400); return }
+      next(err)
+    }
   },
 }
