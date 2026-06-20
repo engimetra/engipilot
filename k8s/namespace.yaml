@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: engipilot
+  labels:
+    app.kubernetes.io/name: engipilot
+    app.kubernetes.io/managed-by: argocd

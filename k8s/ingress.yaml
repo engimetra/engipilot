@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: engipilot-ingress
+  namespace: engipilot
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  tls:
+    - hosts:
+        - engipilot.ma
+      secretName: engipilot-tls
+  rules:
+    - host: engipilot.ma
+      http:
+        paths:
+          # Frontend Next.js
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+          # Backend Spring Boot
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          # Service IA FastAPI
+          - path: /ia
+            pathType: Prefix
+            backend:
+              service:
+                name: ia
+                port:
+                  number: 8000

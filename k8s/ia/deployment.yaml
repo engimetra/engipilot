@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ia
+  namespace: engipilot
+  labels:
+    app: ia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ia
+  template:
+    metadata:
+      labels:
+        app: ia
+    spec:
+      containers:
+        - name: ia
+          image: ghcr.io/engimetra/engipilot/ia:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: engipilot-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15

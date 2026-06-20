@@ -1,0 +1,40 @@
+# ================================================================
+# ENGIPILOT — Synchronisation ArgoCD (GitOps)
+# Déclenche un sync ArgoCD après le build réussi sur main
+# Déclenchement : push sur main uniquement
+# ================================================================
+name: GitOps — ArgoCD Sync
+
+on:
+  workflow_run:
+    workflows: ["ENGIPILOT CI/CD"]
+    branches: [main]
+    types: [completed]
+
+jobs:
+
+  # ── Synchronisation ArgoCD ─────────────────────────────────────
+  argocd-sync:
+    name: Sync ArgoCD — engipilot
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    continue-on-error: true   # Non bloquant si ArgoCD non encore installé
+
+    steps:
+      - name: Synchroniser l'application ArgoCD
+        uses: clowdhaus/argo-cd-action@v2.2.0
+        with:
+          command: app sync engipilot --wait --timeout 300
+          options: >
+            --server ${{ secrets.ARGOCD_SERVER }}
+            --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
+            --grpc-web
+
+      - name: Vérifier l'état de l'application
+        uses: clowdhaus/argo-cd-action@v2.2.0
+        with:
+          command: app wait engipilot --health --timeout 120
+          options: >
+            --server ${{ secrets.ARGOCD_SERVER }}
+            --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
+            --grpc-web

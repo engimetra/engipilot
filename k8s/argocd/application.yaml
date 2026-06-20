@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: engipilot
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: engipilot
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/engimetra/engipilot
+    targetRevision: main
+    path: k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: engipilot
+
+  # Synchronisation automatique GitOps
+  syncPolicy:
+    automated:
+      prune: true       # Supprime les ressources obsolètes
+      selfHeal: true    # Resynchronise si divergence détectée
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
