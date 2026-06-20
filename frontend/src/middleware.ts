@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing"
 const intlMiddleware = createMiddleware(routing)
 
 const BYPASS_INTL = ["/login", "/register", "/reset-password", "/api", "/_next", "/favicon.ico"]
-const PUBLIC_SEGMENTS = ["login", "landing", "register", "onboarding", "reset-password"]
+const PUBLIC_SEGMENTS = ["login", "accueil", "register", "onboarding", "reset-password"]
 
 function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname.includes(".")) return true

@@ -552,7 +552,7 @@ export default function DashboardPage() {
             const spiUp       = spi !== null && spi >= 1
             const cpiUp       = cpi !== null && cpi >= 1
             const color       = pickColor(p.id)
-            const responsable = p.members[0]
+            const responsable = p.members?.[0]
               ? `${p.members[0].user.firstName} ${p.members[0].user.lastName}`
               : "—"
 
@@ -620,7 +620,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="bg-muted/50 rounded-xl p-2 text-center">
                     <p className="text-[8px] text-muted-fg mb-0.5">Type</p>
-                    <span className="text-[9px] font-black text-foreground">{p.type.slice(0,4)}</span>
+                    <span className="text-[9px] font-black text-foreground">{(p.type ?? "N/A").slice(0,4)}</span>
                   </div>
                 </div>
 

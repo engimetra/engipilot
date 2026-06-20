@@ -152,7 +152,7 @@ function RegisterForm() {
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
-            onClick={() => router.push("/landing")}
+            onClick={() => router.push("/accueil")}
             className="flex items-center gap-3 hover:opacity-75 transition-opacity"
           >
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
@@ -162,7 +162,7 @@ function RegisterForm() {
           </button>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push("/landing")}
+              onClick={() => router.push("/accueil")}
               className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors"
             >
               <span>🏠</span>

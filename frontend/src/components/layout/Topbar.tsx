@@ -104,7 +104,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
       </button>
 
       <nav className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
-        <Link href="/landing" className="flex items-center gap-1.5 transition-colors rounded-lg px-2 py-1 hover:bg-muted" style={{ color: "var(--color-muted-fg)", fontSize: "13px", fontWeight: 500 }}>
+        <Link href="/accueil" className="flex items-center gap-1.5 transition-colors rounded-lg px-2 py-1 hover:bg-muted" style={{ color: "var(--color-muted-fg)", fontSize: "13px", fontWeight: 500 }}>
           <Layers style={{ width: "13px", height: "13px" }} />
           <span className="hidden sm:inline">ENGIPILOT</span>
         </Link>

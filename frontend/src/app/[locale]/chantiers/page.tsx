@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Search, Plus, Filter, ChevronUp, ChevronDown, ExternalLink, X, RefreshCw, Pencil, Trash2, AlertTriangle } from "lucide-react"
+import { Search, Plus, Filter, ChevronUp, ChevronDown, ExternalLink, X, RefreshCw, Pencil, Trash2, AlertTriangle, Upload } from "lucide-react"
 import Link from "next/link"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -85,7 +85,8 @@ async function fetchProjects(): Promise<ApiProject[]> {
 
 async function createProject(data: {
   name: string; startDate: string; endDate: string; budgetInitial: number;
-  status: string; type: string; city?: string; clientName?: string;
+  status: string; type: string; city?: string; clientName?: string; reference?: string;
+  chefChantier?: string; description?: string;
 }) {
   const res = await fetch("/api/projects", {
     method:  "POST",
@@ -100,6 +101,7 @@ async function createProject(data: {
 async function updateProject(id: string, data: {
   name?: string; startDate?: string; endDate?: string; budgetInitial?: number;
   status?: string; type?: string; city?: string | null; clientName?: string | null;
+  chefChantier?: string | null; description?: string | null; reference?: string;
 }) {
   const res = await fetch(`/api/projects/${id}`, {
     method:  "PUT",
@@ -122,8 +124,8 @@ async function deleteProject(id: string) {
 type SortKey = "nom" | "avancement" | "budget" | "fin" | null
 
 const FORM_INIT = {
-  nom: "", clientName: "", budget: "", debut: "", fin: "",
-  status: "ACTIVE", type: "CONSTRUCTION", city: "",
+  nom: "", code: "", clientName: "", budget: "", debut: "", fin: "",
+  status: "ACTIVE", type: "CONSTRUCTION", city: "", chefChantier: "", description: "",
 }
 
 // ── Page component ────────────────────────────────────────────────────────────
@@ -141,6 +143,12 @@ export default function ChantiersPage() {
   const [editForm, setEditForm]           = useState(FORM_INIT)
   const [editFormError, setEditFormError] = useState<string | null>(null)
   const [deleteId, setDeleteId]           = useState<string | null>(null)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importFile, setImportFile]           = useState<File | null>(null)
+  const [importPreview, setImportPreview]     = useState<Record<string, string>[]>([])
+  const [importError, setImportError]         = useState<string | null>(null)
+  const [importLoading, setImportLoading]     = useState(false)
+  const [importDone, setImportDone]           = useState<number | null>(null)
 
   const { data: projects = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["projects"],
@@ -205,16 +213,16 @@ export default function ChantiersPage() {
       _debut:     formatDate(p.startDate),
       _fin:       formatDate(p.endDate),
       _color:     pickColor(p.id),
-      _responsable: p.members[0]
+      _responsable: Array.isArray(p.members) && p.members[0]
         ? `${p.members[0].user.firstName[0]}. ${p.members[0].user.lastName}`
         : "—",
-      _initiales: p.members[0]
+      _initiales: Array.isArray(p.members) && p.members[0]
         ? initiales(`${p.members[0].user.firstName} ${p.members[0].user.lastName}`)
         : "??",
     }))
     .filter(c =>
       (filterStatut === "TOUS" || c._statut === filterStatut) &&
-      (c.name.toLowerCase().includes(search.toLowerCase()) || c.reference.includes(search))
+      (c.name?.toLowerCase().includes(search.toLowerCase()) || (c.reference ?? "").includes(search))
     )
     .sort((a, b) => {
       if (!sortBy) return 0
@@ -237,7 +245,10 @@ export default function ChantiersPage() {
   function handleEditOpen(p: ApiProject) {
     setEditId(p.id)
     setEditForm({
+      code:       p.reference ?? "",
       nom:        p.name,
+      chefChantier: (p as {chefChantier?: string}).chefChantier ?? "",
+      description:  (p as {description?: string}).description  ?? "",
       clientName: p.clientName ?? "",
       budget:     String(p.budgetInitial),
       debut:      p.startDate.slice(0, 10),
@@ -257,6 +268,7 @@ export default function ChantiersPage() {
     updateMutation.mutate({
       id: editId,
       data: {
+        reference:     editForm.code.trim(),
         name:          editForm.nom.trim(),
         startDate:     editForm.debut || undefined,
         endDate:       editForm.fin   || undefined,
@@ -265,6 +277,8 @@ export default function ChantiersPage() {
         type:          editForm.type,
         city:          editForm.city       || null,
         clientName:    editForm.clientName || null,
+        chefChantier:  editForm.chefChantier || null,
+        description:   editForm.description  || null,
       },
     })
   }
@@ -274,18 +288,117 @@ export default function ChantiersPage() {
     if (!form.nom.trim()) { setFormError("Nom du chantier requis"); return }
     if (!form.debut)      { setFormError("Date de début requise"); return }
     if (!form.fin)        { setFormError("Date de fin requise"); return }
-    if (!form.budget || isNaN(Number(form.budget))) { setFormError("Budget invalide (nombre en MAD)"); return }
+    const parsedBudget = Number(form.budget.replace(/[\s\u00a0]/g, "").replace(",", "."))
+    if (!form.budget || isNaN(parsedBudget)) { setFormError("Budget invalide (nombre en MAD)"); return }
 
     mutation.mutate({
       name:          form.nom.trim(),
+      reference:     form.code.trim() || undefined,
       startDate:     form.debut,
       endDate:       form.fin,
-      budgetInitial: Number(form.budget),
+      budgetInitial: parsedBudget,
       status:        form.status,
       type:          form.type,
       city:          form.city || undefined,
       clientName:    form.clientName || undefined,
+      chefChantier:  form.chefChantier || undefined,
+      description:   form.description || undefined,
     })
+  }
+
+  function parseCSV(text: string): Record<string, string>[] {
+    const clean = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text
+    const lines = clean.replace(/\r/g, "").split("\n").filter(l => l.trim())
+    if (lines.length < 2) return []
+    const sep = lines[0].includes(";") ? ";" : lines[0].includes("\t") ? "\t" : ","
+    const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g, "").trim())
+    return lines.slice(1).map(line => {
+      const vals = line.split(sep).map(v => v.replace(/^"|"$/g, "").trim())
+      return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]))
+    })
+  }
+
+  function getCol(row: Record<string, string>, label: string, key: string): string {
+    if (row[label] !== undefined && row[label] !== "") return row[label]
+    if (row[key]   !== undefined && row[key]   !== "") return row[key]
+    const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim()
+    const n = norm(label)
+    const found = Object.entries(row).find(([k]) => norm(k) === n)
+    return found?.[1] ?? ""
+  }
+
+  function decodeFileText(buffer: ArrayBuffer): string {
+    const utf8 = new TextDecoder("utf-8").decode(buffer)
+    if (utf8.includes("\uFFFD")) return new TextDecoder("windows-1252").decode(buffer)
+    return utf8
+  }
+
+  function handleImportFile(file: File) {
+    setImportFile(file)
+    setImportError(null)
+    setImportDone(null)
+    const reader = new FileReader()
+    reader.onload = e => {
+      const text = decodeFileText(e.target?.result as ArrayBuffer)
+      const rows = parseCSV(text)
+      if (rows.length === 0) { setImportError("Fichier vide ou format invalide"); return }
+      setImportPreview(rows)
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  async function handleImportSubmit() {
+    if (!importFile) return
+    setImportLoading(true)
+    setImportError(null)
+    const reader = new FileReader()
+    reader.onload = async e => {
+      try {
+        const rows = parseCSV(decodeFileText(e.target?.result as ArrayBuffer))
+        let created = 0
+        for (const row of rows) {
+          const nom = getCol(row, "Nom Chantier", "nom_chantier")
+          const debut = getCol(row, "Date Début", "date_debut")
+          const fin = getCol(row, "Date Fin Prévue", "date_fin_prevue")
+          const budget = getCol(row, "Budget Initial (MAD)", "budget_initial")
+          console.log("DEBUG row:", {nom, debut, fin, budget})
+          if (!nom || !debut || !fin || !budget) continue
+          const parseDate = (d: string) => {
+            const parts = d.split("/")
+            if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`
+            return d
+          }
+          const statusMap: Record<string, string> = {
+            "En cours": "ACTIVE", "Planifié": "DRAFT", "En pause": "PAUSED",
+            "Terminé": "COMPLETED", "Annulé": "CANCELLED",
+          }
+          const typeMap: Record<string, string> = {
+            "Résidentiel": "RESIDENTIAL", "Industriel": "INDUSTRIAL",
+            "Infrastructure": "INFRASTRUCTURE", "Tertiaire": "COMMERCIAL",
+            "Commercial": "COMMERCIAL", "Éducatif": "EDUCATIONAL",
+            "Hospitalier": "HOSPITAL", "Touristique": "TOURISM",
+          }
+          await createProject({
+            name:          nom,
+            startDate:     parseDate(debut),
+            endDate:       parseDate(fin),
+            budgetInitial: Number(budget.replace(/[\s\u00a0]/g, "").replace(",", ".")),
+            status:        statusMap[row["Statut"] || row["statut"]] ?? "ACTIVE",
+            type:          typeMap[row["Type Projet"] || row["type_projet"]] ?? "CONSTRUCTION",
+            city:          row["Ville"] || row["ville"] || undefined,
+            clientName:    row["Client"] || row["client"] || undefined,
+          })
+          created++
+        }
+        setImportDone(created)
+        queryClient.invalidateQueries({ queryKey: ["projects"] })
+      } catch (err) {
+        setImportError((err as Error).message)
+      } finally {
+        setImportLoading(false)
+      }
+    }
+    reader.readAsArrayBuffer(importFile)
   }
 
   return (
@@ -305,6 +418,13 @@ export default function ChantiersPage() {
             title="Rafraîchir"
           >
             <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => { setShowImportModal(true); setImportFile(null); setImportPreview([]); setImportError(null); setImportDone(null) }}
+            className="flex items-center gap-2 border border-border rounded-lg bg-white hover:bg-muted transition-colors text-sm font-semibold px-3 py-2 shadow-card"
+          >
+            <Upload className="w-4 h-4" />
+            Importer
           </button>
           <button className="btn-primary" onClick={() => setShowModal(true)}>
             <Plus className="w-4 h-4" strokeWidth={2.5} />
@@ -347,8 +467,68 @@ export default function ChantiersPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-border rounded-xl shadow-card overflow-hidden">
+      {/* ── Mobile cards (< md) ── */}
+      <div className="md:hidden space-y-3">
+        {isLoading && (
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-fg text-sm">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            Chargement…
+          </div>
+        )}
+        {!isLoading && filtered.length === 0 && (
+          <div className="text-center py-10 text-muted-fg text-sm">Aucun chantier trouvé.</div>
+        )}
+        {filtered.map(c => (
+          <div key={c.id} className="bg-white border border-border rounded-xl shadow-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-semibold text-foreground truncate">{c.name}</div>
+                <div className="text-xs text-muted-fg font-mono mt-0.5">{c.reference}</div>
+              </div>
+              <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full font-semibold border flex-shrink-0 ${STATUT_STYLE[c._statut] ?? STATUT_STYLE.EN_COURS}`}>
+                {c._statut.replace("_", " ")}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-muted-fg">Avancement</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${c._avancement}%`, background: c._avancement > 75 ? "#00C875" : c._avancement > 50 ? "#635BFF" : "#FDAB3D" }} />
+                  </div>
+                  <span className="font-semibold tabular-nums">{c._avancement}%</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Budget</span>
+                <div className="font-semibold mt-1 font-mono">{c._budget}</div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Fin prévue</span>
+                <div className="font-semibold mt-1 font-mono">{c._fin}</div>
+              </div>
+              <div>
+                <span className="text-muted-fg">Chef de projet</span>
+                <div className="font-semibold mt-1 truncate">{c._responsable}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+              <Link href={`/chantiers/${c.id}`} className="flex-1 flex items-center justify-center gap-1 text-xs text-primary font-semibold py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
+                Voir détails <ExternalLink className="w-3 h-3" />
+              </Link>
+              <button onClick={() => handleEditOpen(c)} className="p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-muted transition-colors">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setDeleteId(c.id)} className="p-1.5 rounded-lg text-muted-fg hover:text-danger hover:bg-danger/8 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table (≥ md) ── */}
+      <div className="hidden md:block bg-white border border-border rounded-xl shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -515,16 +695,27 @@ export default function ChantiersPage() {
                 </div>
               )}
 
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  Nom du chantier <span className="text-danger">*</span>
-                </label>
-                <input
-                  value={form.nom}
-                  onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                  placeholder="Ex: Résidence Les Orangers"
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">Code Chantier</label>
+                  <input
+                    value={form.code}
+                    onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
+                    placeholder="Ex: CH-2024-001"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                    Nom du chantier <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    value={form.nom}
+                    onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+                    placeholder="Ex: Résidence Les Orangers"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -611,6 +802,25 @@ export default function ChantiersPage() {
                   onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
                   placeholder="Ex: Société Immobilière Maghreb"
                   className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Chef de Chantier</label>
+                <input
+                  value={form.chefChantier}
+                  onChange={e => setForm(f => ({ ...f, chefChantier: e.target.value }))}
+                  placeholder="Ex: Mohamed Tazi"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Description du chantier..."
+                  rows={2}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 />
               </div>
             </div>
@@ -733,6 +943,18 @@ export default function ChantiersPage() {
                 <input value={editForm.clientName} onChange={e => setEditForm(f => ({ ...f, clientName: e.target.value }))}
                   className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
               </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Chef de Chantier</label>
+                <input value={editForm.chefChantier} onChange={e => setEditForm(f => ({ ...f, chefChantier: e.target.value }))}
+                  placeholder="Ex: Mohamed Tazi"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Description</label>
+                <textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  rows={2} placeholder="Description du chantier..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none" />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/20 rounded-b-2xl">
@@ -783,6 +1005,76 @@ export default function ChantiersPage() {
                   : <><Trash2 className="w-4 h-4" /> Supprimer</>
                 }
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import Modal ────────────────────────────────────────────────── */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-card border rounded-xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-base flex items-center gap-2"><Upload className="w-4 h-4" /> Importer des chantiers</h2>
+              <button onClick={() => setShowImportModal(false)}><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {importDone !== null ? (
+                <div className="text-center py-6">
+                  <div className="text-4xl mb-3">✅</div>
+                  <p className="font-bold text-lg">{importDone} chantier{importDone !== 1 ? "s" : ""} importé{importDone !== 1 ? "s" : ""}</p>
+                  <p className="text-sm text-muted-fg mt-1">La liste a été mise à jour.</p>
+                  <button onClick={() => setShowImportModal(false)} className="mt-4 btn-primary">Fermer</button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    onClick={() => document.getElementById("csv-file-input")?.click()}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
+                  >
+                    <input id="csv-file-input" type="file" accept=".csv,.xlsx,.xls" className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }} />
+                    <Upload className="w-8 h-8 mx-auto text-muted-fg mb-2" />
+                    {importFile ? (
+                      <p className="font-semibold text-sm">{importFile.name}</p>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-sm">Glissez votre fichier ici</p>
+                        <p className="text-xs text-muted-fg mt-1">CSV ou Excel · Séparateur point-virgule (;)</p>
+                      </>
+                    )}
+                  </div>
+
+                  {importPreview.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-fg mb-2">Aperçu ({importPreview.length} lignes)</p>
+                      <div className="overflow-x-auto rounded-lg border text-xs">
+                        <table className="w-full">
+                          <thead className="bg-muted/50">
+                            <tr>{Object.keys(importPreview[0]).slice(0,4).map(k => <th key={k} className="text-left px-3 py-2 font-semibold text-muted-fg whitespace-nowrap">{k}</th>)}<th className="px-3 py-2 text-muted-fg">…</th></tr>
+                          </thead>
+                          <tbody>{importPreview.map((row, i) => <tr key={i} className="border-t">{Object.values(row).slice(0,4).map((v,j) => <td key={j} className="px-3 py-2 whitespace-nowrap font-mono">{v||<span className="text-muted-fg italic">vide</span>}</td>)}<td className="px-3 py-2 text-muted-fg">…</td></tr>)}</tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {importError && <p className="text-xs text-danger bg-danger/10 px-3 py-2 rounded-lg">{importError}</p>}
+
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button onClick={() => setShowImportModal(false)} className="px-4 py-2 text-sm border rounded-lg hover:bg-muted transition-colors">Annuler</button>
+                    <button
+                      onClick={handleImportSubmit}
+                      disabled={!importFile || importLoading}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importLoading ? "Import en cours…" : "Importer"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
