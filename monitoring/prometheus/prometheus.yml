@@ -1,27 +1,55 @@
+# Configuration Prometheus — ENGIPILOT
+# Intervalle de collecte global : 30 secondes
+
 global:
-  scrape_interval: 30s
+  scrape_interval:     30s
   evaluation_interval: 30s
+  scrape_timeout:      10s
 
 scrape_configs:
-  # Backend Spring Boot (Actuator Prometheus)
-  - job_name: engipilot-backend
-    static_configs:
-      - targets: ['backend:8080']
-    metrics_path: /actuator/prometheus
 
-  # Service IA FastAPI
-  - job_name: engipilot-ia
+  # ─── PROMETHEUS LUI-MÊME ─────────────────────────────────────────
+  - job_name: prometheus
     static_configs:
-      - targets: ['ia:8000']
-    metrics_path: /metrics
+      - targets: ['localhost:9090']
+        labels:
+          service: prometheus
 
-  # Frontend Next.js
-  - job_name: engipilot-frontend
+  # ─── MÉTRIQUES SYSTÈME HÔTE (node-exporter) ──────────────────────
+  - job_name: node-exporter
     static_configs:
-      - targets: ['frontend:3000']
-    metrics_path: /metrics
+      - targets: ['node-exporter:9100']
+        labels:
+          service: node-exporter
 
-  # Exporteur PostgreSQL
+  # ─── MÉTRIQUES CONTENEURS DOCKER (cAdvisor) ──────────────────────
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: cadvisor
+
+  # ─── EXPORTEUR POSTGRESQL ────────────────────────────────────────
   - job_name: postgres-exporter
     static_configs:
       - targets: ['postgres-exporter:9187']
+        labels:
+          service: postgres
+
+  # ─── BACKEND SPRING BOOT (Actuator Prometheus) ───────────────────
+  - job_name: engipilot-backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['backend:8080']
+        labels:
+          service: backend
+          stack: engipilot
+
+  # ─── SERVICE IA FASTAPI ──────────────────────────────────────────
+  - job_name: engipilot-ia
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['ia-service:8000']
+        labels:
+          service: ia
+          stack: engipilot
