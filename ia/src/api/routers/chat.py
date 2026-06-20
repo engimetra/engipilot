@@ -28,9 +28,12 @@ class ChatResponse(BaseModel):
 def _get_db():
     try:
         import psycopg2
-        url = DB_URL.replace("postgresql+asyncpg://", "postgresql://")
-        return psycopg2.connect(url) if url else None
-    except Exception:
+        url = DB_URL.replace("postgresql+asyncpg://", "postgresql://").replace("+asyncpg", "")
+        if not url or "postgres" not in url:
+            return None
+        return psycopg2.connect(url)
+    except Exception as e:
+        log.warning(f"DB connexion échouée: {e}")
         return None
 
 
