@@ -659,18 +659,18 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6 items-start">
             {[
               {
-                name: "Starter", price: "Gratuit", sub: "pour toujours",
-                features: ["3 chantiers actifs", "Dashboard & KPIs de base", "Rapports journaliers", "1 utilisateur", "Support communautaire"],
-                cta: "Créer un compte", highlight: false,
+                name: "Starter", price: "499 MAD", sub: "/ mois",
+                features: ["3 utilisateurs", "5 projets actifs", "Chat IA intégré", "Dashboard & KPIs de base", "Rapports journaliers"],
+                cta: "Démarrer l'essai gratuit", highlight: false,
               },
               {
                 name: "Pro", price: "1 490 MAD", sub: "/ mois",
-                features: ["20 chantiers actifs", "KPIs EVM complets", "Module IA prédictif", "25 utilisateurs", "Rapports avancés", "Support prioritaire 24/7"],
-                cta: "Démarrer l'essai 14 jours", highlight: true,
+                features: ["15 utilisateurs", "Projets illimités", "IA avancée & prédictive", "KPIs EVM complets", "Rapports avancés PDF/Excel", "Support prioritaire 24/7"],
+                cta: "Démarrer l'essai gratuit", highlight: true,
               },
               {
                 name: "Enterprise", price: "Sur devis", sub: "",
-                features: ["Chantiers illimités", "IA personnalisée", "API & intégrations", "Utilisateurs illimités", "SLA 99.9 %", "Account manager dédié"],
+                features: ["Utilisateurs illimités", "Projets illimités", "Accès API complet", "IA personnalisée", "SLA 99,9 % garanti", "Support dédié & account manager"],
                 cta: "Nous contacter", highlight: false,
               },
             ].map((plan) => (
