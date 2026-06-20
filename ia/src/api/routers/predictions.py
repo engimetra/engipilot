@@ -1,14 +1,26 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 from pathlib import Path
+from typing import Optional
 import numpy as np
 import joblib
+
+try:
+    from src.ml.lstm_predictor import get_predictor as _get_lstm
+except ImportError:
+    _get_lstm = None
 
 router = APIRouter()
 MODEL_PATH = Path("./models")
 
 
 class KPIInput(BaseModel):
+    # Optionnel : historique de snapshots pour le modèle LSTM
+    historique: Optional[list[dict]] = Field(
+        default=None,
+        description="Snapshots KPI chronologiques (jusqu'à 10). "
+                    "Si fourni, active la prédiction LSTM.",
+    )
     model_config = ConfigDict(str_strip_whitespace=True)
     projet_id:            str
     spi:                  float = Field(ge=0.0, le=2.0)
@@ -40,6 +52,7 @@ class PredictionResult(BaseModel):
     interpretation_depassement: str
     recommandations: list[str]
     niveau_alerte: str
+    modele_retard: str = "GradientBoosting"   # modèle ayant produit la prédiction
 
 
 def _evm_retard(k: KPIInput) -> float:
@@ -83,19 +96,45 @@ def predire(kpis: KPIInput) -> PredictionResult:
         kpis.effectif_actuel / max(kpis.effectif_prevu, 1),
     ]])
 
-    retard, conf_r = _evm_retard(kpis), 0.82
-    if (MODEL_PATH / "predicteur_retards_v1.joblib").exists():
+    retard, conf_r, modele_retard = _evm_retard(kpis), 0.82, "EVM"
+
+    # ── Essai LSTM (prioritaire si historique fourni) ──────────────────────
+    lstm_retard: Optional[float] = None
+    if kpis.historique and _get_lstm is not None:
+        try:
+            # Ajouter le snapshot courant à la fin de l'historique
+            current_snap = {
+                "spi": kpis.spi, "cpi": kpis.cpi,
+                "avancement_physique": kpis.avancement_physique,
+                "avancement_theorique": kpis.avancement_theorique,
+                "effectif_actuel": kpis.effectif_actuel,
+                "effectif_prevu": kpis.effectif_prevu,
+                "nb_nc_ouvertes": kpis.nb_nc_ouvertes,
+                "nb_incidents_hse": kpis.nb_incidents_hse,
+                "jours_ecoules": kpis.jours_ecoules,
+                "duree_prevue_jours": kpis.duree_prevue_jours,
+            }
+            snapshots = kpis.historique + [current_snap]
+            lstm_retard = _get_lstm().predict(snapshots)
+        except Exception:
+            pass
+
+    if lstm_retard is not None:
+        retard, conf_r, modele_retard = lstm_retard, 0.92, "LSTM"
+    elif (MODEL_PATH / "predicteur_retards_v1.joblib").exists():
         try:
             retard = float(max(0, joblib.load(MODEL_PATH / "predicteur_retards_v1.joblib").predict(features)[0]))
-            conf_r = 0.88
-        except Exception: pass
+            conf_r, modele_retard = 0.88, "GradientBoosting"
+        except Exception:
+            pass
 
     depassement, conf_d = max(0.0, round((1/max(kpis.cpi,0.01)-1)*100, 1)), 0.80
     if (MODEL_PATH / "predicteur_couts_v1.joblib").exists():
         try:
             depassement = float(max(0, joblib.load(MODEL_PATH / "predicteur_couts_v1.joblib").predict(features)[0]))
             conf_d = 0.86
-        except Exception: pass
+        except Exception:
+            pass
 
     niveau = "CRITIQUE" if retard>30 or depassement>20 or kpis.spi<0.70 else \
              "ATTENTION" if retard>10 or depassement>8  or kpis.spi<0.85 else "OK"
@@ -108,4 +147,5 @@ def predire(kpis: KPIInput) -> PredictionResult:
         interpretation_depassement=_interpreter_depassement(depassement),
         recommandations=_recommandations(kpis, retard),
         niveau_alerte=niveau,
+        modele_retard=modele_retard,
     )
