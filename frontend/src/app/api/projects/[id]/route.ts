@@ -7,9 +7,8 @@ type Ctx = { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, { params }: Ctx) {
   const token = getToken(req)
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  if (!token) return NextResponse.json({ error: "Non authentifie" }, { status: 401 })
   const { id } = await params
-
   try {
     const res              = await backendFetch(`/projets/${id}`, token)
     const { payload, status } = await proxyResponse(res)
@@ -22,9 +21,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
   const token = getToken(req)
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  if (!token) return NextResponse.json({ error: "Non authentifie" }, { status: 401 })
   const { id } = await params
-
   try {
     const body = await req.json()
     const backendBody = {
@@ -54,9 +52,8 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
   const token = getToken(req)
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  if (!token) return NextResponse.json({ error: "Non authentifie" }, { status: 401 })
   const { id } = await params
-
   try {
     const res              = await backendFetch(`/projets/${id}`, token, { method: "DELETE" })
     const { payload, status } = await proxyResponse(res)

@@ -99,9 +99,8 @@ function RegisterForm() {
         body:    JSON.stringify({
           email,
           password,
-          firstName: prenom,
-          lastName:  nom,
-          phone:     telephone || undefined,
+          fullName:         `${prenom} ${nom}`.trim(),
+          organisationName: entreprise || 'Non renseigné',
         }),
       })
       const data = await res.json()
@@ -114,10 +113,10 @@ function RegisterForm() {
       const u: Utilisateur = {
         id:              data.user.id,
         email:           data.user.email,
-        prenom:          data.user.firstName,
-        nom:             data.user.lastName,
+        prenom:          data.user.fullName?.split(" ")[0] ?? "",
+        nom:             data.user.fullName?.split(" ").slice(1).join(" ") ?? "",
         role:            "UTILISATEUR_STANDARD",
-        organisation_id: data.user.company.id,
+        organisation_id: data.user.organisationId,
         actif:           true,
         created_at:      new Date().toISOString(),
         updated_at:      new Date().toISOString(),
@@ -155,7 +154,7 @@ function RegisterForm() {
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
-            onClick={() => router.push("/landing")}
+            onClick={() => router.push("/accueil")}
             className="flex items-center gap-3 hover:opacity-75 transition-opacity"
           >
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
@@ -165,7 +164,7 @@ function RegisterForm() {
           </button>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push("/landing")}
+              onClick={() => router.push("/accueil")}
               className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors"
             >
               <span>🏠</span>

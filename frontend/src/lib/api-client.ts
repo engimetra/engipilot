@@ -31,8 +31,6 @@ export async function backendFetch(
   return fetch(url, { method: opts.method ?? "GET", headers, body: opts.body })
 }
 
-// Backend returns { success, data, message, meta? }
-// This helper extracts data and normalises errors
 export async function proxyResponse(
   res: Response,
 ): Promise<{ payload: unknown; status: number }> {

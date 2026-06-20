@@ -109,7 +109,7 @@ export default function DocumentsPage() {
     }),
   })
 
-  const docs: Doc[] = apiDocs.map(apiDocToUi)
+  const docs: Doc[] = (Array.isArray(apiDocs) ? apiDocs : []).map(apiDocToUi)
 
   // ── Upload via API → MinIO + Prisma ───────────────────────────────────────
   const { mutateAsync: uploadDoc, isPending: uploading_ } = useMutation({

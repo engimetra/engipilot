@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { backendFetch, getToken, proxyResponse } from "@/lib/api-client"
-
 export const dynamic = "force-dynamic"
-
+const BACKEND = process.env.BACKEND_INTERNAL_URL ?? "http://backend:8080/api/v1"
 export async function GET(req: NextRequest) {
-  const token = getToken(req)
+  const token = req.cookies.get("engipilot_session")?.value ?? req.headers.get("authorization")?.replace("Bearer ", "")
   if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
-
   try {
-    const res              = await backendFetch("/auth/me", token)
-    const { payload, status } = await proxyResponse(res)
-    return NextResponse.json(payload, { status })
-  } catch (err) {
-    console.error("[proxy /auth/me]", err)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    const res = await fetch(`${BACKEND}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    return NextResponse.json(data, { status: res.status })
+  } catch (e) {
+    return NextResponse.json({ error: "Serveur inaccessible" }, { status: 503 })
   }
 }

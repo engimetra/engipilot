@@ -76,7 +76,6 @@ function KPICard({ icon: Icon, label, sublabel, value, delta, deltaUp, accent, a
 
 function buildKpis(data?: DashboardKpis): KPICardProps[] {
   if (!data) {
-    // Fallback statique si pas encore chargé
     return [
       { icon: Building2,  label: "Active Projects",  sublabel: "Company sites",         value: "—", accent: "#635BFF", accentBg: "bg-primary/10", accentText: "text-primary",  sparkline: [1,1,1,1,1,1,1,1], href: "/chantiers" },
       { icon: TrendingUp, label: "Global Progress",  sublabel: "Portfolio average",      value: "—", accent: "#FDAB3D", accentBg: "bg-warning/10", accentText: "text-warning",  sparkline: [1,1,1,1,1,1,1,1], href: "/analytics" },

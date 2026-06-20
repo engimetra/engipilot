@@ -53,14 +53,13 @@ const SEGMENT_TO_PAGE_KEY: Record<string, string> = {
 }
 
 type NotifType = "RETARD" | "BUDGET" | "HSE" | "IA"
+interface QuickNotif { id: string; type: NotifType; title: string; body: string; time: string; read: boolean }
 
-interface QuickNotif {
-  id: string
-  type: NotifType
-  title: string
-  body: string
-  time: string
-  read: boolean
+const NOTIF_ROUTES: Record<string, string> = {
+  RETARD: "/planning",
+  BUDGET: "/analytics",
+  HSE:    "/hse",
+  IA:     "/ia",
 }
 
 const NOTIF_CONFIG: Record<NotifType, { icon: React.ElementType; bg: string; text: string; dot: string }> = {
@@ -105,6 +104,13 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const activeProject = projetActif ?? (projects[0] ? { id: projects[0].id, nom: projects[0].name } as never : null)
   const activeLabel   = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? t("selectProject")
 
+  const { data: projects = [] } = useQuery<ApiProject[]>({
+    queryKey: ["topbar-projects"],
+    queryFn:  () => fetch("/api/projects").then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const activeLabel = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? "Sélectionner projet"
   const unreadCount = notifs.filter(n => !n.read).length
 
   const segment   = "/" + (pathname.split("/")[1] ?? "")
@@ -277,7 +283,6 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
           <span className="hidden sm:inline">{t("new")}</span>
         </button>
 
-        {/* Language switcher */}
         <LanguageSwitcher />
 
         {/* Online status */}

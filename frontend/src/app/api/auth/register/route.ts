@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { backendFetch } from "@/lib/api-client"
-
 export const dynamic = "force-dynamic"
-
+const BACKEND = process.env.BACKEND_INTERNAL_URL ?? "http://backend:8080/api/v1"
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const res  = await backendFetch("/auth/register", null, {
-      method: "POST",
-      body:   JSON.stringify(body),
+    const res = await fetch(`${BACKEND}/auth/register`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     })
     const json = await res.json() as { success?: boolean; data?: { user: unknown; token: string }; message?: string }
 

@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar"
 import { Topbar } from "@/components/layout/Topbar"
 import { NotificationToast } from "@/components/layout/NotificationToast"
 
-const SHELL_FREE = ["login", "landing", "register"]
+const SHELL_FREE = ["login", "accueil", "register"]
 const NON_DEFAULT_LOCALES = ["ar", "en"]
 
 function isShellFree(pathname: string): boolean {

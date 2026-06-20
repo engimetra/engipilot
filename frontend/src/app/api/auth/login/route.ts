@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { backendFetch } from "@/lib/api-client"
-
 export const dynamic = "force-dynamic"
-
+const BACKEND = process.env.BACKEND_INTERNAL_URL ?? "http://engipilot-backend:8080/api/v1"
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const res  = await backendFetch("/auth/login", null, {
-      method: "POST",
-      body:   JSON.stringify(body),
+    const res = await fetch(`${BACKEND}/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     })
     const json = await res.json() as { token?: string; tokenType?: string; user?: unknown; message?: string; error?: string }
 
@@ -35,8 +33,7 @@ export async function POST(req: NextRequest) {
       maxAge:   8 * 60 * 60,
     })
     return response
-  } catch (err) {
-    console.error("[proxy /auth/login]", err)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+  } catch (e) {
+    return NextResponse.json({ error: "Serveur inaccessible" }, { status: 503 })
   }
 }

@@ -30,7 +30,7 @@ function mapProjet(p: Record<string, unknown>) {
 
 export async function GET(req: NextRequest) {
   const token = getToken(req)
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+  if (!token) return NextResponse.json({ error: "Non authentifie" }, { status: 401 })
 
   try {
     const res = await backendFetch("/projets", token)

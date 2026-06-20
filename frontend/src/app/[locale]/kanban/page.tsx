@@ -22,7 +22,8 @@ interface ApiProject {
 async function fetchProjects(): Promise<ApiProject[]> {
   const res = await fetch("/api/projects")
   if (!res.ok) throw new Error("Erreur")
-  return res.json()
+  const data = await res.json()
+  return Array.isArray(data) ? data : []
 }
 
 const PRIO_OPTIONS = [

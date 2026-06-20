@@ -309,6 +309,106 @@ function AdminPageContent() {
           <div style={{ padding: "48px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Aucun utilisateur trouvé</div>
         )}
       </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 14px", flex: 1, maxWidth: "320px" }}>
+          <Search style={{ width: "15px", height: "15px", color: "#94a3b8", flexShrink: 0 }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un utilisateur..."
+            style={{ background: "transparent", fontSize: "13px", outline: "none", flex: 1, color: "#1e293b" }} />
+        </div>
+        <select value={filterRole} onChange={e => setFilter(e.target.value)}
+          style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 14px", fontSize: "13px", color: "#475569", outline: "none" }}>
+          <option value="">Tous les rôles</option>
+          {BACKEND_ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+        </select>
+        <span style={{ fontSize: "12px", color: "#94a3b8", marginLeft: "auto" }}>{filtered.length} utilisateur{filtered.length > 1 ? "s" : ""}</span>
+      </div>
+
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        {loading ? (
+          <div style={{ padding: "48px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Chargement...</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #f1f5f9", background: "#f8fafc" }}>
+                {["Utilisateur", "Rôle", "Statut", "Actions"].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(u => {
+                const rc = ROLE_COLORS[u.role] ?? { bg: "#f1f5f9", color: "#64748b" }
+                return (
+                  <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: `linear-gradient(135deg, ${rc.color} 0%, #0ea5e9 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                          {initials(u.fullName)}
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: 700, color: "#1e293b" }}>{u.fullName}</p>
+                          <p style={{ fontSize: "11.5px", color: "#94a3b8" }}>{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontSize: "11.5px", fontWeight: 700, background: rc.bg, color: rc.color, padding: "3px 10px", borderRadius: "99px" }}>
+                        {ROLE_LABELS[u.role] ?? u.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontSize: "11.5px", fontWeight: 600, background: u.active ? "#dcfce7" : "#fee2e2", color: u.active ? "#166534" : "#dc2626", padding: "3px 10px", borderRadius: "99px" }}>
+                        {u.active ? "Actif" : "Inactif"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ position: "relative", display: "inline-block" }}>
+                        <button onClick={() => setMenuOpen(menuOpen === u.id ? null : u.id)}
+                          style={{ width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", color: "#64748b" }}>
+                          <MoreVertical style={{ width: "14px", height: "14px" }} />
+                        </button>
+                        {menuOpen === u.id && (
+                          <div style={{ position: "absolute", right: 0, top: "36px", zIndex: 20, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", width: "200px", overflow: "hidden" }}>
+                            <div style={{ padding: "6px", borderBottom: "1px solid #f1f5f9" }}>
+                              <p style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", padding: "4px 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Changer le rôle</p>
+                              {BACKEND_ROLES.filter(r => r !== u.role).map(r => (
+                                <button key={r} onClick={() => changeRole(u.id, r)}
+                                  style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", border: "none", background: "transparent", cursor: "pointer", fontSize: "12.5px", color: "#1e293b", fontWeight: 500, borderRadius: "8px" }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                                >
+                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: ROLE_COLORS[r]?.color ?? "#94a3b8", flexShrink: 0 }} />
+                                  {ROLE_LABELS[r]}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ padding: "6px" }}>
+                              <button onClick={() => deactivateUser(u.id)}
+                                style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", border: "none", background: "transparent", cursor: "pointer", fontSize: "12.5px", color: "#dc2626", fontWeight: 600, borderRadius: "8px" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "#fee2e2")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                              >
+                                <Trash2 style={{ width: "13px", height: "13px" }} /> Désactiver
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+        {!loading && filtered.length === 0 && (
+          <div style={{ padding: "48px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Aucun utilisateur trouvé</div>
+        )}
+      </div>
     </div>
   )
 }

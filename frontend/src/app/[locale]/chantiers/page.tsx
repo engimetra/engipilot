@@ -100,6 +100,7 @@ async function createProject(data: {
 async function updateProject(id: string, data: {
   name?: string; startDate?: string; endDate?: string; budgetInitial?: number;
   status?: string; type?: string; city?: string | null; clientName?: string | null;
+  chefChantier?: string | null; description?: string | null; reference?: string;
 }) {
   const res = await fetch(`/api/projects/${id}`, {
     method:  "PUT",
@@ -220,7 +221,7 @@ export default function ChantiersPage() {
     }))
     .filter(c =>
       (filterStatut === "TOUS" || c._statut === filterStatut) &&
-      (c.name.toLowerCase().includes(search.toLowerCase()) || c.reference.includes(search))
+      (c.name?.toLowerCase().includes(search.toLowerCase()) || (c.reference ?? "").includes(search))
     )
     .sort((a, b) => {
       if (!sortBy) return 0
@@ -243,7 +244,10 @@ export default function ChantiersPage() {
   function handleEditOpen(p: ApiProject) {
     setEditId(p.id)
     setEditForm({
+      code:       p.reference ?? "",
       nom:        p.name,
+      chefChantier: (p as {chefChantier?: string}).chefChantier ?? "",
+      description:  (p as {description?: string}).description  ?? "",
       clientName: p.clientName ?? "",
       budget:     String(p.budgetInitial),
       debut:      p.startDate.slice(0, 10),
@@ -263,6 +267,7 @@ export default function ChantiersPage() {
     updateMutation.mutate({
       id: editId,
       data: {
+        reference:     editForm.code.trim(),
         name:          editForm.nom.trim(),
         startDate:     editForm.debut || undefined,
         endDate:       editForm.fin   || undefined,
@@ -271,6 +276,8 @@ export default function ChantiersPage() {
         type:          editForm.type,
         city:          editForm.city       || null,
         clientName:    editForm.clientName || null,
+        chefChantier:  editForm.chefChantier || null,
+        description:   editForm.description  || null,
       },
     })
   }
@@ -280,18 +287,21 @@ export default function ChantiersPage() {
     if (!form.nom.trim()) { setFormError("Nom du chantier requis"); return }
     if (!form.debut)      { setFormError("Date de début requise"); return }
     if (!form.fin)        { setFormError("Date de fin requise"); return }
-    if (!form.budget || isNaN(Number(form.budget))) { setFormError("Budget invalide (nombre en MAD)"); return }
+    const parsedBudget = Number(form.budget.replace(/[\s\u00a0]/g, "").replace(",", "."))
+    if (!form.budget || isNaN(parsedBudget)) { setFormError("Budget invalide (nombre en MAD)"); return }
 
     mutation.mutate({
       name:          form.nom.trim(),
       reference:     form.code.trim() || undefined,
       startDate:     form.debut,
       endDate:       form.fin,
-      budgetInitial: Number(form.budget),
+      budgetInitial: parsedBudget,
       status:        form.status,
       type:          form.type,
       city:          form.city || undefined,
       clientName:    form.clientName || undefined,
+      chefChantier:  form.chefChantier || undefined,
+      description:   form.description || undefined,
     })
   }
 
@@ -794,6 +804,25 @@ export default function ChantiersPage() {
                   className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Chef de Chantier</label>
+                <input
+                  value={form.chefChantier}
+                  onChange={e => setForm(f => ({ ...f, chefChantier: e.target.value }))}
+                  placeholder="Ex: Mohamed Tazi"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Description du chantier..."
+                  rows={2}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/20 rounded-b-2xl">
@@ -913,6 +942,18 @@ export default function ChantiersPage() {
                 <label className="text-xs font-semibold text-foreground mb-1.5 block">Client</label>
                 <input value={editForm.clientName} onChange={e => setEditForm(f => ({ ...f, clientName: e.target.value }))}
                   className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Chef de Chantier</label>
+                <input value={editForm.chefChantier} onChange={e => setEditForm(f => ({ ...f, chefChantier: e.target.value }))}
+                  placeholder="Ex: Mohamed Tazi"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Description</label>
+                <textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  rows={2} placeholder="Description du chantier..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none" />
               </div>
             </div>
 

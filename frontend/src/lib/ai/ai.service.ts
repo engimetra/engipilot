@@ -57,67 +57,25 @@ async function callLLM(messages: ChatMessage[]): Promise<string> {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PARSE — extrait le JSON retourné par le LLM
-══════════════════════════════════════════════════════════════ */
 function parseLLMResponse(raw: string, mode: ChatRequest["mode"]): ChatResponse {
   try {
     const parsed: LLMJsonResponse = JSON.parse(raw)
-
     const confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 75))
-    const warning    = confidence < 70
-      ? (parsed.warning ?? "⚠️ Niveau de confiance faible — vérifiez les informations critiques")
-      : null
-
-    return {
-      content:    parsed.content    ?? raw,
-      confidence,
-      warning,
-      sources:    Array.isArray(parsed.sources) ? parsed.sources : [],
-      mode,
-    }
+    const warning    = confidence < 70 ? (parsed.warning ?? "Niveau de confiance faible") : null
+    return { content: parsed.content ?? raw, confidence, warning, sources: Array.isArray(parsed.sources) ? parsed.sources : [], mode }
   } catch {
-    /* Le LLM n'a pas respecté le format JSON → on retourne le texte brut */
-    return {
-      content:    raw,
-      confidence: 70,
-      warning:    null,
-      sources:    [],
-      mode,
-    }
+    return { content: raw, confidence: 70, warning: null, sources: [], mode }
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FALLBACK — réponses offline si pas de clé API
-══════════════════════════════════════════════════════════════ */
 function fallbackResponse(request: ChatRequest): ChatResponse {
   const last = request.messages[request.messages.length - 1]?.content?.toLowerCase() ?? ""
   const { mode } = request
-
   let content = ""
 
   if (mode === "pv") {
     const today = new Date().toLocaleDateString("fr-FR")
-    content = `## PV — Réunion de chantier | ${today}
-
-**1. PARTICIPANTS**
-• Conducteur travaux · Chef de chantier · Représentants sous-traitants
-
-**2. AVANCEMENT GÉNÉRAL**
-• Avancement physique : conforme au planning
-• Points RH : effectifs présents
-
-**3. POINTS CRITIQUES**
-🟠 À compléter selon vos données de chantier
-
-**4. DÉCISIONS PRISES**
-✓ À compléter lors de la réunion
-
-**5. PROCHAINE RÉUNION**
-À définir
-
-_PV généré en mode hors-ligne — Complétez avec vos données réelles_`
+    content = `## PV — Reunion de chantier | ${today}\n\n**1. PARTICIPANTS**\n• Conducteur travaux · Chef de chantier\n\n**2. AVANCEMENT**\n• A completer selon vos donnees\n\n_PV genere en mode hors-ligne_`
   } else if (mode === "rapport") {
     content = `## Rapport d'avancement — Synthèse
 
@@ -130,18 +88,7 @@ Rapport généré en mode hors-ligne. Connectez votre clé API pour une analyse 
 **RECOMMANDATION**
 → Configurez \`ANTHROPIC_API_KEY\` dans \`.env.local\` pour activer l'analyse IA complète`
   } else if (mode === "risques") {
-    content = `## Analyse de Risques
-
-🟠 **Mode hors-ligne**
-L'analyse de risques complète nécessite la connexion au service IA.
-
-**Risques standards BTP à surveiller :**
-• 🔴 Retards fournisseurs → SPI < 0.85
-• 🟠 Dépassements budgétaires → CPI < 0.90
-• 🟡 Absentéisme équipes → > 20%
-• 🟡 Non-conformités ouvertes → > 3 simultanées
-
-→ Configurez l'API IA pour une analyse personnalisée de vos chantiers`
+    content = "## Analyse de Risques — Mode hors-ligne\n\nConfigurez l'API IA pour une analyse personnalisee."
   } else {
     /* chat générique */
     if (last.includes("spi") || last.includes("retard") || last.includes("planning")) {
@@ -205,38 +152,26 @@ Je fonctionne actuellement sans connexion au service IA.
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SERVICE PRINCIPAL
-══════════════════════════════════════════════════════════════ */
 export async function processChat(request: ChatRequest): Promise<ChatResponse> {
   const { messages, mode } = request
 
   /* Pas de clé API → fallback immédiat */
   if (!process.env.ANTHROPIC_API_KEY) return fallbackResponse(request)
 
-  /* Construction de la liste de messages envoyée au LLM :
-     1. Message système (rôle + instructions + mode)
-     2. Contexte ENGIPILOT (données de la plateforme)
-     3. Historique conversationnel purgé si trop long
-  */
-  const systemMsg: ChatMessage   = buildSystemMessage(mode)
-  const contextMsg: ChatMessage  = { role: "user",      content: ENGIPILOT_CONTEXT }
-  const contextAck: ChatMessage  = { role: "assistant", content: '{"content":"Contexte ENGIPILOT reçu. Prêt à analyser.","confidence":100,"warning":null,"sources":[]}' }
+  const systemMsg: ChatMessage  = buildSystemMessage(mode)
+  const contextMsg: ChatMessage = { role: "user",      content: ENGIPILOT_CONTEXT }
+  const contextAck: ChatMessage = { role: "assistant", content: '{"content":"Contexte ENGIPILOT recu. Pret a analyser.","confidence":100,"warning":null,"sources":[]}' }
 
-  const history   = ConversationMemory.pruneToTokenBudget(messages)
+  const history    = ConversationMemory.pruneToTokenBudget(messages)
   const fullStack: ChatMessage[] = [systemMsg, contextMsg, contextAck, ...history]
 
   try {
     const raw      = await callLLM(fullStack)
     const response = parseLLMResponse(raw, mode)
 
-    /* Sauvegarde en mémoire : dernier user msg + réponse IA */
     const userMsg = messages[messages.length - 1]
     if (userMsg?.role === "user") {
-      ConversationMemory.append("global", [
-        userMsg,
-        { role: "assistant", content: response.content },
-      ])
+      ConversationMemory.append("global", [userMsg, { role: "assistant", content: response.content }])
     }
 
     return response
@@ -244,9 +179,8 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
     const e = err as { code?: string; message?: string }
     if (e?.code === "NO_API_KEY") return fallbackResponse(request)
 
-    /* Erreur LLM → fallback avec message d'erreur */
     return {
-      content:    `## Erreur de connexion IA\n\nImpossible de joindre le service IA : ${e?.message ?? "erreur inconnue"}\n\n→ Réessayez dans quelques instants.`,
+      content:    `## Erreur IA\n\nImpossible de joindre le service IA : ${e?.message ?? "erreur inconnue"}`,
       confidence: 0,
       warning:    `Erreur service IA : ${e?.code ?? "UNKNOWN"}`,
       sources:    [],

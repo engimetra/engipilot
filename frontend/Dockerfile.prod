@@ -21,7 +21,6 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 🔥 FIX IMPORTANT : garantir Prisma client proprement
 RUN pnpm prisma generate
 RUN pnpm build
 
