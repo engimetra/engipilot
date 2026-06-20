@@ -62,6 +62,8 @@ function RegisterForm() {
   const provider = PROVIDERS[providerId] ?? PROVIDERS.google
   const ProviderIcon = PROVIDER_ICONS[providerId] ?? PROVIDER_ICONS.google
 
+  const selectedPlan = params.get("plan")
+
   const setUser = useStore(s => s.setUser)
 
   const [prenom, setPrenom] = useState("")
@@ -97,8 +99,9 @@ function RegisterForm() {
         body:    JSON.stringify({
           email,
           password,
-          fullName:         `${prenom} ${nom}`.trim(),
-          organisationName: entreprise || "Non renseigné",
+          firstName: prenom,
+          lastName:  nom,
+          phone:     telephone || undefined,
         }),
       })
       const data = await res.json()
@@ -111,10 +114,10 @@ function RegisterForm() {
       const u: Utilisateur = {
         id:              data.user.id,
         email:           data.user.email,
-        prenom:          data.user.fullName?.split(" ")[0] ?? "",
-        nom:             data.user.fullName?.split(" ").slice(1).join(" ") ?? "",
+        prenom:          data.user.firstName,
+        nom:             data.user.lastName,
         role:            "UTILISATEUR_STANDARD",
-        organisation_id: data.user.organisationId,
+        organisation_id: data.user.company.id,
         actif:           true,
         created_at:      new Date().toISOString(),
         updated_at:      new Date().toISOString(),
@@ -209,6 +212,21 @@ function RegisterForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+
+              {selectedPlan && (
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
+                  selectedPlan === "pro"
+                    ? "bg-blue-50 border-blue-200 text-blue-800"
+                    : "bg-green-50 border-green-200 text-green-800"
+                }`}>
+                  <span className="text-base">✅</span>
+                  <span>
+                    Plan{" "}
+                    <span className="capitalize font-black">{selectedPlan}</span>{" "}
+                    sélectionné — 14 jours gratuits
+                  </span>
+                </div>
+              )}
 
               {/* Prénom + Nom */}
               <div className="grid grid-cols-2 gap-4">

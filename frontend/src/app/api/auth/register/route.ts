@@ -10,19 +10,19 @@ export async function POST(req: NextRequest) {
       method: "POST",
       body:   JSON.stringify(body),
     })
-    const json = await res.json() as { token?: string; tokenType?: string; user?: unknown; message?: string; error?: string }
+    const json = await res.json() as { success?: boolean; data?: { user: unknown; token: string }; message?: string }
 
     if (!res.ok) {
       return NextResponse.json(
-        { error: json.message ?? json.error ?? "Erreur lors de l'inscription" },
+        { error: json.message ?? "Erreur lors de l'inscription" },
         { status: res.status },
       )
     }
 
-    const token = json.token ?? ""
-    const user  = json.user ?? null
+    const { user, token } = (json.data ?? json) as { user: unknown; token: string }
+    const plan = body.plan ?? null
 
-    const response = NextResponse.json({ user }, { status: 201 })
+    const response = NextResponse.json({ user, ...(plan ? { plan } : {}) }, { status: 201 })
     response.cookies.set("engipilot_session", token, {
       httpOnly: true,
       secure:   process.env.NODE_ENV === "production",
