@@ -134,9 +134,9 @@ export default function PricingPage() {
                   </>
                 )}
 
-                <div className="relative p-8 flex flex-col gap-6 flex-1">
+                <div className="relative p-8 flex flex-col flex-1">
 
-                  <div>
+                  <div className="mb-6">
                     <h2 className={`text-xl font-black ${plan.highlighted ? "text-white" : "text-[#0F172A]"}`}>
                       {plan.name}
                     </h2>
@@ -162,7 +162,7 @@ export default function PricingPage() {
                   </div>
 
                   {plan.badge && (
-                    <div className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${
+                    <div className={`mb-6 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${
                       plan.highlighted
                         ? "bg-white/15 text-white"
                         : "bg-green-50 text-green-700 border border-green-100"
@@ -172,7 +172,7 @@ export default function PricingPage() {
                     </div>
                   )}
 
-                  <ul className="space-y-3 flex-1">
+                  <ul className="space-y-3 flex-1 mb-6">
                     {plan.features.map((feature) => (
                       <li key={feature} className={`flex items-center gap-3 text-sm ${plan.highlighted ? "text-white/85" : "text-[#475569]"}`}>
                         <svg
@@ -188,7 +188,7 @@ export default function PricingPage() {
 
                   <a
                     href={plan.href}
-                    className={`mt-2 block w-full py-3.5 rounded-xl font-bold text-sm text-center transition-all shadow-md ${
+                    className={`mt-auto block w-full py-3.5 rounded-xl font-bold text-sm text-center transition-all shadow-md ${
                       plan.highlighted
                         ? "bg-white text-[#2563EB] hover:bg-blue-50"
                         : plan.isEnterprise
