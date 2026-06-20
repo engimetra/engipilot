@@ -13,12 +13,18 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import joblib
+import mlflow
+import mlflow.pytorch
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("LSTM-Train")
 
 MODEL_PATH = os.getenv("MODEL_PATH", "./models")
 os.makedirs(MODEL_PATH, exist_ok=True)
+
+# Initialisation du suivi MLflow
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001"))
+mlflow.set_experiment("engipilot-lstm-predictions")
 
 # ── Hyperparamètres ─────────────────────────────────────────────────────────
 SEQ_LEN    = 10       # fenêtre temporelle (snapshots hebdomadaires)
@@ -183,65 +189,92 @@ def train():
     best_val_loss = float("inf")
     best_state    = None
 
-    log.info(f"Entraînement LSTM ({EPOCHS} époques)…")
-    for epoch in range(1, EPOCHS + 1):
-        model.train()
-        train_loss = 0.0
-        for xb, yb in train_dl:
-            xb, yb = xb.to(device), yb.to(device)
-            optimizer.zero_grad()
-            pred = model(xb)
-            loss = criterion(pred, yb)
-            loss.backward()
-            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
-            train_loss += loss.item() * len(xb)
-        scheduler.step()
+    # ── Suivi MLflow ────────────────────────────────────────────────────────
+    with mlflow.start_run():
+        # Journalisation des hyperparamètres
+        mlflow.log_params({
+            "epochs":          EPOCHS,
+            "batch_size":      BATCH_SIZE,
+            "sequence_length": SEQ_LEN,
+            "learning_rate":   LR,
+            "hidden_dim":      HIDDEN_DIM,
+            "num_layers":      NUM_LAYERS,
+            "dropout":         DROPOUT,
+            "input_dim":       INPUT_DIM,
+        })
 
+        log.info(f"Entraînement LSTM ({EPOCHS} époques)…")
+        for epoch in range(1, EPOCHS + 1):
+            model.train()
+            train_loss = 0.0
+            for xb, yb in train_dl:
+                xb, yb = xb.to(device), yb.to(device)
+                optimizer.zero_grad()
+                pred = model(xb)
+                loss = criterion(pred, yb)
+                loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+                train_loss += loss.item() * len(xb)
+            scheduler.step()
+
+            model.eval()
+            val_loss = 0.0
+            with torch.no_grad():
+                for xb, yb in test_dl:
+                    xb, yb = xb.to(device), yb.to(device)
+                    val_loss += criterion(model(xb), yb).item() * len(xb)
+
+            train_loss /= len(train_ds)
+            val_loss   /= len(test_ds)
+
+            # Journalisation des métriques par époque
+            mlflow.log_metric("train_loss", train_loss, step=epoch)
+            mlflow.log_metric("val_loss",   val_loss,   step=epoch)
+
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_state    = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+
+            if epoch % 10 == 0 or epoch == 1:
+                log.info(f"  Époque {epoch:3d}/{EPOCHS} | train={train_loss:.4f} | val={val_loss:.4f}")
+
+        # Sauvegarde du meilleur modèle
+        model.load_state_dict(best_state)
+        torch.save({
+            "model_state_dict": model.state_dict(),
+            "config": {
+                "input_dim":  INPUT_DIM,
+                "hidden_dim": HIDDEN_DIM,
+                "num_layers": NUM_LAYERS,
+                "dropout":    DROPOUT,
+            },
+        }, f"{MODEL_PATH}/lstm_retard_v1.pt")
+
+        # Journalisation du modèle PyTorch dans MLflow
+        mlflow.pytorch.log_model(model, "lstm-model")
+        mlflow.log_metric("best_val_loss", best_val_loss)
+
+        # Évaluation finale (MAE en jours réels)
         model.eval()
-        val_loss = 0.0
+        preds, targets = [], []
         with torch.no_grad():
             for xb, yb in test_dl:
-                xb, yb = xb.to(device), yb.to(device)
-                val_loss += criterion(model(xb), yb).item() * len(xb)
+                p = model(xb.to(device)).cpu().numpy().flatten()
+                preds.extend(p)
+                targets.extend(yb.numpy().flatten())
 
-        train_loss /= len(train_ds)
-        val_loss   /= len(test_ds)
+        preds   = np.expm1(np.array(preds)   * y_std + y_mean)
+        targets = np.expm1(np.array(targets) * y_std + y_mean)
+        mae  = np.abs(preds - targets).mean()
+        rmse = np.sqrt(((preds - targets) ** 2).mean())
 
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            best_state    = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+        # Journalisation des métriques finales
+        mlflow.log_metric("mae_jours",  float(mae))
+        mlflow.log_metric("rmse_jours", float(rmse))
 
-        if epoch % 10 == 0 or epoch == 1:
-            log.info(f"  Époque {epoch:3d}/{EPOCHS} | train={train_loss:.4f} | val={val_loss:.4f}")
-
-    # Sauvegarde du meilleur modèle
-    model.load_state_dict(best_state)
-    torch.save({
-        "model_state_dict": model.state_dict(),
-        "config": {
-            "input_dim":  INPUT_DIM,
-            "hidden_dim": HIDDEN_DIM,
-            "num_layers": NUM_LAYERS,
-            "dropout":    DROPOUT,
-        },
-    }, f"{MODEL_PATH}/lstm_retard_v1.pt")
-
-    # Évaluation finale (MAE en jours réels)
-    model.eval()
-    preds, targets = [], []
-    with torch.no_grad():
-        for xb, yb in test_dl:
-            p = model(xb.to(device)).cpu().numpy().flatten()
-            preds.extend(p)
-            targets.extend(yb.numpy().flatten())
-
-    preds   = np.expm1(np.array(preds)   * y_std + y_mean)
-    targets = np.expm1(np.array(targets) * y_std + y_mean)
-    mae  = np.abs(preds - targets).mean()
-    rmse = np.sqrt(((preds - targets) ** 2).mean())
-    log.info(f"Évaluation finale → MAE={mae:.1f} jours | RMSE={rmse:.1f} jours")
-    log.info("Modèle LSTM sauvegardé dans models/lstm_retard_v1.pt")
+        log.info(f"Évaluation finale → MAE={mae:.1f} jours | RMSE={rmse:.1f} jours")
+        log.info("Modèle LSTM sauvegardé dans models/lstm_retard_v1.pt et dans MLflow")
 
 
 if __name__ == "__main__":

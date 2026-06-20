@@ -1,26 +1,17 @@
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 from pathlib import Path
 from typing import Optional
 import numpy as np
 import joblib
-
-try:
-    from src.ml.lstm_predictor import get_predictor as _get_lstm
-except ImportError:
-    _get_lstm = None
+import os
 
 router = APIRouter()
 MODEL_PATH = Path("./models")
 
 
 class KPIInput(BaseModel):
-    # Optionnel : historique de snapshots pour le modèle LSTM
-    historique: Optional[list[dict]] = Field(
-        default=None,
-        description="Snapshots KPI chronologiques (jusqu'à 10). "
-                    "Si fourni, active la prédiction LSTM.",
-    )
     model_config = ConfigDict(str_strip_whitespace=True)
     projet_id:            str
     spi:                  float = Field(ge=0.0, le=2.0)
@@ -52,7 +43,6 @@ class PredictionResult(BaseModel):
     interpretation_depassement: str
     recommandations: list[str]
     niveau_alerte: str
-    modele_retard: str = "GradientBoosting"   # modèle ayant produit la prédiction
 
 
 def _evm_retard(k: KPIInput) -> float:
@@ -96,45 +86,19 @@ def predire(kpis: KPIInput) -> PredictionResult:
         kpis.effectif_actuel / max(kpis.effectif_prevu, 1),
     ]])
 
-    retard, conf_r, modele_retard = _evm_retard(kpis), 0.82, "EVM"
-
-    # ── Essai LSTM (prioritaire si historique fourni) ──────────────────────
-    lstm_retard: Optional[float] = None
-    if kpis.historique and _get_lstm is not None:
-        try:
-            # Ajouter le snapshot courant à la fin de l'historique
-            current_snap = {
-                "spi": kpis.spi, "cpi": kpis.cpi,
-                "avancement_physique": kpis.avancement_physique,
-                "avancement_theorique": kpis.avancement_theorique,
-                "effectif_actuel": kpis.effectif_actuel,
-                "effectif_prevu": kpis.effectif_prevu,
-                "nb_nc_ouvertes": kpis.nb_nc_ouvertes,
-                "nb_incidents_hse": kpis.nb_incidents_hse,
-                "jours_ecoules": kpis.jours_ecoules,
-                "duree_prevue_jours": kpis.duree_prevue_jours,
-            }
-            snapshots = kpis.historique + [current_snap]
-            lstm_retard = _get_lstm().predict(snapshots)
-        except Exception:
-            pass
-
-    if lstm_retard is not None:
-        retard, conf_r, modele_retard = lstm_retard, 0.92, "LSTM"
-    elif (MODEL_PATH / "predicteur_retards_v1.joblib").exists():
+    retard, conf_r = _evm_retard(kpis), 0.82
+    if (MODEL_PATH / "predicteur_retards_v1.joblib").exists():
         try:
             retard = float(max(0, joblib.load(MODEL_PATH / "predicteur_retards_v1.joblib").predict(features)[0]))
-            conf_r, modele_retard = 0.88, "GradientBoosting"
-        except Exception:
-            pass
+            conf_r = 0.88
+        except Exception: pass
 
     depassement, conf_d = max(0.0, round((1/max(kpis.cpi,0.01)-1)*100, 1)), 0.80
     if (MODEL_PATH / "predicteur_couts_v1.joblib").exists():
         try:
             depassement = float(max(0, joblib.load(MODEL_PATH / "predicteur_couts_v1.joblib").predict(features)[0]))
             conf_d = 0.86
-        except Exception:
-            pass
+        except Exception: pass
 
     niveau = "CRITIQUE" if retard>30 or depassement>20 or kpis.spi<0.70 else \
              "ATTENTION" if retard>10 or depassement>8  or kpis.spi<0.85 else "OK"
@@ -147,5 +111,66 @@ def predire(kpis: KPIInput) -> PredictionResult:
         interpretation_depassement=_interpreter_depassement(depassement),
         recommandations=_recommandations(kpis, retard),
         niveau_alerte=niveau,
-        modele_retard=modele_retard,
     )
+
+
+@router.get("/model-info")
+def model_info() -> JSONResponse:
+    """Retourne les informations du dernier run MLflow (run_id, val_loss, statut).
+
+    Renvoie 503 si le serveur MLflow est inaccessible.
+    """
+    import mlflow
+
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
+
+    try:
+        mlflow.set_tracking_uri(tracking_uri)
+        client = mlflow.tracking.MlflowClient()
+
+        # Récupération de l'expérience LSTM
+        experiment = client.get_experiment_by_name("engipilot-lstm-predictions")
+        if experiment is None:
+            return JSONResponse(
+                status_code=404,
+                content={"detail": "Expérience 'engipilot-lstm-predictions' introuvable dans MLflow."},
+            )
+
+        # Dernier run enregistré
+        runs = client.search_runs(
+            experiment_ids=[experiment.experiment_id],
+            order_by=["start_time DESC"],
+            max_results=1,
+        )
+        if not runs:
+            return JSONResponse(
+                status_code=404,
+                content={"detail": "Aucun run MLflow trouvé pour cette expérience."},
+            )
+
+        run = runs[0]
+        return JSONResponse(content={
+            "run_id":       run.info.run_id,
+            "status":       run.info.status,
+            "start_time":   run.info.start_time,
+            "end_time":     run.info.end_time,
+            "metrics": {
+                "val_loss":      run.data.metrics.get("val_loss"),
+                "best_val_loss": run.data.metrics.get("best_val_loss"),
+                "mae_jours":     run.data.metrics.get("mae_jours"),
+                "rmse_jours":    run.data.metrics.get("rmse_jours"),
+            },
+            "params": {
+                "epochs":        run.data.params.get("epochs"),
+                "batch_size":    run.data.params.get("batch_size"),
+                "learning_rate": run.data.params.get("learning_rate"),
+            },
+            "tracking_uri": tracking_uri,
+        })
+
+    except Exception as exc:
+        # MLflow inaccessible ou erreur réseau
+        return JSONResponse(
+            status_code=503,
+            content={"detail": f"Serveur MLflow inaccessible : {str(exc)}"},
+        )

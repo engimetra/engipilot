@@ -1,0 +1,43 @@
+# Infrastructure Airflow pour l'orchestration du pipeline ML ENGIPILOT
+# Comprend le webserver (port 8090) et le scheduler avec executor local.
+
+version: "3.9"
+
+services:
+  airflow-webserver:
+    image: apache/airflow:2.9.1
+    container_name: engipilot-airflow-webserver
+    restart: unless-stopped
+    depends_on:
+      - airflow-scheduler
+    ports:
+      - "8090:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:EngPilot2024prod@engipilot-db:5432/engipilot_airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      MLFLOW_TRACKING_URI: http://engipilot-mlflow:5000
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: webserver
+    networks:
+      - engipilot_default
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.1
+    container_name: engipilot-airflow-scheduler
+    restart: unless-stopped
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:EngPilot2024prod@engipilot-db:5432/engipilot_airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      MLFLOW_TRACKING_URI: http://engipilot-mlflow:5000
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: scheduler
+    networks:
+      - engipilot_default
+
+networks:
+  engipilot_default:
+    external: true
