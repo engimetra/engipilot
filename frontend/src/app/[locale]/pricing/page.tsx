@@ -115,11 +115,11 @@ export default function PricingPage() {
         </section>
 
         <section className="pb-20 px-5">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 items-start">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 items-stretch">
             {PLANS.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-2xl border overflow-hidden transition-all hover:-translate-y-1 flex flex-col ${
+                className={`relative rounded-2xl border overflow-hidden transition-all hover:-translate-y-1 flex flex-col h-full ${
                   plan.highlighted
                     ? "shadow-2xl scale-[1.03]"
                     : "bg-white border-gray-200 shadow-sm hover:shadow-lg"
