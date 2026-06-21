@@ -5,7 +5,7 @@
 
 -- Organisation démo
 INSERT INTO organisations (id, nom, plan_abonnement) VALUES
-('00000000-0000-0000-0000-000000000001', 'BTP Maroc Constructions', 'PRO')
+('00000000-0000-0000-0000-000000000001', 'Entreprise BTP Démo', 'PRO')
 ON CONFLICT DO NOTHING;
 
 -- Utilisateurs (mot_de_passe = "demo123" hashé BCrypt strength 12)
@@ -27,7 +27,7 @@ INSERT INTO utilisateurs (id, organisation_id, email, mot_de_passe, prenom, nom,
  'Youssef', 'Amrani', 'CHEF_CHANTIER')
 ON CONFLICT DO NOTHING;
 
--- Projet 1 : Résidence Al Andalous — SPI correct (modéré)
+-- Projet 1 : Projet Démo 1 — SPI correct (modéré)
 INSERT INTO projets (
     id, organisation_id, code_projet, nom, description,
     statut, priorite,
@@ -38,16 +38,16 @@ INSERT INTO projets (
 ) VALUES (
     '00000000-0000-0000-0000-000000000100',
     '00000000-0000-0000-0000-000000000001',
-    'P-2024-CA-007', 'Résidence Al Andalous',
+    'P-2024-CA-007', 'Projet Démo 1',
     'Résidence de standing 48 appartements avec parking souterrain et piscine',
     'EN_COURS', 'HAUTE',
     63.0, 67.0,
     48500000, 33000000,
     '2024-03-01', '2025-11-30',
-    'ADDOHA Group', 'Ahmed Khalil', 'Casablanca'
+    'Client Démo 1', 'Chef Projet Démo', 'Casablanca'
 ) ON CONFLICT DO NOTHING;
 
--- Projet 2 : Usine Bouskoura — SPI critique
+-- Projet 2 : Projet Démo 2 — SPI critique
 INSERT INTO projets (
     id, organisation_id, code_projet, nom, description,
     statut, priorite,
@@ -58,13 +58,13 @@ INSERT INTO projets (
 ) VALUES (
     '00000000-0000-0000-0000-000000000101',
     '00000000-0000-0000-0000-000000000001',
-    'P-2024-BS-003', 'Usine Bouskoura — Ligne de production',
+    'P-2024-BS-003', 'Projet Démo 2 — Ligne de production',
     'Construction usine agro-alimentaire 8000m² avec chambres froides et bureaux',
     'EN_COURS', 'CRITIQUE',
     45.0, 63.0,
     82000000, 43800000,
     '2024-01-15', '2026-02-28',
-    'OCP Group', 'Karima Fassi', 'Bouskoura'
+    'Client Démo 2', 'Responsable Démo', 'Bouskoura'
 ) ON CONFLICT DO NOTHING;
 
 -- Projet 3 : Centre Commercial Rabat
@@ -78,16 +78,16 @@ INSERT INTO projets (
 ) VALUES (
     '00000000-0000-0000-0000-000000000102',
     '00000000-0000-0000-0000-000000000001',
-    'P-2024-RB-011', 'Centre Commercial Hay Riad',
+    'P-2024-RB-011', 'Projet Démo 3',
     'Centre commercial 15 000m² avec 80 boutiques, food court et cinéma multiplex',
     'EN_COURS', 'NORMALE',
     88.0, 85.0,
     135000000, 115000000,
     '2023-06-01', '2025-08-31',
-    'LabelVie Group', 'Omar Tazi', 'Rabat'
+    'Client Démo 3', 'Omar Tazi', 'Rabat'
 ) ON CONFLICT DO NOTHING;
 
--- Lots pour Résidence Al Andalous
+-- Lots pour Projet Démo 1
 INSERT INTO lots (projet_id, code, nom, avancement, budget, cout_reel, statut) VALUES
 ('00000000-0000-0000-0000-000000000100', 'LOT-01', 'Gros Œuvre',       100, 15000000, 14800000, 'TERMINE'),
 ('00000000-0000-0000-0000-000000000100', 'LOT-02', 'Charpente & Toiture', 78, 8000000,  7200000, 'EN_COURS'),
@@ -97,7 +97,7 @@ INSERT INTO lots (projet_id, code, nom, avancement, budget, cout_reel, statut) V
 ('00000000-0000-0000-0000-000000000100', 'LOT-06', 'Finitions & Peinture', 0, 4000000,     0, 'PLANIFIE')
 ON CONFLICT DO NOTHING;
 
--- Lots pour Usine Bouskoura
+-- Lots pour Projet Démo 2
 INSERT INTO lots (projet_id, code, nom, avancement, budget, cout_reel, statut) VALUES
 ('00000000-0000-0000-0000-000000000101', 'LOT-01', 'Terrassement & VRD', 100, 8000000,  8400000, 'TERMINE'),
 ('00000000-0000-0000-0000-000000000101', 'LOT-02', 'Structure Béton Armé', 82, 25000000, 22000000, 'EN_COURS'),
@@ -107,22 +107,22 @@ INSERT INTO lots (projet_id, code, nom, avancement, budget, cout_reel, statut) V
 ('00000000-0000-0000-0000-000000000101', 'LOT-06', 'Chambres Froides',     0, 10000000,       0, 'PLANIFIE')
 ON CONFLICT DO NOTHING;
 
--- Tâches Kanban pour Résidence Al Andalous
+-- Tâches Kanban pour Projet Démo 1
 INSERT INTO taches (projet_id, titre, statut, priorite, responsable, avancement) VALUES
 ('00000000-0000-0000-0000-000000000100', 'Coulage dalle niveau R+4',          'TERMINE',          'HAUTE',    'Équipe Gros Œuvre A', 100),
-('00000000-0000-0000-0000-000000000100', 'Pose fenêtres aluminium R+1 à R+3',  'EN_COURS',         'HAUTE',    'Menuiserie Alami',     65),
-('00000000-0000-0000-0000-000000000100', 'Installation tableau électrique T1', 'EN_COURS',         'NORMALE',  'Électricité Fassi',    40),
-('00000000-0000-0000-0000-000000000100', 'Recalage planning façade nord',      'A_FAIRE',          'CRITIQUE', 'Ahmed Khalil',          0),
+('00000000-0000-0000-0000-000000000100', 'Pose fenêtres aluminium R+1 à R+3',  'EN_COURS',         'HAUTE',    'Menuiserie Démo',     65),
+('00000000-0000-0000-0000-000000000100', 'Installation tableau électrique T1', 'EN_COURS',         'NORMALE',  'Électricité Démo',    40),
+('00000000-0000-0000-0000-000000000100', 'Recalage planning façade nord',      'A_FAIRE',          'CRITIQUE', 'Chef Projet Démo',          0),
 ('00000000-0000-0000-0000-000000000100', 'Réception charpente niveau R+5',     'CONTROLE_QUALITE', 'HAUTE',    'Bureau de Contrôle',   95),
 ('00000000-0000-0000-0000-000000000100', 'Inspection étanchéité terrasse R+5', 'A_FAIRE',          'HAUTE',    'Chef de chantier',      0),
 ('00000000-0000-0000-0000-000000000100', 'Commande carrelage RDC',             'A_FAIRE',          'NORMALE',  'Service achats',        0),
-('00000000-0000-0000-0000-000000000100', 'Passage gaines électriques R+2',     'EN_COURS',         'NORMALE',  'Électricité Fassi',    30)
+('00000000-0000-0000-0000-000000000100', 'Passage gaines électriques R+2',     'EN_COURS',         'NORMALE',  'Électricité Démo',    30)
 ON CONFLICT DO NOTHING;
 
--- Tâches pour Usine Bouskoura
+-- Tâches pour Projet Démo 2
 INSERT INTO taches (projet_id, titre, statut, priorite, responsable, avancement) VALUES
 ('00000000-0000-0000-0000-000000000101', 'Coffrage poteaux zone B',            'EN_COURS',         'CRITIQUE', 'Équipe BA',            70),
-('00000000-0000-0000-0000-000000000101', 'Réception acier lot charpente',       'A_FAIRE',          'CRITIQUE', 'Karima Fassi',          0),
+('00000000-0000-0000-0000-000000000101', 'Réception acier lot charpente',       'A_FAIRE',          'CRITIQUE', 'Responsable Démo',          0),
 ('00000000-0000-0000-0000-000000000101', 'Plan câblage HT validé ingénieur',   'CONTROLE_QUALITE', 'HAUTE',    'Bureau Études',        90),
 ('00000000-0000-0000-0000-000000000101', 'Recrutement électriciens (8 postes)', 'A_FAIRE',          'CRITIQUE', 'DRH',                   0),
 ('00000000-0000-0000-0000-000000000101', 'Levée NC béton zone A-4',            'EN_COURS',         'MAJEURE',  'Chef Qualité',         50)
@@ -156,7 +156,7 @@ INSERT INTO non_conformites (
 ('00000000-0000-0000-0000-000000000100',
  '00000000-0000-0000-0000-000000000001',
  'NC-001', 'Fissures constatées sur dalle R+2 — joint de dilatation non conforme au plan',
- 'MAJEURE', 'EN_COURS', 'Gros Œuvre', 'Ahmed Khalil', CURRENT_DATE - 15),
+ 'MAJEURE', 'EN_COURS', 'Gros Œuvre', 'Chef Projet Démo', CURRENT_DATE - 15),
 ('00000000-0000-0000-0000-000000000100',
  '00000000-0000-0000-0000-000000000001',
  'NC-002', 'Enrobage insuffisant armatures poteaux P12 à P15 (enrobage 2cm au lieu de 3cm)',
@@ -164,7 +164,7 @@ INSERT INTO non_conformites (
 ('00000000-0000-0000-0000-000000000101',
  '00000000-0000-0000-0000-000000000001',
  'NC-003', 'Béton zone A-4 : résistance à 28j non conforme (25 MPa obtenu, 30 MPa requis)',
- 'CRITIQUE', 'EN_COURS', 'Structure Béton Armé', 'Karima Fassi', CURRENT_DATE - 12),
+ 'CRITIQUE', 'EN_COURS', 'Structure Béton Armé', 'Responsable Démo', CURRENT_DATE - 12),
 ('00000000-0000-0000-0000-000000000101',
  '00000000-0000-0000-0000-000000000001',
  'NC-004', 'Soudures charpente métallique — contrôle magnétoscopique non réalisé',
@@ -172,7 +172,7 @@ INSERT INTO non_conformites (
 ('00000000-0000-0000-0000-000000000101',
  '00000000-0000-0000-0000-000000000001',
  'NC-005', 'Plan d installation câblage HT non approuvé — travaux bloqués',
- 'CRITIQUE', 'OUVERTE', 'Électricité HT/BT', 'Karima Fassi', CURRENT_DATE - 3)
+ 'CRITIQUE', 'OUVERTE', 'Électricité HT/BT', 'Responsable Démo', CURRENT_DATE - 3)
 ON CONFLICT DO NOTHING;
 
 -- Incidents HSE
