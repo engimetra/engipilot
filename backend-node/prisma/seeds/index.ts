@@ -20,7 +20,7 @@ async function main() {
     where:  { siret: "DEMO00000001MA" },
     update: {},
     create: {
-      name:    "ENGIPILOT Demo SA",
+      name:    "Entreprise Démo",
       siret:   "DEMO00000001MA",
       city:    "Casablanca",
       country: "MA",
@@ -77,7 +77,7 @@ async function main() {
       status:      "UNDER_INVESTIGATION",
       date:        new Date("2025-05-10"),
       location:    "Zone B — Niveau R+2",
-      reportedBy:  "Karim Tazi (HSE)",
+      reportedBy:  "HSE Démo (HSE)",
       projectId:   mainProject.id,
     },
   })
@@ -86,12 +86,12 @@ async function main() {
   // 8. Notifications démo
   console.log("  → Seeding notifications…")
   const NOTIFS = [
-    { title: "Alerte critique — SPI 0.72",      message: "Le projet Usine Bouskoura accuse un retard critique (SPI=0.72). Action requise.",  type: "AI_ALERT" as const },
+    { title: "Alerte critique — SPI 0.72",      message: "Le projet Projet Démo 1 accuse un retard critique (SPI=0.72). Action requise.",  type: "AI_ALERT" as const },
     { title: "Rapport hebdomadaire disponible", message: "Le rapport S-21 est prêt à consulter dans la section Rapports.",                    type: "INFO"     as const },
     { title: "NC-046 levée",                    message: "La non-conformité NC-046 a été clôturée avec succès.",                               type: "SUCCESS"  as const },
     { title: "Stock béton faible",              message: "Le stock de béton Zone C est en dessous du seuil minimum (15 m³ restants).",          type: "WARNING"  as const },
     { title: "Nouvelles prédictions IA",        message: "5 nouvelles alertes IA générées. Consultez le module Intelligence IA.",              type: "AI_ALERT" as const },
-    { title: "Nouveau membre ajouté",           message: "Salma El Fassi a rejoint le projet Villas Ain Diab en tant qu'ingénieure.",           type: "INFO"     as const },
+    { title: "Nouveau membre ajouté",           message: "Ingénieur Démo a rejoint le projet Villas Ain Diab en tant qu'ingénieure.",           type: "INFO"     as const },
   ]
 
   await Promise.all(

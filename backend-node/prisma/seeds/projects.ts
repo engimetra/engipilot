@@ -3,7 +3,7 @@ import { prisma } from "./_client"
 // MySQL schema has no RESIDENTIAL type — map to CONSTRUCTION
 const DEMO_PROJECTS = [
   {
-    name:          "Usine Agroalimentaire Bouskoura",
+    name:          "Projet Démo 1",
     reference:     "PROJ-2024-001",
     description:   "Construction d'une usine agroalimentaire de 12 000 m² — Phase 2 Génie Civil & Électricité",
     type:          "INDUSTRIAL"      as const,
@@ -14,13 +14,13 @@ const DEMO_PROJECTS = [
     spi:           0.72,
     cpi:           0.84,
     progress:      47,
-    city:          "Bouskoura",
+    city:          "Ville Démo",
     country:       "MA",
-    clientName:    "Groupe Omnium Industries",
+    clientName:    "Client Démo 1",
     clientContact: "+212 5 22 XX XX XX",
   },
   {
-    name:          "Station Énergie Mohammedia",
+    name:          "Projet Démo 2",
     reference:     "PROJ-2024-002",
     description:   "Installation station de production énergétique — Capacité 150 MW",
     type:          "INFRASTRUCTURE"  as const,
@@ -32,12 +32,12 @@ const DEMO_PROJECTS = [
     spi:           0.89,
     cpi:           0.74,
     progress:      38,
-    city:          "Mohammedia",
+    city:          "Ville Démo 2",
     country:       "MA",
-    clientName:    "ONEE",
+    clientName:    "Client Démo 2",
   },
   {
-    name:          "Villas Ain Diab Prestige",
+    name:          "Projet Démo 3",
     reference:     "PROJ-2024-003",
     description:   "Résidence de luxe 24 villas — Façade océan · Finitions premium",
     type:          "CONSTRUCTION"    as const,
@@ -50,10 +50,10 @@ const DEMO_PROJECTS = [
     progress:      72,
     city:          "Casablanca",
     country:       "MA",
-    clientName:    "Groupe Addoha",
+    clientName:    "Client Démo 3",
   },
   {
-    name:          "Résidence Al Andalous",
+    name:          "Projet Démo 4",
     reference:     "PROJ-2024-004",
     description:   "Résidence 120 appartements R+8 — Infrastructures VRD complètes",
     type:          "CONSTRUCTION"    as const,
@@ -66,7 +66,7 @@ const DEMO_PROJECTS = [
     progress:      63,
     city:          "Rabat",
     country:       "MA",
-    clientName:    "Alliances Développement",
+    clientName:    "Client Démo 4",
   },
 ]
 

@@ -40,9 +40,9 @@ const MODE_INIT: Record<ChatMode, string> = {
 
 J'ai analysé vos **12 chantiers actifs**. Voici un résumé :
 
-🔴 **Usine Bouskoura** — SPI=0.72 · Retard +46j prédit (confiance 88%)
-🟠 **Station Énergie** — CPI=0.74 · Dépassement EAC +34.8%
-✅ **Villas Ain Diab** — SPI=1.04 · Performance excellente
+🔴 **Projet Démo** — SPI=0.72 · Retard +46j prédit (confiance 88%)
+🟠 **Projet Démo** — CPI=0.74 · Dépassement EAC +34.8%
+✅ **Projet Démo** — SPI=1.04 · Performance excellente
 
 Posez-moi une question sur vos chantiers, KPIs ou plannings.`,
 
@@ -70,7 +70,7 @@ Indiquez le rapport ou la période souhaitée.`,
 
 **3 risques critiques** détectés sur vos chantiers :
 1. 🔴 Électricité Bouskoura — Retard +28j · Probabilité 94%
-2. 🟠 Budget Résidence Al Andalous — CPI 0.87 · EAC +14.8%
+2. 🟠 Budget Projet Démo — CPI 0.87 · EAC +14.8%
 3. 🟡 RH Tour Hassan — Absentéisme 34%
 
 Demandez une analyse approfondie d'un risque spécifique.`,

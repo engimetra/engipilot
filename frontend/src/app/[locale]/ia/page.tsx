@@ -12,22 +12,22 @@ const AILivePredictiveSystem = dynamic(
 
 const PREDICTIONS = [
   {
-    type: "RETARD", chantier: "Usine Bouskoura", flag:"🇲🇦", valeur: "+46j", confiance: 88, niveau: "CRITIQUE",
+    type: "RETARD", chantier: "Projet Démo", flag:"🇲🇦", valeur: "+46j", confiance: 88, niveau: "CRITIQUE",
     desc: "SPI=0.72 et CPI=0.84 indiquent une trajectoire critique. Fin prédite 15/05/2026.",
     reco: "Recruter 4 électriciens intérimaires · Renégocier béton · Clôturer NC-047",
   },
   {
-    type: "BUDGET", chantier: "Station Énergie", flag:"🇲🇦", valeur: "+34.8%", confiance: 91, niveau: "CRITIQUE",
+    type: "BUDGET", chantier: "Projet Démo", flag:"🇲🇦", valeur: "+34.8%", confiance: 91, niveau: "CRITIQUE",
     desc: "CPI=0.74 sur 4 semaines. EAC estimé 283M MAD vs BAT 210M.",
     reco: "Audit matériaux béton Zone C · Réviser BAT avec maître d'ouvrage",
   },
   {
-    type: "ANOMALIE", chantier: "Résidence Al Andalous", flag:"🇲🇦", valeur: "×1.34 béton", confiance: 84, niveau: "MAJEUR",
+    type: "ANOMALIE", chantier: "Projet Démo", flag:"🇲🇦", valeur: "×1.34 béton", confiance: 84, niveau: "MAJEUR",
     desc: "Consommation béton Zone C supérieure de 34% à la norme.",
     reco: "Vérifier coffrage · Contrôler pertes · Audit sous-traitant béton",
   },
   {
-    type: "POSITIF", chantier: "Villas Ain Diab", flag:"🇲🇦", valeur: "Livraison OK", confiance: 95, niveau: "OK",
+    type: "POSITIF", chantier: "Projet Démo", flag:"🇲🇦", valeur: "Livraison OK", confiance: 95, niveau: "OK",
     desc: "SPI=1.04 et CPI=1.02 — performance excellente. Livraison prédite dans les délais.",
     reco: "Maintenir le rythme · Partager les bonnes pratiques avec les autres équipes",
   },
@@ -115,7 +115,7 @@ export default function IAPage() {
         {[
           { icon:Zap,         label:"Prédictions actives", sublabel:"En production", value:"3",    accent:"#635BFF", accentBg:"bg-primary/10", accentText:"text-primary", spark:[5,6,6,7,7,8,8,3] },
           { icon:AlertOctagon,label:"Alertes critiques",   sublabel:"Action requise", value:"2",   accent:"#E2445C", accentBg:"bg-danger/10",  accentText:"text-danger",  spark:[1,2,1,2,2,3,2,2] },
-          { icon:Calendar,    label:"Retard max prédit",   sublabel:"Usine Bouskoura",value:"+46j", accent:"#FDAB3D", accentBg:"bg-warning/10", accentText:"text-warning", spark:[20,28,32,38,40,44,46,46] },
+          { icon:Calendar,    label:"Retard max prédit",   sublabel:"Projet Démo",value:"+46j", accent:"#FDAB3D", accentBg:"bg-warning/10", accentText:"text-warning", spark:[20,28,32,38,40,44,46,46] },
           { icon:CheckCircle2,label:"Confiance moyenne",   sublabel:"Tous modèles",   value:"89%", accent:"#00C875", accentBg:"bg-success/10", accentText:"text-success", spark:[82,84,85,86,87,88,89,89] },
         ].map(k => {
           const Icon = k.icon
