@@ -1,0 +1,198 @@
+groups:
+
+  # ─── INFRASTRUCTURE ──────────────────────────────────────────────────────────
+  - name: infrastructure
+    rules:
+
+      - alert: CPUElevé
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU élevé sur {{ $labels.instance }}"
+          description: "CPU à {{ $value | printf \"%.1f\" }}% depuis 5 minutes."
+
+      - alert: CPUCritique
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU critique sur {{ $labels.instance }}"
+          description: "CPU à {{ $value | printf \"%.1f\" }}% — intervention requise."
+
+      - alert: MémoireElevée
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mémoire élevée sur {{ $labels.instance }}"
+          description: "Mémoire utilisée à {{ $value | printf \"%.1f\" }}%."
+
+      - alert: MémoireCritique
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mémoire critique sur {{ $labels.instance }}"
+          description: "Mémoire utilisée à {{ $value | printf \"%.1f\" }}% — OOM imminent."
+
+      - alert: DisquePlein
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disque presque plein sur {{ $labels.instance }}"
+          description: "Disque / utilisé à {{ $value | printf \"%.1f\" }}%."
+
+      - alert: DisqueCritique
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disque critique sur {{ $labels.instance }}"
+          description: "Disque / utilisé à {{ $value | printf \"%.1f\" }}% — nettoyage urgent."
+
+  # ─── CONTENEURS DOCKER ───────────────────────────────────────────────────────
+  - name: conteneurs
+    rules:
+
+      - alert: ConteneurArrêté
+        expr: absent(container_last_seen{name=~"engipilot-.+"}) or time() - container_last_seen{name=~"engipilot-.+"} > 60
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Conteneur arrêté : {{ $labels.name }}"
+          description: "Le conteneur {{ $labels.name }} n'est plus détecté depuis 1 minute."
+
+      - alert: RedémarragesFréquents
+        expr: increase(container_start_time_seconds{name=~"engipilot-.+"}[1h]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redémarrages fréquents : {{ $labels.name }}"
+          description: "{{ $labels.name }} a redémarré {{ $value | printf \"%.0f\" }} fois en 1h."
+
+  # ─── POSTGRESQL ──────────────────────────────────────────────────────────────
+  - name: postgresql
+    rules:
+
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL inaccessible"
+          description: "L'exporteur PostgreSQL ne peut pas se connecter à la base de données."
+
+      - alert: ConnexionsPostgreSQLElevées
+        expr: pg_stat_activity_count > 40
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Connexions PostgreSQL élevées"
+          description: "{{ $value | printf \"%.0f\" }} connexions actives (seuil: 40)."
+
+      - alert: TransactionsLentes
+        expr: rate(pg_stat_database_xact_commit[5m]) + rate(pg_stat_database_xact_rollback[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Activité PostgreSQL très faible"
+          description: "Moins d'1 transaction/seconde depuis 10 minutes."
+
+  # ─── BACKEND SPRING BOOT ─────────────────────────────────────────────────────
+  - name: backend
+    rules:
+
+      - alert: BackendDown
+        expr: absent(up{job="engipilot-backend"}) or up{job="engipilot-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend ENGIPILOT inaccessible"
+          description: "Le backend Spring Boot ne répond plus à Prometheus."
+
+      - alert: TauxErreurÉlevé
+        expr: rate(http_server_requests_seconds_count{job="engipilot-backend",status=~"5.."}[5m]) /
+              rate(http_server_requests_seconds_count{job="engipilot-backend"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreurs HTTP 5xx élevé (backend)"
+          description: "{{ $value | printf \"%.1f\" }}% des requêtes retournent une erreur 5xx."
+
+      - alert: LatenceÉlevée
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="engipilot-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence backend élevée (P95 > 2s)"
+          description: "P95 latence = {{ $value | printf \"%.2f\" }}s."
+
+      - alert: JVMMémoireElevée
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM Heap élevé"
+          description: "Heap JVM utilisé à {{ $value | printf \"%.0f\" }}%."
+
+  # ─── SERVICE IA FASTAPI ──────────────────────────────────────────────────────
+  - name: ia_service
+    rules:
+
+      - alert: IAServiceDown
+        expr: absent(up{job="engipilot-ia"}) or up{job="engipilot-ia"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service IA inaccessible"
+          description: "Le service FastAPI IA ne répond plus à Prometheus."
+
+      - alert: IALatenceÉlevée
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="engipilot-ia"}[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence IA élevée (P95 > 3s)"
+          description: "P95 latence IA = {{ $value | printf \"%.2f\" }}s."
+
+      - alert: IATauxErreurÉlevé
+        expr: rate(http_requests_total{job="engipilot-ia",status_code=~"5.."}[5m]) /
+              rate(http_requests_total{job="engipilot-ia"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreurs IA élevé"
+          description: "{{ $value | printf \"%.1f\" }}% des requêtes IA retournent 5xx."
+
+  # ─── PROMETHEUS LUI-MÊME ────────────────────────────────────────────────────
+  - name: prometheus
+    rules:
+
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Target Prometheus down : {{ $labels.job }}"
+          description: "La cible {{ $labels.instance }} (job: {{ $labels.job }}) est inaccessible depuis 5 minutes."

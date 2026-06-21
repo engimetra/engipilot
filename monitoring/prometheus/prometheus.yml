@@ -6,6 +6,9 @@ global:
   evaluation_interval: 30s
   scrape_timeout:      10s
 
+rule_files:
+  - "alerts.yml"
+
 scrape_configs:
 
   # ─── PROMETHEUS LUI-MÊME ─────────────────────────────────────────
