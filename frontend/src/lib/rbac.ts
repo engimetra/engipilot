@@ -253,12 +253,12 @@ export const DEMO_USERS: Record<RolePlateforme, {
   prenom: string; nom: string; email: string
   role: RolePlateforme; organisation_id: string
 }> = {
-  SUPER_ADMIN:          { prenom: "Ismail",  nom: "AMZIL",     email: "ismail.amzil@engipilot.ma",   role: "SUPER_ADMIN",          organisation_id: "org_engipilot" },
-  ADMIN_ENTREPRISE:     { prenom: "Nadia",   nom: "Amrani",    email: "nadia.amrani@btpmaroc.ma",    role: "ADMIN_ENTREPRISE",     organisation_id: "org_btpmaroc" },
-  ADMIN:                { prenom: "Karim",   nom: "Benali",    email: "karim.benali@btpmaroc.ma",    role: "ADMIN",                organisation_id: "org_btpmaroc" },
-  CHEF_PROJET:          { prenom: "Youssef", nom: "El Fassi",  email: "youssef.elfassi@btpmaroc.ma", role: "CHEF_PROJET",          organisation_id: "org_btpmaroc" },
-  CHEF_CHANTIER:        { prenom: "Hassan",  nom: "Moussaoui", email: "hassan.m@btpmaroc.ma",        role: "CHEF_CHANTIER",        organisation_id: "org_btpmaroc" },
-  CONSULTANT:           { prenom: "Sara",    nom: "Tazi",      email: "sara.tazi@consulting.ma",     role: "CONSULTANT",           organisation_id: "org_btpmaroc" },
-  LECTEUR:              { prenom: "Ahmed",   nom: "Idrissi",   email: "ahmed.idrissi@btpmaroc.ma",   role: "LECTEUR",              organisation_id: "org_btpmaroc" },
-  UTILISATEUR_STANDARD: { prenom: "Fatima", nom: "Zahra",     email: "fatima.zahra@btpmaroc.ma",    role: "UTILISATEUR_STANDARD", organisation_id: "org_btpmaroc" },
+  SUPER_ADMIN:          { prenom: "", nom: "", email: "", role: "SUPER_ADMIN",          organisation_id: "" },
+  ADMIN_ENTREPRISE:     { prenom: "", nom: "", email: "", role: "ADMIN_ENTREPRISE",     organisation_id: "" },
+  ADMIN:                { prenom: "", nom: "", email: "", role: "ADMIN",                organisation_id: "" },
+  CHEF_PROJET:          { prenom: "", nom: "", email: "", role: "CHEF_PROJET",          organisation_id: "" },
+  CHEF_CHANTIER:        { prenom: "", nom: "", email: "", role: "CHEF_CHANTIER",        organisation_id: "" },
+  CONSULTANT:           { prenom: "", nom: "", email: "", role: "CONSULTANT",           organisation_id: "" },
+  LECTEUR:              { prenom: "", nom: "", email: "", role: "LECTEUR",              organisation_id: "" },
+  UTILISATEUR_STANDARD: { prenom: "", nom: "", email: "", role: "UTILISATEUR_STANDARD", organisation_id: "" },
 }
