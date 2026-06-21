@@ -1,255 +1,174 @@
 "use client"
+// Page des tarifs avec intégration Stripe Checkout
+import { useState } from "react"
+import { CheckCircle, X } from "lucide-react"
 
-import { useRouter } from "next/navigation"
-import { Building2 } from "lucide-react"
-
+// Définition des plans tarifaires ENGIPILOT
 const PLANS = [
   {
     name: "Starter",
-    price: "499",
-    currency: "MAD",
-    period: "/mois",
-    description: "Parfait pour les petites équipes qui démarrent",
+    prix: "499 MAD",
+    periode: "/ mois",
+    description: "Idéal pour les petites équipes",
     features: [
-      "3 utilisateurs",
-      "5 projets actifs",
-      "Chat IA intégré",
-      "Dashboard & KPIs de base",
-      "Rapports journaliers",
-      "Support email",
+      { ok: true,  t: "5 chantiers max" },
+      { ok: true,  t: "Dashboard basique" },
+      { ok: true,  t: "Rapports journaliers" },
+      { ok: true,  t: "Export PDF" },
+      { ok: false, t: "KPIs EVM avancés" },
+      { ok: false, t: "Module IA prédictions" },
     ],
-    cta: "Démarrer l'essai gratuit",
-    badge: "14 jours gratuits, sans carte bancaire",
-    highlighted: false,
-    href: "/register?plan=starter",
-    isEnterprise: false,
+    couleur: "border-border hover:border-primary/40",
+    btnClass: "bg-primary text-white hover:bg-primary-hover",
   },
   {
     name: "Pro",
-    price: "1 490",
-    currency: "MAD",
-    period: "/mois",
-    description: "Pour les équipes ambitieuses avec des projets complexes",
+    prix: "1 490 MAD",
+    periode: "/ mois · annuel",
+    description: "Pour les bureaux d'études professionnels",
+    populaire: true,
     features: [
-      "15 utilisateurs",
-      "Projets illimités",
-      "IA avancée & prédictive",
-      "KPIs EVM complets",
-      "Rapports avancés PDF/Excel",
-      "Support prioritaire 24/7",
+      { ok: true, t: "20 chantiers" },
+      { ok: true, t: "KPIs EVM complets" },
+      { ok: true, t: "Module IA prédictions" },
+      { ok: true, t: "Export PDF illimité" },
+      { ok: true, t: "Kanban + Gantt" },
+      { ok: true, t: "Support prioritaire" },
     ],
-    cta: "Démarrer l'essai gratuit",
-    badge: "14 jours gratuits, sans carte bancaire",
-    highlighted: true,
-    href: "/register?plan=pro",
-    isEnterprise: false,
+    couleur: "border-primary border-2",
+    btnClass: "bg-primary text-white hover:bg-primary-hover",
   },
   {
     name: "Enterprise",
-    price: "Sur devis",
-    currency: null,
-    period: null,
-    description: "Solution sur mesure pour les grandes organisations",
+    prix: "Sur devis",
+    periode: "Multi-organisations",
+    description: "Solutions sur mesure pour grandes entreprises",
     features: [
-      "Utilisateurs illimités",
-      "Projets illimités",
-      "Accès API complet",
-      "IA personnalisée",
-      "SLA 99,9 % garanti",
-      "Support dédié & account manager",
+      { ok: true, t: "Chantiers illimités" },
+      { ok: true, t: "Multi-tenant SaaS" },
+      { ok: true, t: "IA personnalisée" },
+      { ok: true, t: "API accès complet" },
+      { ok: true, t: "SSO + SAML" },
+      { ok: true, t: "SLA 99.9%" },
     ],
-    cta: "Nous contacter",
-    badge: null,
-    highlighted: false,
-    href: "mailto:contact@engipilot.ma",
-    isEnterprise: true,
+    couleur: "border-border hover:border-success/40",
+    btnClass: "bg-success text-white hover:bg-success/90",
   },
 ]
 
 export default function PricingPage() {
-  const router = useRouter()
+  // État de chargement pour le bouton en cours de traitement
+  const [loading, setLoading] = useState<string | null>(null)
+
+  // Déclenche le processus de paiement Stripe pour le plan sélectionné
+  async function handleCheckout(plan: string) {
+    setLoading(plan)
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, userId: "guest" }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.erreur ?? "Erreur lors de la création du paiement")
+      }
+
+      // Redirection vers la page de paiement Stripe
+      window.location.href = data.url
+    } catch (err) {
+      alert("Une erreur est survenue. Veuillez réessayer.")
+      console.error("Erreur Stripe Checkout :", err)
+    } finally {
+      setLoading(null)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="space-y-8 page-enter">
+      {/* En-tête de la page */}
+      <div className="text-center">
+        <h1 className="page-title">Choisissez votre plan</h1>
+        <p className="text-sm text-muted-fg mt-1">
+          Tarifs en Dirham Marocain (MAD) · TVA non incluse
+        </p>
+      </div>
 
-      <header className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={() => router.push("/landing")}
-            className="flex items-center gap-3 hover:opacity-75 transition-opacity"
+      {/* Grille des plans tarifaires */}
+      <div className="grid grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {PLANS.map((plan) => (
+          <div
+            key={plan.name}
+            className={`bg-white border rounded-2xl p-6 relative flex flex-col shadow-card transition-all ${plan.couleur}`}
           >
-            <div className="w-9 h-9 bg-[#2563EB] rounded-xl flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-black text-xl text-[#0F172A]">ENGIPILOT</span>
-          </button>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/login")}
-              className="text-sm text-[#475569] hover:text-[#0F172A] font-medium transition-colors"
-            >
-              Se connecter
-            </button>
-            <button
-              onClick={() => router.push("/register")}
-              className="bg-[#2563EB] hover:bg-[#1E3A8A] text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors"
-            >
-              Commencer gratuitement
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1">
-
-        <section className="py-16 text-center px-5">
-          <div className="inline-flex items-center gap-2 bg-blue-50 text-[#2563EB] border border-blue-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            💳 Tarifs transparents
-          </div>
-          <h1 className="text-4xl lg:text-5xl font-black text-[#0F172A] leading-tight">
-            Des plans pour chaque<br />organisation BTP
-          </h1>
-          <p className="mt-5 text-lg text-[#475569] max-w-xl mx-auto">
-            Commencez avec 14 jours gratuits, sans carte bancaire. Passez au plan supérieur quand vous êtes prêt.
-          </p>
-        </section>
-
-        <section className="pb-20 px-5">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 items-stretch">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl border overflow-hidden transition-all hover:-translate-y-1 flex flex-col h-full ${
-                  plan.highlighted
-                    ? "shadow-2xl scale-[1.03]"
-                    : "bg-white border-gray-200 shadow-sm hover:shadow-lg"
-                }`}
-              >
-                {plan.highlighted && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E3A8A]" />
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap z-10">
-                      ⭐ RECOMMANDÉ
-                    </div>
-                  </>
-                )}
-
-                <div className="relative p-8 flex flex-col flex-1">
-
-                  <div className="mb-6">
-                    <h2 className={`text-xl font-black ${plan.highlighted ? "text-white" : "text-[#0F172A]"}`}>
-                      {plan.name}
-                    </h2>
-                    <p className={`text-sm mt-1 ${plan.highlighted ? "text-white/60" : "text-[#475569]"}`}>
-                      {plan.description}
-                    </p>
-                    <div className="mt-4 flex items-end gap-1">
-                      {plan.currency ? (
-                        <>
-                          <span className={`text-4xl font-black ${plan.highlighted ? "text-white" : "text-[#2563EB]"}`}>
-                            {plan.price}
-                          </span>
-                          <span className={`text-sm mb-1 font-semibold ${plan.highlighted ? "text-white/60" : "text-[#475569]"}`}>
-                            {plan.currency}{plan.period}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`text-3xl font-black ${plan.highlighted ? "text-white" : "text-[#2563EB]"}`}>
-                          {plan.price}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {plan.badge && (
-                    <div className={`mb-6 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${
-                      plan.highlighted
-                        ? "bg-white/15 text-white"
-                        : "bg-green-50 text-green-700 border border-green-100"
-                    }`}>
-                      <span>✓</span>
-                      {plan.badge}
-                    </div>
-                  )}
-
-                  <ul className="space-y-3 flex-1 mb-6">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className={`flex items-center gap-3 text-sm ${plan.highlighted ? "text-white/85" : "text-[#475569]"}`}>
-                        <svg
-                          className={`w-4 h-4 flex-shrink-0 ${plan.highlighted ? "text-blue-200" : "text-[#2563EB]"}`}
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={plan.href}
-                    className={`mt-auto block w-full py-3.5 rounded-xl font-bold text-sm text-center transition-all shadow-md ${
-                      plan.highlighted
-                        ? "bg-white text-[#2563EB] hover:bg-blue-50"
-                        : plan.isEnterprise
-                          ? "bg-[#0F172A] text-white hover:bg-[#1E3A8A]"
-                          : "bg-[#2563EB] text-white hover:bg-[#1E3A8A]"
-                    }`}
-                  >
-                    {plan.cta}
-                  </a>
-                </div>
+            {/* Badge "Populaire" pour le plan Pro */}
+            {plan.populaire && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                Le plus populaire ✓
               </div>
-            ))}
-          </div>
+            )}
 
-          <p className="text-center mt-10 text-sm text-[#475569]">
-            Tous les prix sont HT · Essai gratuit sans engagement · Annulation à tout moment
-          </p>
-        </section>
+            {/* Informations du plan */}
+            <div className="mb-4">
+              <h3 className="font-black text-lg text-foreground">{plan.name}</h3>
+              <p className="text-xs text-muted-fg mt-0.5">{plan.description}</p>
+              <div className="mt-3">
+                <span className="text-2xl font-black text-foreground">{plan.prix}</span>
+                <span className="text-sm text-muted-fg ml-1">{plan.periode}</span>
+              </div>
+            </div>
 
-        <section className="py-16 bg-white border-t border-gray-100">
-          <div className="max-w-4xl mx-auto px-5">
-            <h2 className="text-2xl font-black text-center text-[#0F172A] mb-10">Questions fréquentes</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  q: "L'essai gratuit nécessite-t-il une carte bancaire ?",
-                  a: "Non. Vous pouvez démarrer votre essai de 14 jours sans aucune information de paiement.",
-                },
-                {
-                  q: "Puis-je changer de plan à tout moment ?",
-                  a: "Oui. Vous pouvez passer à un plan supérieur ou inférieur à tout moment depuis votre espace compte.",
-                },
-                {
-                  q: "Que se passe-t-il à la fin de l'essai ?",
-                  a: "Votre compte passe en mode lecture seule. Vos données sont conservées 30 jours supplémentaires.",
-                },
-                {
-                  q: "L'Enterprise inclut-il un SLA ?",
-                  a: "Oui. L'offre Enterprise inclut un SLA de 99,9 % de disponibilité avec support dédié 24/7.",
-                },
-              ].map((faq) => (
-                <div key={faq.q} className="bg-[#F8FAFC] rounded-2xl p-6 border border-gray-100">
-                  <h3 className="font-bold text-[#0F172A] text-sm mb-2">{faq.q}</h3>
-                  <p className="text-sm text-[#475569] leading-relaxed">{faq.a}</p>
+            <div className="h-px bg-border mb-4" />
+
+            {/* Liste des fonctionnalités */}
+            <div className="space-y-2 flex-1 mb-6">
+              {plan.features.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span className={f.ok ? "text-success" : "text-muted-fg/40"}>
+                    {f.ok ? "✓" : "✗"}
+                  </span>
+                  <span className={f.ok ? "text-foreground" : "text-muted-fg"}>{f.t}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
 
-      </main>
-
-      <footer className="bg-[#0F172A] text-white py-8">
-        <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/40">
-          <p>© 2026 ENGIPILOT. Tous droits réservés.</p>
-          <div className="flex gap-6">
-            <button onClick={() => router.push("/landing")} className="hover:text-white transition-colors">Accueil</button>
-            <a href="mailto:contact@engipilot.ma" className="hover:text-white transition-colors">Contact</a>
+            {/* Bouton d'action — Stripe pour Starter/Pro, mailto pour Enterprise */}
+            {plan.name === "Enterprise" ? (
+              <a
+                href="mailto:contact@engipilot.ma"
+                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all text-center block ${plan.btnClass}`}
+              >
+                Nous contacter →
+              </a>
+            ) : (
+              <button
+                onClick={() => handleCheckout(plan.name.toLowerCase())}
+                disabled={loading === plan.name.toLowerCase()}
+                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${plan.btnClass} disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                {loading === plan.name.toLowerCase() ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Redirection…
+                  </span>
+                ) : (
+                  `Choisir ${plan.name} →`
+                )}
+              </button>
+            )}
           </div>
-        </div>
-      </footer>
+        ))}
+      </div>
+
+      {/* Note de bas de page */}
+      <p className="text-center text-xs text-muted-fg">
+        Paiement sécurisé par Stripe · Annulation à tout moment · Sans engagement
+      </p>
     </div>
   )
 }

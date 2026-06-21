@@ -1,19 +1,19 @@
 "use client"
 import { useState } from "react"
-import { CheckCircle, Download, X, ExternalLink } from "lucide-react"
+import { CheckCircle, Download, X, ExternalLink, Settings } from "lucide-react"
 
 const PLANS = [
-  { nom:"Starter", prix:"499 MAD", periode:"/ mois", actif:false, features:[
-    {ok:true,t:"3 utilisateurs"},{ok:true,t:"5 projets actifs"},{ok:true,t:"Chat IA intégré"},
-    {ok:true,t:"Dashboard & KPIs de base"},{ok:true,t:"Rapports journaliers"},{ok:false,t:"Support email"},
+  { nom:"Starter", prix:"0", periode:"Gratuit", actif:false, features:[
+    {ok:true,t:"3 chantiers max"},{ok:true,t:"Dashboard basique"},{ok:true,t:"Rapports journaliers"},
+    {ok:false,t:"KPIs EVM avancés"},{ok:false,t:"Module IA"},{ok:false,t:"Export PDF"},
   ]},
-  { nom:"Pro", prix:"1 490 MAD", periode:"/ mois", actif:true, features:[
-    {ok:true,t:"15 utilisateurs"},{ok:true,t:"Projets illimités"},{ok:true,t:"IA avancée & prédictive"},
-    {ok:true,t:"KPIs EVM complets"},{ok:true,t:"Rapports avancés PDF/Excel"},{ok:true,t:"Support prioritaire 24/7"},
+  { nom:"Pro", prix:"1 490 MAD", periode:"/ mois · annuel", actif:true, features:[
+    {ok:true,t:"20 chantiers"},{ok:true,t:"KPIs EVM complets"},{ok:true,t:"Module IA prédictions"},
+    {ok:true,t:"Export PDF illimité"},{ok:true,t:"Kanban + Gantt"},{ok:true,t:"Support prioritaire"},
   ]},
-  { nom:"Enterprise", prix:"Sur devis", periode:"", actif:false, features:[
-    {ok:true,t:"Utilisateurs illimités"},{ok:true,t:"Projets illimités"},{ok:true,t:"Accès API complet"},
-    {ok:true,t:"IA personnalisée"},{ok:true,t:"SLA 99,9 % garanti"},{ok:true,t:"Support dédié & account manager"},
+  { nom:"Enterprise", prix:"Sur devis", periode:"Multi-organisations", actif:false, features:[
+    {ok:true,t:"Chantiers illimités"},{ok:true,t:"Multi-tenant SaaS"},{ok:true,t:"IA personnalisée"},
+    {ok:true,t:"API accès complet"},{ok:true,t:"SSO + SAML"},{ok:true,t:"SLA 99.9%"},
   ]},
 ]
 
@@ -66,9 +66,35 @@ function ModalContact({ onClose }: { onClose: () => void }) {
   )
 }
 
+// Identifiant client Stripe (à récupérer depuis le profil utilisateur en production)
+const STRIPE_CUSTOMER_ID_DEMO = "cus_demo_placeholder"
+
 export default function FacturationPage() {
   const [toast, setToast] = useState("")
   const [showContact, setShowContact] = useState(false)
+  // État de chargement pour le portail Stripe
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  // Ouvre le portail Stripe pour gérer l'abonnement
+  async function handlePortail() {
+    setPortalLoading(true)
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: STRIPE_CUSTOMER_ID_DEMO }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error(data.erreur ?? "Erreur portail")
+      // Redirection vers le portail de gestion Stripe
+      window.location.href = data.url
+    } catch (err) {
+      alert("Impossible d'ouvrir le portail de gestion. Veuillez réessayer.")
+      console.error("Erreur portail Stripe :", err)
+    } finally {
+      setPortalLoading(false)
+    }
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -106,9 +132,20 @@ export default function FacturationPage() {
       {toast && <Toast msg={toast} onClose={() => setToast("")} />}
       {showContact && <ModalContact onClose={() => { setShowContact(false); showToast("Message envoyé à l'équipe commerciale") }} />}
 
-      <div>
-        <h1 className="page-title">Facturation & Plans SaaS</h1>
-        <p className="text-sm text-muted-fg mt-0.5">Gérez votre abonnement ENGIPILOT</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="page-title">Facturation & Plans SaaS</h1>
+          <p className="text-sm text-muted-fg mt-0.5">Gérez votre abonnement ENGIPILOT</p>
+        </div>
+        {/* Bouton d'accès au portail Stripe pour gérer l'abonnement */}
+        <button
+          onClick={handlePortail}
+          disabled={portalLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border hover:border-primary hover:text-primary text-sm font-semibold text-muted-fg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Settings className="w-4 h-4" />
+          {portalLoading ? "Chargement…" : "Gérer mon abonnement"}
+        </button>
       </div>
 
       {/* Plans */}
