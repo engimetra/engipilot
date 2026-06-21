@@ -2,14 +2,7 @@
 import { useState } from "react"
 import { Users, TrendingUp, UserCheck, AlertTriangle, Plus, ChevronRight, Star } from "lucide-react"
 
-const MEMBRES = [
-  { initiales:"AK", nom:"Ahmed Khalil",   role:"Chef de chantier",    color:"#635BFF", statut:"Actif",  prod:94, chantier:"Résidence Al Andalous" },
-  { initiales:"SA", nom:"Sara Alami",     role:"Ingénieure QC",       color:"#00C875", statut:"Actif",  prod:88, chantier:"Résidence Al Andalous" },
-  { initiales:"MB", nom:"Mohamed Benhali",role:"Chef d'équipe BA",    color:"#FDAB3D", statut:"Actif",  prod:91, chantier:"Résidence Al Andalous" },
-  { initiales:"YC", nom:"Youssef Chraibi",role:"Électricien chef",    color:"#8b5cf6", statut:"Absent", prod:62, chantier:"Usine Bouskoura" },
-  { initiales:"KF", nom:"Karima Fassi",   role:"Conductrice travaux", color:"#E2445C", statut:"Actif",  prod:85, chantier:"Usine Bouskoura" },
-  { initiales:"MB2",nom:"Mehdi Benali",   role:"Plombier chef",       color:"#14b8a6", statut:"Actif",  prod:78, chantier:"Tour Hassan II" },
-]
+const MEMBRES = []
 
 const CORPS = [
   { nom:"Maçons / BA",       agents:18, prod:94, color:"#00C875" },
@@ -19,10 +12,7 @@ const CORPS = [
   { nom:"Conducteurs engins",agents:6,  prod:96, color:"#8b5cf6" },
 ]
 
-const ALERTES_RH = [
-  { level:"danger",  title:"Électricité — Absentéisme 38%", action:"Recruter 2 intérimaires cette semaine" },
-  { level:"warning", title:"3 habilitations expirent dans 7j", action:"Recyclage HSE requis avant le 25/05" },
-]
+const ALERTES_RH = []
 
 export default function EquipesPage() {
   const [activeTab, setActiveTab] = useState<"equipe"|"corps">("equipe")

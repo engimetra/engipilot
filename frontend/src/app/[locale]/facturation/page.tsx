@@ -50,7 +50,7 @@ function ModalContact({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="text-xs font-semibold text-muted-fg block mb-1.5">Email</label>
-            <input type="email" defaultValue="ahmed.khalil@engipilot.ma" className="input" />
+            <input type="email" defaultValue="" className="input" />
           </div>
           <div>
             <label className="text-xs font-semibold text-muted-fg block mb-1.5">Message</label>
