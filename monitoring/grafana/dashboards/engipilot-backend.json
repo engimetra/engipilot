@@ -43,7 +43,7 @@
           "refId": "B"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 2,
@@ -76,7 +76,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 3,
@@ -114,7 +114,7 @@
           "refId": "B"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 4,
@@ -152,7 +152,7 @@
           "refId": "B"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     }
   ],
   "templating": {

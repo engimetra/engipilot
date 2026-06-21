@@ -35,3 +35,6 @@ pytest-asyncio==0.23.5
 black==24.3.0
 isort==5.13.2
 psycopg2-binary==2.9.9
+
+# ── Monitoring ─────────────────────────────
+prometheus-fastapi-instrumentator==6.1.0

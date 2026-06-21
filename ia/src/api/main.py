@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from .routers import predictions, anomalies, chat, health
 
 log = logging.getLogger("IA-Main")
@@ -102,3 +103,6 @@ app.include_router(health.router,      prefix="/health",             tags=["Heal
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["Prédictions"])
 app.include_router(anomalies.router,   prefix="/api/v1/anomalies",   tags=["Anomalies"])
 app.include_router(chat.router,        prefix="/api/v1/chat",        tags=["Chat IA"])
+
+# ── Prometheus metrics ────────────────────────────────────────────────────────
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)

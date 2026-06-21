@@ -21,7 +21,7 @@ services:
       - "--storage.tsdb.retention.time=30d"
       - "--web.enable-lifecycle"
     networks:
-      - engipilot_network
+      - engipilot_default
 
   # ─── GRAFANA ─────────────────────────────────────────────────────
   grafana:
@@ -41,7 +41,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - engipilot_network
+      - engipilot_default
 
   # ─── NODE EXPORTER (métriques système hôte) ──────────────────────
   node-exporter:
@@ -59,7 +59,7 @@ services:
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
-      - engipilot_network
+      - engipilot_default
 
   # ─── CADVISOR (métriques conteneurs Docker) ──────────────────────
   cadvisor:
@@ -76,7 +76,7 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /cgroup:/cgroup:ro
     networks:
-      - engipilot_network
+      - engipilot_default
 
   # ─── POSTGRES EXPORTER (métriques base de données) ───────────────
   postgres-exporter:
@@ -86,13 +86,13 @@ services:
     environment:
       DATA_SOURCE_NAME: ${POSTGRES_EXPORTER_DSN:-postgresql://admin:password@postgres:5432/engipilot?sslmode=disable}
     networks:
-      - engipilot_network
+      - engipilot_default
 
 volumes:
   prometheus_data:
   grafana_data:
 
 networks:
-  # Réseau partagé avec le compose principal — doit être créé au préalable
-  engipilot_network:
+  # Réseau partagé avec le compose principal
+  engipilot_default:
     external: true

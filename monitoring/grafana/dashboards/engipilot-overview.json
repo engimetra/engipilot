@@ -40,7 +40,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 2,
@@ -73,7 +73,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 3,
@@ -104,7 +104,7 @@
           "hide": false
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 4,
@@ -139,7 +139,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 5,
@@ -172,7 +172,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     },
     {
       "id": 6,
@@ -205,7 +205,7 @@
           "refId": "A"
         }
       ],
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+      "datasource": { "type": "prometheus" }
     }
   ],
   "templating": {
