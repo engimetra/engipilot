@@ -58,11 +58,10 @@ export async function POST(req: NextRequest) {
       priorite:           body.priorite,
       chefChantier:       body.chefChantier,
     }
-    const res = await backendFetch("/projects", token, {
+    const res = await backendFetch("/projets", token, {
       method: "POST",
       body:   JSON.stringify(backendBody),
     })
-    const res = await backendFetch("/projets", token, { method: "POST", body })
     const { payload, status } = await proxyResponse(res)
     return NextResponse.json(payload, { status })
   } catch {

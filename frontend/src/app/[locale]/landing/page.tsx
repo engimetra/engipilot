@@ -497,12 +497,12 @@ export default function LandingPage() {
             {[
               {
                 name: "Starter", price: "499 MAD", sub: "/ mois",
-                features: ["3 utilisateurs", "5 projets actifs", "Chat IA intégré", "Dashboard & KPIs de base", "Rapports journaliers"],
+                features: ["10 utilisateurs", "5 chantiers actifs", "5 Go stockage", "Dashboard & KPIs de base", "Rapports journaliers"],
                 cta: "Démarrer l'essai gratuit", highlight: false, href: "/register?plan=starter", isEnterprise: false,
               },
               {
                 name: "Pro", price: "1 490 MAD", sub: "/ mois",
-                features: ["15 utilisateurs", "Projets illimités", "IA avancée & prédictive", "KPIs EVM complets", "Rapports avancés PDF/Excel", "Support prioritaire 24/7"],
+                features: ["50 utilisateurs", "20 chantiers actifs", "20 Go stockage", "KPIs EVM complets", "Rapports avancés PDF/Excel", "Support prioritaire 24/7"],
                 cta: "Démarrer l'essai gratuit", highlight: true, href: "/register?plan=pro", isEnterprise: false,
               },
               {
@@ -574,8 +574,8 @@ export default function LandingPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6 items-start">
             {[
-              { name: "Starter",    price: "Gratuit",    sub: "pour toujours", features: ["3 chantiers actifs", "Dashboard & KPIs de base", "Rapports journaliers", "1 utilisateur", "Support communautaire"],                                                          cta: "Créer un compte",          highlight: false },
-              { name: "Pro",        price: "1 490 MAD",  sub: "/ mois",        features: ["20 chantiers actifs", "KPIs EVM complets", "Module IA prédictif", "25 utilisateurs", "Rapports avancés", "Support prioritaire 24/7"],                                        cta: "Démarrer l'essai 14 jours", highlight: true  },
+              { name: "Starter",    price: "499 MAD",    sub: "/ mois", features: ["5 chantiers actifs", "10 utilisateurs", "5 Go stockage", "Dashboard & KPIs de base", "Rapports journaliers", "Support email"],                                                          cta: "Commencer",          highlight: false },
+              { name: "Pro",        price: "1 490 MAD",  sub: "/ mois",        features: ["20 chantiers actifs", "KPIs EVM complets", "Module IA prédictions", "50 utilisateurs", "Rapports avancés", "Support prioritaire 24/7"],                                        cta: "Démarrer l'essai 14 jours", highlight: true  },
               { name: "Enterprise", price: "Sur devis",  sub: "",              features: ["Chantiers illimités", "IA personnalisée", "API & intégrations", "Utilisateurs illimités", "SLA 99.9 %", "Account manager dédié"],                                            cta: "Nous contacter",           highlight: false },
             ].map((plan) => (
               <div key={plan.name} className={`relative rounded-3xl border flex flex-col gap-6 overflow-hidden transition-transform hover:-translate-y-1 ${plan.highlight ? "shadow-2xl scale-[1.02]" : "bg-white border-gray-200 shadow-sm hover:shadow-md"}`}>
@@ -684,78 +684,6 @@ export default function LandingPage() {
                 <div className="text-gray-500 text-sm mt-2 font-medium">{s.label}</div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer id="footer" className="bg-[#00154A] text-white py-16">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-5 gap-12">
-          <div>
-            <button
-              onClick={() => scrollTo("hero")}
-              className="text-3xl font-black hover:opacity-80 transition"
-            >
-              ENGIPILOT
-            </button>
-            <p className="mt-5 text-blue-100 leading-relaxed">
-              La plateforme tout-en-un pour piloter vos projets BTP avec
-              intelligence et performance.
-            </p>
-          </div>
-
-          {[
-            { title: "Produit",    links: [
-              { label: "Fonctionnalités", action: () => scrollTo("features")   },
-              { label: "Modules",         action: () => scrollTo("modules")    },
-              { label: "Tarifs",          action: () => router.push("/pricing") },
-              { label: "Mises à jour",    action: () => scrollTo("hero")       },
-            ]},
-            { title: "Solutions",  links: [
-              { label: "Par type de projet", action: () => scrollTo("modules")    },
-              { label: "Par département",    action: () => scrollTo("modules")    },
-              { label: "Intégrations",       action: () => router.push("/login")  },
-              { label: "API",                action: () => router.push("/login")  },
-            ]},
-            { title: "Ressources", links: [
-              { label: "Documentation", action: () => scrollTo("ressources") },
-              { label: "Blog",          action: () => scrollTo("ressources") },
-              { label: "Guides",        action: () => scrollTo("ressources") },
-              { label: "Support",       action: () => scrollTo("ressources") },
-            ]},
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="font-bold mb-5">{col.title}</h4>
-              <ul className="space-y-3 text-blue-100">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <button
-                      onClick={link.action}
-                      className="hover:text-white transition-colors text-left"
-                    >
-                      {link.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          <div>
-            <h4 className="font-bold mb-5">Newsletter</h4>
-            <div className="flex overflow-hidden rounded-xl">
-              <input
-                type="email"
-                placeholder="Votre email"
-                className="flex-1 px-4 py-3 text-black outline-none"
-              />
-              <button
-                type="button"
-                className="bg-blue-600 hover:bg-blue-700 px-5 transition"
-              >
-                →
-              </button>
-            </div>
           </div>
         </div>
       </section>
