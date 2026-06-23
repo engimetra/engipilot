@@ -104,13 +104,6 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const activeProject = projetActif ?? (projects[0] ? { id: projects[0].id, nom: projects[0].name } as never : null)
   const activeLabel   = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? t("selectProject")
 
-  const { data: projects = [] } = useQuery<ApiProject[]>({
-    queryKey: ["topbar-projects"],
-    queryFn:  () => fetch("/api/projects").then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const activeLabel = (projetActif as {nom?: string} | null)?.nom ?? projects[0]?.name ?? "Sélectionner projet"
   const unreadCount = notifs.filter(n => !n.read).length
 
   const segment   = "/" + (pathname.split("/")[1] ?? "")

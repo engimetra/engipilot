@@ -130,20 +130,6 @@ export default function LoginPage() {
   const [forgotSent,setForgotSent]       = useState(false)
   const [forgotErr,setForgotErr]         = useState("")
 
-  const [mode, setMode]         = useState<Mode>("login")
-  const [fields, setFields]     = useState<Fields>(INITIAL)
-  const [showPass, setShowPass] = useState(false)
-  const [showConf, setShowConf] = useState(false)
-  const [touched, setTouched]   = useState<Partial<Record<keyof Fields, boolean>>>({})
-  const [errors, setErrors]     = useState<FieldErrors>({})
-  const [apiErr, setApiErr]     = useState<string | null>(null)
-  const [loading, setLoading]   = useState(false)
-
-  const [forgotMode,    setForgotMode]    = useState(false)
-  const [forgotEmail,   setForgotEmail]   = useState("")
-  const [forgotLoading, setForgotLoading] = useState(false)
-  const [forgotSent,    setForgotSent]    = useState(false)
-  const [forgotErr,     setForgotErr]     = useState("")
 
   const set = (k: keyof Fields, v: string | boolean) =>
     setFields(f => ({ ...f, [k]: v }))
