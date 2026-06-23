@@ -27,6 +27,15 @@ public class Organisation {
     @Column(name = "trial_expires_at")
     private LocalDate trialExpiresAt;
 
+    @Column(name = "stripe_customer_id")
+    private String stripeCustomerId;
+
+    @Column(name = "stripe_subscription_id")
+    private String stripeSubscriptionId;
+
+    @Column(name = "subscription_expires_at")
+    private LocalDate subscriptionExpiresAt;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean actif = true;

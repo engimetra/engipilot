@@ -3,6 +3,7 @@ package com.engipilot.controller;
 import com.engipilot.domain.User;
 import com.engipilot.repository.UserRepository;
 import com.engipilot.security.SecurityUtils;
+import com.engipilot.security.subscription.PlanRequired;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
