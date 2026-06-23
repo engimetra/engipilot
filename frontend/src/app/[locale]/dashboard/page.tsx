@@ -20,6 +20,7 @@ const AlertesPanel = dynamic(() => import("@/components/ia/AlertesPanel").then(m
   { ssr: false, loading: () => <ChartSkeleton height="h-full" /> })
 
 import { useStore } from "@/store/useStore"
+import { RoleDashboard } from "@/components/layout/RoleDashboard"
 import {
   LayoutDashboard, Building2, SquareKanban, CalendarDays, FileText,
   FolderOpen, ShieldCheck, ClipboardCheck, Users, BarChart3, Brain,
@@ -248,6 +249,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 page-enter">
+
+      {/* ROLE DASHBOARD */}
+      <RoleDashboard />
 
       {/* ══════════ HEADER ══════════ */}
       <div
