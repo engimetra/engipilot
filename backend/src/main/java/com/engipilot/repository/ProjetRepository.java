@@ -13,4 +13,5 @@ public interface ProjetRepository extends JpaRepository<Projet, UUID> {
     @Query("SELECT p FROM Projet p WHERE p.organisationId = :orgId AND p.statut = 'EN_COURS'")
     Page<Projet> findEnCoursByOrganisation(UUID orgId, Pageable pageable);
     boolean existsByCodeProjetAndOrganisationId(String code, UUID orgId);
+    long countByOrganisationId(UUID organisationId);
 }

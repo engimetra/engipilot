@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { Topbar } from "@/components/layout/Topbar"
 import { NotificationToast } from "@/components/layout/NotificationToast"
+import { TrialBanner } from "@/components/layout/TrialBanner"
 
 const SHELL_FREE = ["login", "accueil", "register"]
 const NON_DEFAULT_LOCALES = ["ar", "en"]
@@ -78,6 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <Topbar onMenuToggle={() => setSidebarOpen(v => !v)} />
+        <TrialBanner />
         <main
           style={{
             flex: 1,

@@ -18,4 +18,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByResetToken(String resetToken);
 
     List<User> findAllByOrganisation_IdAndActiveTrue(UUID organisationId);
+    long countByOrganisationId(UUID organisationId);
 }

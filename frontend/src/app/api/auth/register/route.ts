@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 export const dynamic = "force-dynamic"
 const BACKEND = process.env.BACKEND_INTERNAL_URL ?? "http://backend:8080/api/v1"
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+  const rl = checkRateLimit(`register:${ip}`, RATE_LIMITS.register)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Trop d'inscriptions depuis cette adresse. Réessayez plus tard." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    )
+  }
   try {
     const body = await req.json()
     const res = await fetch(`${BACKEND}/auth/register`, {
@@ -9,17 +18,14 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     })
     const json = await res.json() as { success?: boolean; data?: { user: unknown; token: string }; message?: string }
-
     if (!res.ok) {
       return NextResponse.json(
         { error: json.message ?? "Erreur lors de l'inscription" },
         { status: res.status },
       )
     }
-
     const { user, token } = (json.data ?? json) as { user: unknown; token: string }
     const plan = body.plan ?? null
-
     const response = NextResponse.json({ user, ...(plan ? { plan } : {}) }, { status: 201 })
     response.cookies.set("engipilot_session", token, {
       httpOnly: true,
