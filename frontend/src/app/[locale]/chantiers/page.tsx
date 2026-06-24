@@ -124,7 +124,7 @@ type SortKey = "nom" | "avancement" | "budget" | "fin" | null
 
 const FORM_INIT = {
   nom: "", code: "", clientName: "", budget: "", debut: "", fin: "",
-  status: "ACTIVE", type: "CONSTRUCTION", city: "",
+  status: "ACTIVE", type: "CONSTRUCTION", city: "", chefChantier: "", description: "",
 }
 
 // ── Page component ────────────────────────────────────────────────────────────
