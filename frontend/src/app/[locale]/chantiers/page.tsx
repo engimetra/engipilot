@@ -86,6 +86,7 @@ async function fetchProjects(): Promise<ApiProject[]> {
 async function createProject(data: {
   name: string; startDate: string; endDate: string; budgetInitial: number;
   status: string; type: string; city?: string; clientName?: string; reference?: string;
+  chefChantier?: string; description?: string;
 }) {
   const res = await fetch("/api/projects", {
     method:  "POST",
