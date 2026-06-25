@@ -12,7 +12,7 @@ const CORPS = [
   { nom:"Conducteurs engins",agents:6,  prod:96, color:"#8b5cf6" },
 ]
 
-const ALERTES_RH = []
+const ALERTES_RH : never[] = []
 
 export default function EquipesPage() {
   const [activeTab, setActiveTab] = useState<"equipe"|"corps">("equipe")
