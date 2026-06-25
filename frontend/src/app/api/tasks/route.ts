@@ -17,16 +17,12 @@ interface BackendTask {
 const MEMBER_COLORS = ["#635BFF","#E2445C","#FDAB3D","#00C875","#8b5cf6","#0ea5e9","#f97316"]
 
 function statusToFrontend(s: string): string {
-  const map: Record<string, string> = {
-    TODO: "À faire", IN_PROGRESS: "En cours", DONE: "Terminé", REVIEW: "En révision",
-  }
+  const map: Record<string, string> = { TODO: "À faire", IN_PROGRESS: "En cours", DONE: "Terminé", REVIEW: "En révision" }
   return map[s] ?? s
 }
 
 function priorityToFrontend(p: string): string {
-  const map: Record<string, string> = {
-    LOW: "Basse", MEDIUM: "Moyenne", HIGH: "Haute", CRITICAL: "Critique",
-  }
+  const map: Record<string, string> = { LOW: "Basse", MEDIUM: "Moyenne", HIGH: "Haute", CRITICAL: "Critique" }
   return map[p] ?? p
 }
 
@@ -47,24 +43,18 @@ export async function GET(req: NextRequest) {
     for (const t of tasks) {
       if (t.assignee && !membersMap[t.assignee.id]) {
         membersMap[t.assignee.id] = {
-          name:     `${t.assignee.firstName} ${t.assignee.lastName}`,
+          name: `${t.assignee.firstName} ${t.assignee.lastName}`,
           initials: `${t.assignee.firstName[0]}${t.assignee.lastName[0]}`.toUpperCase(),
-          color:    MEMBER_COLORS[colorIdx++ % MEMBER_COLORS.length],
+          color: MEMBER_COLORS[colorIdx++ % MEMBER_COLORS.length],
         }
       }
     }
     const mapped = tasks.map(t => ({
-      id:            t.id,
-      titre:         t.title,
-      description:   t.description ?? undefined,
-      statut:        statusToFrontend(t.status),
-      priorite:      priorityToFrontend(t.priority),
-      tags:          [],
-      avancement:    Math.round(Number(t.progress ?? 0)),
+      id: t.id, titre: t.title, description: t.description ?? undefined,
+      statut: statusToFrontend(t.status), priorite: priorityToFrontend(t.priority),
+      tags: [], avancement: Math.round(Number(t.progress ?? 0)),
       date_echeance: t.endDate ? new Date(t.endDate).toISOString().split("T")[0] : undefined,
-      responsable:   t.assignee?.id ?? null,
-      projet_id:     projectId,
-      created_at:    t.createdAt,
+      responsable: t.assignee?.id ?? null, projet_id: projectId, created_at: t.createdAt,
     }))
     return NextResponse.json({ tasks: mapped, members: membersMap })
   } catch (err) {
