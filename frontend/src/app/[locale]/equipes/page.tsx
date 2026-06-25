@@ -12,7 +12,11 @@ const CORPS = [
   { nom:"Conducteurs engins",agents:6,  prod:96, color:"#8b5cf6" },
 ]
 
-const ALERTES_RH : never[] = []
+const ALERTES_RH: { level: string; title: string; action: string }[] = [
+  { level:"warning", title:"Taux absentéisme 8.2% semaine 22", action:"Prévoir remplacement lot électricité" },
+  { level:"danger",  title:"Habilitation grue Y. Chraibi expirée", action:"Renouvellement urgent avant reprise" },
+  { level:"info",    title:"3 contrats CDD expirent fin juin", action:"Décision renouvellement requise" },
+]
 
 export default function EquipesPage() {
   const [activeTab, setActiveTab] = useState<"equipe"|"corps">("equipe")
