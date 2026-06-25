@@ -5,6 +5,8 @@ export async function GET(req: NextRequest) {
   const token = getToken(req)
   if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
   try {
+    const { searchParams } = new URL(req.url)
+    const projectId = searchParams.get("projectId")
     const qs  = new URLSearchParams()
     if (projectId) qs.set("projectId", projectId)
 
