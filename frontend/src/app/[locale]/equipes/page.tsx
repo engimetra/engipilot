@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { Users, TrendingUp, UserCheck, AlertTriangle, Plus, ChevronRight, Star } from "lucide-react"
 
-const MEMBRES: { nom: string; role: string; statut: string; prod: number; [key: string]: unknown }[] = []
+const MEMBRES: { initiales: string; nom: string; role: string; color: string; statut: string; prod: number; chantier: string }[] = []
 
 const CORPS = [
   { nom:"Maçons / BA",       agents:18, prod:94, color:"#00C875" },
