@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
+import { useParams } from "next/navigation"
 import {
   ArrowLeft, MapPin, Calendar, Users, TrendingUp, AlertTriangle,
   CheckCircle2, Clock, DollarSign, FileText, BarChart2, Settings,
@@ -15,11 +16,11 @@ const CHANTIERS: Record<string, {
   taches: { total: number; done: number; en_cours: number; bloquees: number }
   incidents: number; localisation: string
 }> = {
-  "1": { id:"1", code:"P-2024-CA-007", nom:"Résidence Al Andalous", responsable:"A. Khalil", initiales:"AK", color:"#635BFF", statut:"EN_COURS", avancement:63, retard:"+12j", budget:"48.5M MAD", budgetConsomme:"31.2M MAD", priorite:"HAUTE", debut:"01/03/2024", fin:"30/11/2025", description:"Construction d'une résidence de 120 logements sur 4 blocs R+7 avec parking souterrain, espaces verts et équipements communs.", equipe:47, taches:{total:84,done:53,en_cours:18,bloquees:3}, incidents:2, localisation:"Casablanca, Hay Hassani" },
-  "2": { id:"2", code:"P-2024-BS-003", nom:"Usine Bouskoura", responsable:"K. Fassi", initiales:"KF", color:"#E2445C", statut:"RETARD", avancement:45, retard:"+46j", budget:"82.0M MAD", budgetConsomme:"40.1M MAD", priorite:"CRITIQUE", debut:"15/01/2024", fin:"28/02/2026", description:"Construction d'une unité industrielle de 12 000 m² dédiée à la production agroalimentaire, avec infrastructure logistique.", equipe:92, taches:{total:140,done:63,en_cours:42,bloquees:11}, incidents:7, localisation:"Bouskoura, Province Nouaceur" },
-  "3": { id:"3", code:"P-2024-RB-011", nom:"Tour Hassan II Ext.", responsable:"M. Benhali", initiales:"MB", color:"#FDAB3D", statut:"EN_COURS", avancement:62, retard:"+8j", budget:"135M MAD", budgetConsomme:"83.7M MAD", priorite:"HAUTE", debut:"10/06/2023", fin:"31/12/2025", description:"Extension et rénovation de la Tour Hassan II — aménagement de 6 étages supplémentaires, façades et infrastructure technique.", equipe:130, taches:{total:210,done:130,en_cours:55,bloquees:8}, incidents:3, localisation:"Rabat, Centre-ville" },
-  "4": { id:"4", code:"P-2024-AD-015", nom:"Villas Ain Diab", responsable:"S. Alami", initiales:"SA", color:"#00C875", statut:"EN_COURS", avancement:91, retard:"—", budget:"24.2M MAD", budgetConsomme:"22.0M MAD", priorite:"BASSE", debut:"01/09/2023", fin:"31/07/2025", description:"Ensemble résidentiel de 18 villas haut standing avec piscine individuelle, jardin et domotique.", equipe:28, taches:{total:60,done:55,en_cours:4,bloquees:0}, incidents:0, localisation:"Casablanca, Ain Diab" },
-  "5": { id:"5", code:"P-2024-TG-002", nom:"Station Énergie Tanger", responsable:"Y. Chraibi", initiales:"YC", color:"#8b5cf6", statut:"RETARD", avancement:33, retard:"+32j", budget:"210M MAD", budgetConsomme:"71.4M MAD", priorite:"CRITIQUE", debut:"01/04/2024", fin:"30/06/2026", description:"Construction d'une station de transformation électrique haute tension pour l'alimentation de la zone franche de Tanger Med.", equipe:185, taches:{total:320,done:106,en_cours:89,bloquees:24}, incidents:9, localisation:"Tanger, Zone Franche" },
+  "1": { id:"1", code:"P-2024-CA-007", nom:"Chantier Démo A", responsable:"Chef Projet", initiales:"CP", color:"#635BFF", statut:"EN_COURS", avancement:63, retard:"+12j", budget:"48.5M MAD", budgetConsomme:"31.2M MAD", priorite:"HAUTE", debut:"01/03/2024", fin:"30/11/2025", description:"Construction d'une résidence de 120 logements sur 4 blocs R+7 avec parking souterrain, espaces verts et équipements communs.", equipe:47, taches:{total:84,done:53,en_cours:18,bloquees:3}, incidents:2, localisation:"Ville Démo" },
+  "2": { id:"2", code:"P-2024-BS-003", nom:"Chantier Démo B", responsable:"Chef Chantier", initiales:"CC", color:"#E2445C", statut:"RETARD", avancement:45, retard:"+46j", budget:"82.0M MAD", budgetConsomme:"40.1M MAD", priorite:"CRITIQUE", debut:"15/01/2024", fin:"28/02/2026", description:"Construction d'une unité industrielle de 12 000 m² dédiée à la production agroalimentaire, avec infrastructure logistique.", equipe:92, taches:{total:140,done:63,en_cours:42,bloquees:11}, incidents:7, localisation:"Zone Démo" },
+  "3": { id:"3", code:"P-2024-RB-011", nom:"Chantier Démo C", responsable:"Technicien", initiales:"TC", color:"#FDAB3D", statut:"EN_COURS", avancement:62, retard:"+8j", budget:"135M MAD", budgetConsomme:"83.7M MAD", priorite:"HAUTE", debut:"10/06/2023", fin:"31/12/2025", description:"Projet de construction démo.", equipe:130, taches:{total:210,done:130,en_cours:55,bloquees:8}, incidents:3, localisation:"Ville Démo" },
+  "4": { id:"4", code:"P-2024-AD-015", nom:"Chantier Démo D", responsable:"Resp. Démo", initiales:"RD", color:"#00C875", statut:"EN_COURS", avancement:91, retard:"—", budget:"24.2M MAD", budgetConsomme:"22.0M MAD", priorite:"BASSE", debut:"01/09/2023", fin:"31/07/2025", description:"Ensemble résidentiel de 18 villas haut standing avec piscine individuelle, jardin et domotique.", equipe:28, taches:{total:60,done:55,en_cours:4,bloquees:0}, incidents:0, localisation:"Ville Démo" },
+  "5": { id:"5", code:"P-2024-TG-002", nom:"Chantier Démo E", responsable:"Resp. Qualité", initiales:"RQ", color:"#8b5cf6", statut:"RETARD", avancement:33, retard:"+32j", budget:"210M MAD", budgetConsomme:"71.4M MAD", priorite:"CRITIQUE", debut:"01/04/2024", fin:"30/06/2026", description:"Construction d'une station de transformation électrique haute tension pour l'alimentation de la zone franche de Tanger Med.", equipe:185, taches:{total:320,done:106,en_cours:89,bloquees:24}, incidents:9, localisation:"Zone Démo" },
 }
 
 const STATUT_LABEL: Record<string,string> = { EN_COURS:"En cours", RETARD:"Retard", PLANIFIE:"Planifié", TERMINE:"Terminé" }
@@ -78,19 +79,19 @@ export default function ChantierDetailPage() {
 
   // Tâches
   const [tasks, setTasks] = useState<TaskItem[]>([
-    { id:"t1", titre:"Fondations Zone D — Coulage BA", statut:"A_FAIRE", priorite:"CRITIQUE", resp:"A. Khalil", echeance:"20/05/2025", avancement:0 },
-    { id:"t2", titre:"Structure BA Niv.3 — Poteaux P14-P22", statut:"EN_COURS", priorite:"HAUTE", resp:"M. Benhali", echeance:"18/05/2025", avancement:65 },
-    { id:"t3", titre:"Installation CFO Zone A", statut:"EN_COURS", priorite:"CRITIQUE", resp:"K. Fassi", echeance:"15/05/2025", avancement:28 },
-    { id:"t4", titre:"Contrôle résistance béton Dalle R+2", statut:"TERMINE", priorite:"HAUTE", resp:"S. Alami", echeance:"10/05/2025", avancement:100 },
+    { id:"t1", titre:"Fondations Zone D — Coulage BA", statut:"A_FAIRE", priorite:"CRITIQUE", resp:"Chef Projet", echeance:"20/05/2025", avancement:0 },
+    { id:"t2", titre:"Structure BA Niv.3 — Poteaux P14-P22", statut:"EN_COURS", priorite:"HAUTE", resp:"Technicien", echeance:"18/05/2025", avancement:65 },
+    { id:"t3", titre:"Installation CFO Zone A", statut:"EN_COURS", priorite:"CRITIQUE", resp:"Chef Chantier", echeance:"15/05/2025", avancement:28 },
+    { id:"t4", titre:"Contrôle résistance béton Dalle R+2", statut:"TERMINE", priorite:"HAUTE", resp:"Resp. Démo", echeance:"10/05/2025", avancement:100 },
   ])
   const [showTaskForm, setShowTaskForm] = useState(false)
-  const [taskForm, setTaskForm] = useState({ titre:"", priorite:"NORMALE", resp:"A. Khalil", echeance:"" })
+  const [taskForm, setTaskForm] = useState({ titre:"", priorite:"NORMALE", resp:"Chef Projet", echeance:"" })
 
   // Documents
   const [docs, setDocs] = useState<DocItem[]>([
-    { nom:"Plans Architecturaux R+4", type:"PDF", taille:"12.4 MB", version:"v3.0", date:"14/05" },
-    { nom:"Planning Général", type:"XLSX", taille:"1.2 MB", version:"v4", date:"12/05" },
-    { nom:"PPSPS Sécurité", type:"PDF", taille:"1.8 MB", version:"v2", date:"01/03" },
+    { nom:"Plans Architecturaux R+4", type:"PDF", taille:"12.4 TC", version:"v3.0", date:"14/05" },
+    { nom:"Planning Général", type:"XLSX", taille:"1.2 TC", version:"v4", date:"12/05" },
+    { nom:"PPSPS Sécurité", type:"PDF", taille:"1.8 TC", version:"v2", date:"01/03" },
   ])
   const [dragOver, setDragOver] = useState(false)
 
@@ -124,7 +125,7 @@ export default function ChantierDetailPage() {
       statut:"A_FAIRE", priorite:taskForm.priorite,
       resp:taskForm.resp, echeance:taskForm.echeance, avancement:0,
     }])
-    setTaskForm({ titre:"", priorite:"NORMALE", resp:"A. Khalil", echeance:"" })
+    setTaskForm({ titre:"", priorite:"NORMALE", resp:"Chef Projet", echeance:"" })
     setShowTaskForm(false)
     showToast("Tâche ajoutée")
   }
@@ -132,7 +133,7 @@ export default function ChantierDetailPage() {
   function processFiles(files: FileList | File[]) {
     Array.from(files).forEach(f => {
       const ext = f.name.split(".").pop()?.toUpperCase() ?? "FILE"
-      const taille = f.size > 1e6 ? `${(f.size/1e6).toFixed(1)} MB` : `${(f.size/1e3).toFixed(0)} KB`
+      const taille = f.size > 1e6 ? `${(f.size/1e6).toFixed(1)} TC` : `${(f.size/1e3).toFixed(0)} KB`
       const now = new Date()
       setDocs(prev => [{
         nom: f.name.replace(/\.[^.]+$/,""), type:ext,
@@ -145,9 +146,9 @@ export default function ChantierDetailPage() {
 
   const membres: MembreItem[] = [
     { nom:c.responsable, role:"Chef de chantier", initiales:c.initiales, color:c.color, taches:12, avancement:78 },
-    { nom:"K. Fassi", role:"Ingénieur structure", initiales:"KF", color:"#E2445C", taches:8, avancement:55 },
-    { nom:"S. Alami", role:"Chef d'équipe électricité", initiales:"SA", color:"#00C875", taches:6, avancement:90 },
-    { nom:"M. Benhali", role:"Conducteur de travaux", initiales:"MB", color:"#FDAB3D", taches:10, avancement:63 },
+    { nom:"Chef Chantier", role:"Ingénieur structure", initiales:"CC", color:"#E2445C", taches:8, avancement:55 },
+    { nom:"Resp. Démo", role:"Chef d'équipe électricité", initiales:"RD", color:"#00C875", taches:6, avancement:90 },
+    { nom:"Technicien", role:"Conducteur de travaux", initiales:"TC", color:"#FDAB3D", taches:10, avancement:63 },
   ]
 
   return (
@@ -317,7 +318,7 @@ export default function ChantierDetailPage() {
                 <div>
                   <label className="text-xs font-semibold text-muted-fg block mb-1.5">Responsable</label>
                   <select value={taskForm.resp} onChange={e=>setTaskForm(f=>({...f,resp:e.target.value}))} className="input">
-                    <option>A. Khalil</option><option>K. Fassi</option><option>S. Alami</option><option>M. Benhali</option>
+                    <option>Chef Projet</option><option>Chef Chantier</option><option>Resp. Démo</option><option>Technicien</option>
                   </select>
                 </div>
                 <div>

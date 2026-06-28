@@ -100,7 +100,7 @@ Rapport généré en mode hors-ligne. Connectez votre clé API pour une analyse 
 • SPI 0.8–0.9 → Retard modéré 🟠
 • SPI < 0.8 → Retard critique 🔴
 
-**Pour Usine Bouskoura** (données ENGIPILOT) :
+**Pour Projet Démo** (données ENGIPILOT) :
 SPI = 0.72 → Retard critique · +46j prédit
 
 **Recommandations :**
@@ -117,7 +117,7 @@ _Mode hors-ligne — Connectez l'API pour une analyse personnalisée_`
 • CPI 0.9–1.0 → Dépassement léger 🟡
 • CPI < 0.85 → Dépassement critique 🔴
 
-**Station Énergie Mohammedia** :
+**Chantier B** :
 CPI = 0.74 → EAC projeté 283M MAD vs BAT 210M (+34.8%)
 
 **Actions recommandées :**

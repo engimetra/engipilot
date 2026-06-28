@@ -178,9 +178,9 @@ export default function EquipesPage() {
             </div>
             <div className="space-y-3">
               {[
-                { name:"Résidence Al Andalous", agents:120, color:"#635BFF", pct:42 },
-                { name:"Usine Bouskoura",        agents:64,  color:"#E2445C", pct:23 },
-                { name:"Tour Hassan II",         agents:87,  color:"#FDAB3D", pct:31 },
+                { name:"Chantier Démo A", agents:120, color:"#635BFF", pct:42 },
+                { name:"Chantier Démo B",        agents:64,  color:"#E2445C", pct:23 },
+                { name:"Chantier Démo C",         agents:87,  color:"#FDAB3D", pct:31 },
                 { name:"Autres sites",           agents:13,  color:"#9CA3AF", pct:5  },
               ].map(s => (
                 <div key={s.name}>

@@ -1,5 +1,5 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { useLocale } from "next-intl"
 
 export default function GuideEngipilot() {
@@ -239,8 +239,8 @@ export default function GuideEngipilot() {
           <SubSection title="Exemples de questions">
             <ul className="space-y-1.5 text-sm">
               {[
-                '"Analyse le SPI du chantier Bouskoura et donne-moi un plan de rattrapage"',
-                '"Génère un PV de réunion hebdo pour le chantier Station Énergie"',
+                '"Analyse le SPI du chantier actif et donne-moi un plan de rattrapage"',
+                '"Génère un PV de réunion hebdo pour le chantier actif"',
                 '"Quels sont les risques budget sur mes chantiers ce mois-ci ?"',
                 '"Résume le rapport d\'avancement d\'avril 2025"',
               ].map(q => <li key={q} className="flex gap-2 italic text-muted-fg"><span className="text-primary not-italic">→</span>{q}</li>)}

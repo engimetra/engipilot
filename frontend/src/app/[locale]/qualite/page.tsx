@@ -10,11 +10,11 @@ type NC = {
 }
 
 const NCS_INIT: NC[] = [
-  { ref:"NC-047", desc:"Résistance béton insuffisante — Poteau P12", lot:"Lot BA", zone:"Zone C / Niv.3", resp:"M. Benhali", priorite:"CRITIQUE", statut:"OUVERTE", age:"5j" },
-  { ref:"NC-046", desc:"Enrobage ferraillage hors tolérance", lot:"Lot BA", zone:"Zone B / Niv.2", resp:"S. Alami", priorite:"MAJEURE", statut:"EN_COURS", age:"8j" },
-  { ref:"NC-044", desc:"Désalignement maçonnerie façade nord +2cm", lot:"Lot Maç.", zone:"Façade Nord", resp:"K. Fassi", priorite:"MINEURE", statut:"EN_COURS", age:"12j" },
-  { ref:"NC-043", desc:"Étanchéité terrasse insuffisante — test eau", lot:"Lot Maç.", zone:"Terrasse R+5", resp:"Y. Chraibi", priorite:"MINEURE", statut:"EN_COURS", age:"15j" },
-  { ref:"NC-041", desc:"Ferraillage poteau P8 manquant", lot:"Lot BA", zone:"Zone A / Niv.1", resp:"M. Benhali", priorite:"CRITIQUE", statut:"RESOLUE", age:"22j" },
+  { ref:"NC-047", desc:"Résistance béton insuffisante — Poteau P12", lot:"Lot BA", zone:"Zone C / Niv.3", resp:"Technicien", priorite:"CRITIQUE", statut:"OUVERTE", age:"5j" },
+  { ref:"NC-046", desc:"Enrobage ferraillage hors tolérance", lot:"Lot BA", zone:"Zone B / Niv.2", resp:"Resp. Démo", priorite:"MAJEURE", statut:"EN_COURS", age:"8j" },
+  { ref:"NC-044", desc:"Désalignement maçonnerie façade nord +2cm", lot:"Lot Maç.", zone:"Façade Nord", resp:"Chef Chantier", priorite:"MINEURE", statut:"EN_COURS", age:"12j" },
+  { ref:"NC-043", desc:"Étanchéité terrasse insuffisante — test eau", lot:"Lot Maç.", zone:"Terrasse R+5", resp:"Resp. Qualité", priorite:"MINEURE", statut:"EN_COURS", age:"15j" },
+  { ref:"NC-041", desc:"Ferraillage poteau P8 manquant", lot:"Lot BA", zone:"Zone A / Niv.1", resp:"Technicien", priorite:"CRITIQUE", statut:"RESOLUE", age:"22j" },
 ]
 
 const P_STYLE: Record<string, string> = {
@@ -29,7 +29,7 @@ const S_STYLE: Record<string, string> = {
   FERMEE:"bg-muted text-muted-fg",
 }
 
-const FORM_INIT = { desc:"", lot:"Lot BA", zone:"", resp:"A. Khalil", priorite:"MINEURE" as NC["priorite"] }
+const FORM_INIT = { desc:"", lot:"Lot BA", zone:"", resp:"Chef Projet", priorite:"MINEURE" as NC["priorite"] }
 
 function Toast({ msg }: { msg: string }) {
   return (
@@ -171,7 +171,7 @@ export default function QualitePage() {
             <div>
               <label className="text-xs font-semibold text-muted-fg block mb-1.5">Responsable</label>
               <select value={form.resp} onChange={e => setForm(f=>({...f,resp:e.target.value}))} className="input">
-                <option>A. Khalil</option><option>K. Fassi</option><option>S. Alami</option><option>M. Benhali</option><option>Y. Chraibi</option>
+                <option>Chef Projet</option><option>Chef Chantier</option><option>Resp. Démo</option><option>Technicien</option><option>Resp. Qualité</option>
               </select>
             </div>
           </div>

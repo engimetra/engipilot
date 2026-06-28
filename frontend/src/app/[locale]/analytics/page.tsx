@@ -9,10 +9,9 @@ import {
   BarChart3, TrendingUp, Clock, AlertOctagon, Activity,
   ArrowUpRight, RefreshCw, Brain, Download,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { exportAnalyticsPDF, type AnalyticsPDFData } from "@/lib/pdf-export"
 
-// ── Types ──────────────────────────────────────────────────────────────────────
 interface AnalyticsData {
   perfData:   { chantier: string; spi: number | null; cpi: number | null; score: number | null }[]
   budgetData: { chantier: string; prevu: number; reel: number }[]
@@ -34,27 +33,12 @@ async function fetchAnalytics(period: number): Promise<AnalyticsData> {
   return res.json()
 }
 
-// ── Static fallbacks ───────────────────────────────────────────────────────────
-const FALLBACK_SPI = [
-  { m:"Jan", spi:0.98 }, { m:"Fév", spi:0.95 }, { m:"Mar", spi:0.91 },
-  { m:"Avr", spi:0.89 }, { m:"Mai", spi:0.87 }, { m:"Jun", spi:0.94 },
-]
-const FALLBACK_BUDGET = [
-  { chantier:"Résidence", prevu:1200, reel:1350 },
-  { chantier:"Usine Bsk", prevu:2800, reel:3100 },
-  { chantier:"Villas",    prevu:950,  reel:900  },
-]
-const FALLBACK_PERF = [
-  { chantier:"Résidence", score:0.88 }, { chantier:"Usine Bsk", score:0.58 },
-  { chantier:"Villas",    score:0.97 },
-]
-
 const INCIDENT_STATUS_MAP: Record<string, { label: string; fill: string }> = {
-  OPEN:                { label:"En cours",    fill:"#E2445C" },
+  OPEN:                { label:"En cours",      fill:"#E2445C" },
   UNDER_INVESTIGATION: { label:"Investigation", fill:"#FDAB3D" },
-  ACTION_PENDING:      { label:"Action requis",  fill:"#8b5cf6" },
-  RESOLVED:            { label:"Résolu",       fill:"#00C875" },
-  CLOSED:              { label:"Clôturé",      fill:"#9CA3AF" },
+  ACTION_PENDING:      { label:"Action requis", fill:"#8b5cf6" },
+  RESOLVED:            { label:"Résolu",        fill:"#00C875" },
+  CLOSED:              { label:"Clôturé",       fill:"#9CA3AF" },
 }
 
 const tooltipStyle = {
@@ -73,8 +57,8 @@ const INCIDENT_LABELS: Record<string, string> = {
   OPEN:                "En cours",
   UNDER_INVESTIGATION: "Investigation",
   ACTION_PENDING:      "Action requis",
-  RESOLVED:            "Résolu",
-  CLOSED:              "Clôturé",
+  RESOLVED:            "Resolu",
+  CLOSED:              "Cloture",
 }
 
 export default function AnalyticsPage() {
@@ -86,32 +70,21 @@ export default function AnalyticsPage() {
     queryFn:  () => fetchAnalytics(period),
   })
 
-  // ── Derived data ─────────────────────────────────────────────────────────────
-  const spiChartData = data?.spiTrend?.length
-    ? data.spiTrend.map(d => ({ m: d.date, spi: d.spi, alerte: 0.85, critique: 0.75 }))
-    : FALLBACK_SPI.map(d => ({ ...d, alerte: 0.85, critique: 0.75 }))
+  const spiChartData = (data?.spiTrend ?? []).map(d => ({ m: d.date, spi: d.spi, alerte: 0.85, critique: 0.75 }))
+  const budgetChartData = data?.budgetData ?? []
+  const perfChartData   = data?.perfData ?? []
 
-  const budgetChartData = data?.budgetData?.length ? data.budgetData : FALLBACK_BUDGET
-  const perfChartData   = data?.perfData?.length ? data.perfData : FALLBACK_PERF
+  const ncData = (data?.summary?.incidentsByStatus ?? [])
+    .map(i => ({
+      name:  INCIDENT_STATUS_MAP[i.status]?.label ?? i.status,
+      value: i.count,
+      fill:  INCIDENT_STATUS_MAP[i.status]?.fill ?? "#9CA3AF",
+    })).filter(d => d.value > 0)
 
-  const ncData = data?.summary?.incidentsByStatus?.length
-    ? data.summary.incidentsByStatus.map(i => ({
-        name:  INCIDENT_STATUS_MAP[i.status]?.label ?? i.status,
-        value: i.count,
-        fill:  INCIDENT_STATUS_MAP[i.status]?.fill ?? "#9CA3AF",
-      })).filter(d => d.value > 0)
-    : [
-        { name:"En cours",    value:38, fill:"#E2445C" },
-        { name:"Résolu",      value:24, fill:"#00C875" },
-        { name:"Clôturé",     value:20, fill:"#9CA3AF" },
-        { name:"Investigation",value:11, fill:"#FDAB3D" },
-        { name:"Action requis",value:7, fill:"#8b5cf6" },
-      ]
-
-  const totalIncidents = data?.summary?.incidentsByStatus?.reduce((s, i) => s + i.count, 0) ?? 14
-  const avgProgress    = data?.summary?.avgProgress ?? 87
-  const budgetPct      = data?.summary?.budgetPct ?? 87
-  const avgSpi         = data?.summary?.avgSpi != null ? Number(data.summary.avgSpi).toFixed(2) : "—"
+  const totalIncidents = data?.summary?.incidentsByStatus?.reduce((s, i) => s + i.count, 0) ?? 0
+  const avgProgress    = data?.summary?.avgProgress ?? 0
+  const budgetPct      = data?.summary?.budgetPct ?? 0
+  const avgSpi         = data?.summary?.avgSpi != null ? Number(data.summary.avgSpi).toFixed(2) : "\u2014"
 
   function handleExportPDF() {
     if (!data) return
@@ -141,36 +114,34 @@ export default function AnalyticsPage() {
 
   const KPIS = [
     {
-      icon: TrendingUp,   label: "Avancement moyen",   value: isLoading ? "—" : `${avgProgress}%`,
+      icon: TrendingUp,   label: "Avancement moyen",  value: isLoading ? "\u2014" : `${avgProgress}%`,
       delta: "+4pts", up: true, accent: "#00C875",
       accentBg: "bg-success/10", accentText: "text-success",
-      spark: [40,55,50,70,65,80,avgProgress, avgProgress],
+      spark: [avgProgress],
     },
     {
-      icon: Clock,        label: "SPI moyen",           value: isLoading ? "—" : avgSpi,
-      delta: "≥ 0.85 OK", up: (data?.summary?.avgSpi ?? 0) >= 0.85, accent: "#635BFF",
+      icon: Clock,        label: "SPI moyen",          value: isLoading ? "\u2014" : avgSpi,
+      delta: "\u2265 0.85 OK", up: (data?.summary?.avgSpi ?? 0) >= 0.85, accent: "#635BFF",
       accentBg: "bg-primary/10", accentText: "text-primary",
-      spark: [75,80,78,85,80,88,87,87],
+      spark: [data?.summary?.avgSpi != null ? Math.round(Number(data.summary.avgSpi) * 100) : 0],
     },
     {
-      icon: Activity,     label: "Budget consommé",     value: isLoading ? "—" : `${budgetPct}%`,
-      delta: `${budgetPct > 100 ? "+" + (budgetPct - 100) + "% dépassement" : "Dans budget"}`,
+      icon: Activity,     label: "Budget consomme",    value: isLoading ? "\u2014" : `${budgetPct}%`,
+      delta: budgetPct > 100 ? "+" + (budgetPct - 100) + "% depassement" : "Dans budget",
       up: budgetPct <= 100, accent: "#FDAB3D",
       accentBg: "bg-warning/10", accentText: "text-warning",
-      spark: [60,65,70,75,78,82,86,budgetPct > 100 ? 100 : budgetPct],
+      spark: [budgetPct > 100 ? 100 : budgetPct],
     },
     {
-      icon: AlertOctagon, label: "Incidents cumulés",   value: isLoading ? "—" : String(totalIncidents),
+      icon: AlertOctagon, label: "Incidents cumules",  value: isLoading ? "\u2014" : String(totalIncidents),
       delta: "tous statuts", up: totalIncidents < 10, accent: "#14b8a6",
       accentBg: "bg-teal/10", accentText: "text-teal",
-      spark: [60,80,40,55,70,45,30,totalIncidents],
+      spark: [totalIncidents],
     },
   ]
 
   return (
     <div className="space-y-6 page-enter">
-
-      {/* ══ HEADER ══ */}
       <div className="relative rounded-2xl overflow-hidden border border-border"
         style={{ background:"linear-gradient(135deg, #FDAB3D08 0%, #ffffff 40%, #635BFF08 100%)" }}>
         <div className="absolute inset-0 opacity-[0.025]"
@@ -180,40 +151,32 @@ export default function AnalyticsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full">
                 <BarChart3 className="w-3 h-3" />
-                {isLoading ? "…" : `${data?.summary?.totalProjects ?? 0} projets analysés`}
+                {isLoading ? "\u2026" : `${data?.summary?.totalProjects ?? 0} projets analyses`}
               </span>
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-warning/10 text-warning border border-warning/20 px-2.5 py-1 rounded-full">
-                <Brain className="w-3 h-3" /> Données réelles
+                <Brain className="w-3 h-3" /> Donnees reelles
               </span>
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-foreground tracking-tight">Data Intelligence</h1>
-            <p className="text-sm text-muted-fg mt-1">KPI avancés · EVM · SPI/CPI · Tous chantiers actifs</p>
+            <p className="text-sm text-muted-fg mt-1">KPI avances - EVM - SPI/CPI - Tous chantiers actifs</p>
           </div>
           <div className="flex items-center gap-2 self-start lg:self-auto">
-            <button
-              onClick={() => refetch()}
-              className="p-2 border border-border rounded-xl bg-white hover:bg-muted transition-colors text-muted-fg shadow-card"
-            >
+            <button onClick={() => refetch()}
+              className="p-2 border border-border rounded-xl bg-white hover:bg-muted transition-colors text-muted-fg shadow-card">
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
             </button>
-            <button
-              onClick={handleExportPDF}
-              disabled={!data || isLoading}
-              className="flex items-center gap-1.5 border border-border bg-white hover:bg-muted text-foreground text-xs font-semibold px-3 py-2 rounded-xl transition-colors shadow-card disabled:opacity-40"
-            >
+            <button onClick={handleExportPDF} disabled={!data || isLoading}
+              className="flex items-center gap-1.5 border border-border bg-white hover:bg-muted text-foreground text-xs font-semibold px-3 py-2 rounded-xl transition-colors shadow-card disabled:opacity-40">
               <Download className="w-3.5 h-3.5" /> PDF
             </button>
-            <button
-              onClick={() => router.push("/ia")}
-              className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
-            >
+            <button onClick={() => router.push("/ia")}
+              className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
               Voir IA Monitor <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* ══ KPI CARDS ══ */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {KPIS.map(k => {
           const Icon = k.icon
@@ -234,8 +197,7 @@ export default function AnalyticsPage() {
               </div>
               <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-2">{k.label}</p>
               <p className="text-2xl font-black tracking-tight text-foreground">{k.value}</p>
-              <div className={`mt-2.5 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full
-                ${k.up ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+              <div className={`mt-2.5 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${k.up ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
                 <TrendingUp className="w-3 h-3" />
                 {k.delta}
               </div>
@@ -244,80 +206,64 @@ export default function AnalyticsPage() {
         })}
       </div>
 
-      {/* ══ CHARTS GRID ══ */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-        {/* SPI / CPI evolution */}
         <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-1 h-4 rounded-full bg-primary" />
-            <h3 className="font-bold text-sm text-foreground">Évolution SPI — {period} jours</h3>
+            <h3 className="font-bold text-sm text-foreground">Evolution SPI - {period} jours</h3>
             <div className="ml-auto flex items-center gap-1">
               {PERIODS.map(p => (
-                <button
-                  key={p.value}
-                  onClick={() => setPeriod(p.value)}
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors ${
-                    period === p.value
-                      ? "bg-primary text-white"
-                      : "bg-muted text-muted-fg hover:bg-border"
-                  }`}
-                >
+                <button key={p.value} onClick={() => setPeriod(p.value)}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors ${period === p.value ? "bg-primary text-white" : "bg-muted text-muted-fg hover:bg-border"}`}>
                   {p.label}
                 </button>
               ))}
             </div>
           </div>
-          <p className="text-xs text-muted-fg mb-3 ml-3">Tous chantiers · Snapshots analytiques</p>
-          <div className="flex flex-wrap gap-4 mb-4 text-xs">
-            {[["#635BFF","SPI réel"],["#FDAB3D","Seuil alerte (0.85)"],["#E2445C","Seuil critique (0.75)"]].map(([c,l]) => (
-              <span key={l} className="flex items-center gap-1.5">
-                <span className="w-4 h-1 rounded-full inline-block" style={{ background:c }} />
-                <span className="text-muted-fg">{l}</span>
-              </span>
-            ))}
-          </div>
-          <ResponsiveContainer width="100%" height={190}>
-            <LineChart data={spiChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-              <XAxis dataKey="m" tick={axisProps} axisLine={false} tickLine={false} />
-              <YAxis domain={[0.6, 1.1]} tick={axisProps} tickFormatter={v => v.toFixed(2)} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Line dataKey="spi"      stroke="#635BFF" strokeWidth={2.5} dot={{ r:4, fill:"#635BFF", strokeWidth:0 }} name="SPI" />
-              <Line dataKey="alerte"   stroke="#FDAB3D" strokeWidth={1.5} strokeDasharray="5 3" dot={false} name="Alerte" />
-              <Line dataKey="critique" stroke="#E2445C" strokeWidth={1.5} strokeDasharray="5 3" dot={false} name="Critique" />
-            </LineChart>
-          </ResponsiveContainer>
+          <p className="text-xs text-muted-fg mb-3 ml-3">Tous chantiers - Snapshots analytiques</p>
+          {spiChartData.length === 0 ? (
+            <div className="flex items-center justify-center h-[190px] text-xs text-muted-fg">
+              {isLoading ? "Chargement\u2026" : "Aucune donnee SPI disponible"}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={190}>
+              <LineChart data={spiChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="m" tick={axisProps} axisLine={false} tickLine={false} />
+                <YAxis domain={[0.6, 1.1]} tick={axisProps} tickFormatter={v => v.toFixed(2)} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Line dataKey="spi"      stroke="#635BFF" strokeWidth={2.5} dot={{ r:4, fill:"#635BFF", strokeWidth:0 }} name="SPI" />
+                <Line dataKey="alerte"   stroke="#FDAB3D" strokeWidth={1.5} strokeDasharray="5 3" dot={false} name="Alerte" />
+                <Line dataKey="critique" stroke="#E2445C" strokeWidth={1.5} strokeDasharray="5 3" dot={false} name="Critique" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
-        {/* Budget vs réalisé — par projet */}
         <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-1 h-4 rounded-full bg-danger" />
-            <h3 className="font-bold text-sm text-foreground">Budget vs Réalisé — par projet</h3>
+            <h3 className="font-bold text-sm text-foreground">Budget vs Realise - par projet</h3>
           </div>
           <p className="text-xs text-muted-fg mb-3 ml-3">En milliers MAD</p>
-          <div className="flex gap-4 mb-4 text-xs">
-            {[["rgba(99,91,255,0.5)","Budget prévu"],["rgba(226,68,92,0.5)","Coût réel"]].map(([c,l]) => (
-              <span key={l} className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded inline-block" style={{ background:c }} />
-                <span className="text-muted-fg">{l}</span>
-              </span>
-            ))}
-          </div>
-          <ResponsiveContainer width="100%" height={190}>
-            <BarChart data={budgetChartData} layout="vertical" margin={{ left:4, right:20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" horizontal={false} />
-              <XAxis type="number" tick={axisProps} tickFormatter={v => `${v}k`} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="chantier" tick={axisProps} width={80} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}k MAD`]} />
-              <Bar dataKey="prevu" fill="rgba(99,91,255,0.5)" name="Prévu"   radius={[0,4,4,0]} maxBarSize={10} />
-              <Bar dataKey="reel"  fill="rgba(226,68,92,0.5)" name="Réalisé" radius={[0,4,4,0]} maxBarSize={10} />
-            </BarChart>
-          </ResponsiveContainer>
+          {budgetChartData.length === 0 ? (
+            <div className="flex items-center justify-center h-[190px] text-xs text-muted-fg">
+              {isLoading ? "Chargement\u2026" : "Aucune donnee budgetaire disponible"}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={190}>
+              <BarChart data={budgetChartData} layout="vertical" margin={{ left:4, right:20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" horizontal={false} />
+                <XAxis type="number" tick={axisProps} tickFormatter={v => `${v}k`} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="chantier" tick={axisProps} width={80} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}k MAD`]} />
+                <Bar dataKey="prevu" fill="rgba(99,91,255,0.5)" name="Prevu"   radius={[0,4,4,0]} maxBarSize={10} />
+                <Bar dataKey="reel"  fill="rgba(226,68,92,0.5)" name="Realise" radius={[0,4,4,0]} maxBarSize={10} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
-        {/* Incidents par statut */}
         <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-1 h-4 rounded-full bg-warning" />
@@ -325,7 +271,7 @@ export default function AnalyticsPage() {
           </div>
           {ncData.length === 0 ? (
             <div className="flex items-center justify-center h-[160px] text-xs text-muted-fg">
-              Aucun incident enregistré
+              {isLoading ? "Chargement\u2026" : "Aucun incident enregistre"}
             </div>
           ) : (
             <div className="flex items-center gap-6">
@@ -350,7 +296,6 @@ export default function AnalyticsPage() {
           )}
         </div>
 
-        {/* Performance score par chantier */}
         <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-1 h-4 rounded-full bg-success" />
@@ -359,7 +304,7 @@ export default function AnalyticsPage() {
           <p className="text-xs text-muted-fg mb-4 ml-3">Schedule Performance Index</p>
           {perfChartData.length === 0 ? (
             <div className="flex items-center justify-center h-[190px] text-xs text-muted-fg">
-              Aucune donnée SPI disponible
+              {isLoading ? "Chargement\u2026" : "Aucune donnee SPI disponible"}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={190}>
@@ -367,18 +312,16 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" horizontal={false} />
                 <XAxis type="number" domain={[0, 1.2]} tick={axisProps} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="chantier" tick={axisProps} width={74} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v != null ? v.toFixed(2) : "—", "SPI"]} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v != null ? v.toFixed(2) : "\u2014", "SPI"]} />
                 <Bar dataKey="score" radius={[0,6,6,0]} maxBarSize={14}>
                   {perfChartData.map((e, i) => (
-                    <Cell key={i}
-                      fill={e.score == null ? "#9CA3AF" : e.score >= 0.85 ? "#00C875" : e.score >= 0.70 ? "#FDAB3D" : "#E2445C"} />
+                    <Cell key={i} fill={e.score == null ? "#9CA3AF" : e.score >= 0.85 ? "#00C875" : e.score >= 0.70 ? "#FDAB3D" : "#E2445C"} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
-
       </div>
     </div>
   )

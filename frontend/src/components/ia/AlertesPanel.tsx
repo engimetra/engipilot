@@ -1,5 +1,5 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { XCircle, AlertTriangle, CheckCircle2, Info, ArrowRight, Brain, Zap } from "lucide-react"
 
 export interface DashboardAlert {
@@ -40,9 +40,9 @@ function timeAgo(iso: string): string {
 
 // Alertes statiques de fallback si pas encore de données DB
 const FALLBACK_ALERTS = [
-  { id: "f1", level: "CRITICAL", message: "SPI critique détecté — action requise", value: "0.72", confidence: 92, isRead: false, createdAt: new Date(Date.now() - 2 * 3600_000).toISOString(), type: "SPI_CRITICAL", project: { id: "p1", name: "Usine Bouskoura", city: "Bouskoura", country: "MA" } },
-  { id: "f2", level: "MEDIUM",   message: "Dépassement budgétaire prévu",          value: "+12%", confidence: 78, isRead: false, createdAt: new Date(Date.now() - 4 * 3600_000).toISOString(), type: "BUDGET_OVERRUN", project: { id: "p2", name: "Résidence Al Andalous", city: "Casablanca", country: "MA" } },
-  { id: "f3", level: "LOW",      message: "Avancement dans les prévisions",         value: "1.05", confidence: 95, isRead: true,  createdAt: new Date(Date.now() - 6 * 3600_000).toISOString(), type: "DELAY_RISK",    project: { id: "p3", name: "Villas Ain Diab",        city: "Casablanca", country: "MA" } },
+  { id: "f1", level: "CRITICAL", message: "SPI critique détecté — action requise", value: "0.72", confidence: 92, isRead: false, createdAt: new Date(Date.now() - 2 * 3600_000).toISOString(), type: "SPI_CRITICAL", project: { id: "p1", name: "Chantier Démo B", city: "Ville Démo", country: "MA" } },
+  { id: "f2", level: "MEDIUM",   message: "Dépassement budgétaire prévu",          value: "+12%", confidence: 78, isRead: false, createdAt: new Date(Date.now() - 4 * 3600_000).toISOString(), type: "BUDGET_OVERRUN", project: { id: "p2", name: "Chantier Démo A", city: "Ville Démo", country: "MA" } },
+  { id: "f3", level: "LOW",      message: "Avancement dans les prévisions",         value: "1.05", confidence: 95, isRead: true,  createdAt: new Date(Date.now() - 6 * 3600_000).toISOString(), type: "DELAY_RISK",    project: { id: "p3", name: "Chantier D",        city: "Ville Démo", country: "MA" } },
 ] as DashboardAlert[]
 
 export function AlertesPanel({ alerts }: { alerts?: DashboardAlert[] }) {

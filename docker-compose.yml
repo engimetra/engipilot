@@ -3,7 +3,9 @@ version: "3.9"
 services:
 
   postgres:
-    image: postgres:17.2-alpine3.21
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
     container_name: engipilot-db
     restart: unless-stopped
     environment:

@@ -31,16 +31,16 @@ const SIGNAL_CONFIG: Record<SignalType, { color: string; bg: string; text: strin
 }
 
 const SIGNAL_POOL: Omit<LiveSignal, "id" | "ts">[] = [
-  { type: "RETARD",   chantier: "Projet Démo",            message: "SPI=0.71 → retard critique détecté",          confiance: 88 },
-  { type: "BUDGET",   chantier: "Projet Démo Mohammedia", message: "CPI=0.74 → dépassement EAC projeté +34%",     confiance: 91 },
-  { type: "ANOMALIE", chantier: "Projet Démo",      message: "Béton Zone C ×1.34 vs norme",                 confiance: 84 },
-  { type: "POSITIF",  chantier: "Villas Ain Diab",            message: "SPI=1.04 — livraison dans les délais",        confiance: 95 },
-  { type: "SYNC",     chantier: "Système central",            message: "Resynchronisation modèles ML terminée",        confiance: 100 },
-  { type: "RETARD",   chantier: "Centre Commercial Hay Riad", message: "Lot Plomberie : 12j d'écart sur planning",    confiance: 79 },
-  { type: "BUDGET",   chantier: "Projet Démo",     message: "Matériaux acier +22% vs budget initial",      confiance: 86 },
-  { type: "POSITIF",  chantier: "Éco-Quartier Témara",        message: "NC-031 levée — qualité conformée",            confiance: 93 },
-  { type: "ANOMALIE", chantier: "Tour Business Casablanca",   message: "Présence équipe réduite de 31% détectée",     confiance: 81 },
-  { type: "SYNC",     chantier: "Cluster Nord",               message: "12 chantiers recalibrés — prédictions à jour",confiance: 100 },
+  { type: "RETARD",   chantier: "Chantier A",        message: "SPI critique → retard détecté",               confiance: 88 },
+  { type: "BUDGET",   chantier: "Chantier B",        message: "CPI faible → dépassement EAC projeté",        confiance: 91 },
+  { type: "ANOMALIE", chantier: "Chantier C",        message: "Consommation matériaux anormale détectée",     confiance: 84 },
+  { type: "POSITIF",  chantier: "Chantier D",        message: "SPI ≥ 1.0 — livraison dans les délais",       confiance: 95 },
+  { type: "SYNC",     chantier: "Système central",   message: "Resynchronisation modèles ML terminée",        confiance: 100 },
+  { type: "RETARD",   chantier: "Chantier E",        message: "Lot Plomberie : écart de planning détecté",   confiance: 79 },
+  { type: "BUDGET",   chantier: "Chantier F",        message: "Matériaux acier au-dessus du budget initial",  confiance: 86 },
+  { type: "POSITIF",  chantier: "Chantier G",        message: "Non-conformité levée — qualité conformée",    confiance: 93 },
+  { type: "ANOMALIE", chantier: "Chantier H",        message: "Présence équipe réduite détectée",            confiance: 81 },
+  { type: "SYNC",     chantier: "Cluster principal", message: "Chantiers recalibrés — prédictions à jour",   confiance: 100 },
 ]
 
 function makeId() { return Math.random().toString(36).slice(2) }

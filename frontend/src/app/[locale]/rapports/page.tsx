@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { FileText, Download, CheckCircle, Clock, Edit, Upload, X, Printer, Plus } from "lucide-react"
 import { exportRapportPDF, type RapportPDFData } from "@/lib/pdf-export"
 
@@ -12,11 +12,11 @@ type Rapport = {
 }
 
 const HISTORIQUE_INIT: Rapport[] = [
-  { num:"RJ-2025-084", date:"15/05", auteur:"A. Khalil", effectif:42, statut:"BROUILLON", weather:"ENSOLEILLE", travaux:"Coulage dalle plein pied Zone C Niveau 3 — 24 m³ béton B30.", avancement:63 },
-  { num:"RJ-2025-083", date:"14/05", auteur:"A. Khalil", effectif:42, statut:"VALIDE", weather:"NUAGEUX", travaux:"Ferraillage poteaux P14 à P18.", avancement:61 },
-  { num:"RJ-2025-082", date:"13/05", auteur:"A. Khalil", effectif:40, statut:"VALIDE", weather:"ENSOLEILLE", travaux:"Maçonnerie façade Nord Niv.3.", avancement:60 },
-  { num:"RJ-2025-081", date:"12/05", auteur:"M. Alami",  effectif:38, statut:"SOUMIS",  weather:"PLUVIEUX", travaux:"Travaux arrêtés matin — pluie. Électricité Zone A.", avancement:59 },
-  { num:"RJ-2025-080", date:"11/05", auteur:"A. Khalil", effectif:45, statut:"VALIDE", weather:"ENSOLEILLE", travaux:"Coulage poteaux Zone D.", avancement:58 },
+  { num:"RJ-2025-084", date:"15/05", auteur:"Chef Projet", effectif:42, statut:"BROUILLON", weather:"ENSOLEILLE", travaux:"Coulage dalle plein pied Zone C Niveau 3 — 24 m³ béton B30.", avancement:63 },
+  { num:"RJ-2025-083", date:"14/05", auteur:"Chef Projet", effectif:42, statut:"VALIDE", weather:"NUAGEUX", travaux:"Ferraillage poteaux P14 à P18.", avancement:61 },
+  { num:"RJ-2025-082", date:"13/05", auteur:"Chef Projet", effectif:40, statut:"VALIDE", weather:"ENSOLEILLE", travaux:"Maçonnerie façade Nord Niv.3.", avancement:60 },
+  { num:"RJ-2025-081", date:"12/05", auteur:"Chef Chantier",  effectif:38, statut:"SOUMIS",  weather:"PLUVIEUX", travaux:"Travaux arrêtés matin — pluie. Électricité Zone A.", avancement:59 },
+  { num:"RJ-2025-080", date:"11/05", auteur:"Chef Projet", effectif:45, statut:"VALIDE", weather:"ENSOLEILLE", travaux:"Coulage poteaux Zone D.", avancement:58 },
 ]
 
 const STATUT_STYLE: Record<string, { bg: string; text: string; Icon: typeof CheckCircle }> = {

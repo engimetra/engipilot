@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { useStore } from "@/store/useStore"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -37,7 +37,7 @@ const NAV: NavSection[] = [
     sectionKey: "principal",
     items: [
       { href: "/dashboard",  icon: LayoutDashboard, labelKey: "dashboard",  permission: "view:dashboard" },
-      { href: "/chantiers",  icon: HardHat,         labelKey: "chantiers",  badge: 12, permission: "view:chantiers" },
+      { href: "/chantiers",  icon: HardHat,         labelKey: "chantiers",  permission: "view:chantiers" },
       { href: "/kanban",     icon: SquareKanban,    labelKey: "kanban",     permission: "view:kanban"    },
       { href: "/planning",   icon: CalendarDays,    labelKey: "planning",   permission: "view:planning"  },
     ],
@@ -47,8 +47,8 @@ const NAV: NavSection[] = [
     items: [
       { href: "/rapports",          icon: FileText,     labelKey: "rapports",          permission: "view:rapports"          },
       { href: "/analytics",         icon: BarChart2,    labelKey: "analytics",         permission: "view:analytics"         },
-      { href: "/hse",               icon: ShieldCheck,  labelKey: "hse",               badge: 2,  danger: true, permission: "view:hse"    },
-      { href: "/qualite",           icon: CheckSquare,  labelKey: "qualite",           badge: 4,  danger: true, permission: "view:qualite" },
+      { href: "/hse",               icon: ShieldCheck,  labelKey: "hse",               danger: true, permission: "view:hse"    },
+      { href: "/qualite",           icon: CheckSquare,  labelKey: "qualite",           danger: true, permission: "view:qualite" },
       { href: "/facturation",       icon: CreditCard,   labelKey: "facturation",       permission: "view:facturation"       },
       { href: "/approvisionnement", icon: Package,      labelKey: "approvisionnement", permission: "view:approvisionnement" },
       { href: "/documents",         icon: FolderOpen,   labelKey: "documents",         permission: "view:documents"         },
@@ -57,7 +57,7 @@ const NAV: NavSection[] = [
   {
     sectionKey: "ia",
     items: [
-      { href: "/ia",   icon: Bot,           labelKey: "alertesIa",   badge: 3, permission: "view:ia"   },
+      { href: "/ia",   icon: Bot,           labelKey: "alertesIa",   permission: "view:ia"   },
       { href: "/chat", icon: MessageSquare, labelKey: "chatCopilot",           permission: "view:chat"  },
     ],
   },
@@ -65,7 +65,7 @@ const NAV: NavSection[] = [
     sectionKey: "equipe",
     items: [
       { href: "/equipes",       icon: Users,    labelKey: "equipes",       permission: "view:equipes"       },
-      { href: "/notifications", icon: Bell,     labelKey: "notifications", badge: 6, danger: true, permission: "view:notifications" },
+      { href: "/notifications", icon: Bell,     labelKey: "notifications", danger: true, permission: "view:notifications" },
       { href: "/onboarding",    icon: Rocket,   labelKey: "onboarding",    permission: "view:onboarding"    },
       { href: "/parametres",    icon: Settings, labelKey: "parametres",    permission: "view:parametres"    },
     ],

@@ -1,6 +1,6 @@
 "use client"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { ShieldOff } from "lucide-react"
 import { usePermissions } from "@/hooks/usePermissions"
 import type { Permission } from "@/lib/rbac"

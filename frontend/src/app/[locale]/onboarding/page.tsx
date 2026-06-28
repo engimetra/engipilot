@@ -1,5 +1,5 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { useLocale } from "next-intl"
 import { useState } from "react"
 
@@ -31,7 +31,7 @@ const STEPS = [
   {
     n: 4,
     titre: "Premier rapport soumis",
-    desc: "RJ-001 soumis par A. Khalil le 01/03/2024.",
+    desc: "RJ-001 soumis par Chef Projet le 01/03/2024.",
     done: true,
     href: null,
     actionLabel: null,

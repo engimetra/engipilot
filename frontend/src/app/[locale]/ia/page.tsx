@@ -2,7 +2,7 @@
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import { Brain, Zap, Calendar, Wallet, AlertOctagon, CheckCircle2, Cpu, TrendingUp, TrendingDown, Activity, ArrowUpRight } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { Skeleton } from "@/components/ui/Skeleton"
 
 const AILivePredictiveSystem = dynamic(

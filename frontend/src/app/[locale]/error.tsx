@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { AlertTriangle, RefreshCw, Home } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 
 export default function Error({
   error,

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import dynamic from "next/dynamic"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslations, useLocale } from "next-intl"

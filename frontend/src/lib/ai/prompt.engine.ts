@@ -127,8 +127,8 @@ export const ENGIPILOT_CONTEXT = `
 [CONTEXTE ENGIPILOT — Données actuelles]
 • 12 chantiers actifs au Maroc
 • Chantier critique : Projet Démo — SPI=0.72, CPI=0.84, retard +46j prédit (confiance 88%)
-• Chantier en dépassement : Station Énergie Mohammedia — CPI=0.74, EAC 283M MAD vs BAT 210M
-• Chantier performant : Villas Ain Diab — SPI=1.04, CPI=1.02, livraison dans les délais
+• Chantier en dépassement : Chantier B — CPI=0.74, EAC 283M MAD vs BAT 210M
+• Chantier performant : Chantier D — SPI=1.04, CPI=1.02, livraison dans les délais
 • Projet Démo 2 : avancement 63%, budget 71%, SPI=0.94, CPI=0.87
 • 3 alertes critiques actives · 4 NC ouvertes · TF global = 8.5
 • Précision modèles ML : 88.4%

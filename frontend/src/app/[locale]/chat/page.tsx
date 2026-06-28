@@ -29,7 +29,7 @@ const MODES: { id: ChatMode; label: string; icon: React.ElementType; color: stri
 ]
 
 const MODE_SUGGESTIONS: Record<ChatMode, string[]> = {
-  chat:    ["Analyse SPI/CPI chantiers actifs", "Prévoir la livraison Bouskoura", "Risques budget Résidence", "NC urgentes à clôturer", "Plan de rattrapage Bouskoura"],
+  chat:    ["Analyse SPI/CPI chantiers actifs", "Prévoir la livraison du projet", "Risques budget projet", "NC urgentes à clôturer", "Plan de rattrapage projet"],
   pv:      ["PV réunion hebdo chantier", "PV réception partielle R+3", "PV levée de réserves", "PV coordination sous-traitants"],
   rapport: ["Rapport avancement mai 2025", "Synthèse mensuelle direction", "Rapport financier Q2", "Tableau de bord EVM"],
   risques: ["Risques retard chantiers critiques", "Alertes HSE actives", "Prédire dépassements budget", "Chemin critique bloqué"],
@@ -69,15 +69,15 @@ Indiquez le rapport ou la période souhaitée.`,
   risques: `## Scan de Risques activé ⚠️
 
 **3 risques critiques** détectés sur vos chantiers :
-1. 🔴 Électricité Bouskoura — Retard +28j · Probabilité 94%
+1. 🔴 Électricité Projet Démo — Retard +28j · Probabilité 94%
 2. 🟠 Budget Projet Démo — CPI 0.87 · EAC +14.8%
-3. 🟡 RH Tour Hassan — Absentéisme 34%
+3. 🟡 RH Projet Démo — Absentéisme détecté
 
 Demandez une analyse approfondie d'un risque spécifique.`,
 }
 
 const HISTORY_ITEMS = [
-  { id: "h1", title: "Analyse SPI Bouskoura",  time: "Il y a 2h",  mode: "chat"    },
+  { id: "h1", title: "Analyse SPI Projet Démo",  time: "Il y a 2h",  mode: "chat"    },
   { id: "h2", title: "PV réunion 12/05",        time: "Il y a 1j",  mode: "pv"      },
   { id: "h3", title: "Risques budget Q2",        time: "Il y a 2j",  mode: "risques" },
   { id: "h4", title: "Rapport avril 2025",       time: "Il y a 3j",  mode: "rapport" },
