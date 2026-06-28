@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -167,25 +167,6 @@ function NavDropdown({ item, onClose }: { item: NavItem; onClose: () => void }) 
         </div>
       </div>
     </div>
-  );
-}
-
-/* ─── Donut Chart (SVG) ──────────────────────────────────── */
-function DonutChart({ value, color, size = 72 }: { value: number; color: string; size?: number }) {
-  const r = (size - 10) / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = (value / 100) * circ;
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E2E8F0" strokeWidth={8} />
-      <circle
-        cx={size/2} cy={size/2} r={r} fill="none"
-        stroke={color} strokeWidth={8}
-        strokeDasharray={`${dash} ${circ - dash}`}
-        strokeLinecap="round"
-        style={{ transition: "stroke-dasharray 1s ease" }}
-      />
-    </svg>
   );
 }
 
@@ -454,26 +435,32 @@ export default function LandingPage() {
                 </div>
                 <span className="text-xs font-bold text-[#0F172A]">ENGIPILOT</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-                <span className="text-xs text-emerald-600 font-medium">Live</span>
+                <span className="text-xs text-emerald-600 font-medium flex-1">Live</span>
+                <span className="text-[9px] text-gray-400 font-medium bg-gray-50 px-2 py-0.5 rounded-full">Aperçu plateforme</span>
               </div>
 
-              {/* KPI row */}
+              {/* KPI row — structure du dashboard (valeurs chargées après connexion) */}
               <div className="grid grid-cols-4 divide-x divide-gray-50 px-2 py-3 gap-0">
                 {[
-                  { label: "Avancement global", value: 72,  display: "72%",  color: "#2563EB", type: "donut" },
-                  { label: "Budget consommé",   value: 64,  display: "64%",  color: "#059669", type: "donut" },
-                  { label: "Tâches actives",    value: 128, display: "128",  color: "#7C3AED", type: "number" },
-                  { label: "Alertes HSE",       value: 7,   display: "7",    color: "#DC2626", type: "number" },
+                  { label: "Avancement global", color: "#2563EB", type: "donut" },
+                  { label: "Budget consommé",   color: "#059669", type: "donut" },
+                  { label: "Tâches actives",    color: "#7C3AED", type: "number" },
+                  { label: "Alertes HSE",       color: "#DC2626", type: "number" },
                 ].map((kpi) => (
                   <div key={kpi.label} className="flex flex-col items-center gap-1 px-1 py-1">
                     {kpi.type === "donut" ? (
                       <div className="relative">
-                        <DonutChart value={kpi.value} color={kpi.color} size={56} />
-                        <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black" style={{ color: kpi.color }}>{kpi.display}</span>
+                        <svg width={56} height={56} className="-rotate-90">
+                          <circle cx={28} cy={28} r={23} fill="none" stroke="#E2E8F0" strokeWidth={8} />
+                          <circle cx={28} cy={28} r={23} fill="none" stroke={kpi.color} strokeWidth={8}
+                            strokeDasharray="60 84" strokeLinecap="round"
+                            className="opacity-40" />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-300">—</span>
                       </div>
                     ) : (
                       <div className="w-14 h-14 flex items-center justify-center">
-                        <span className="text-2xl font-black" style={{ color: kpi.color }}>{kpi.display}</span>
+                        <span className="text-2xl font-black text-gray-200">—</span>
                       </div>
                     )}
                     <p className="text-[9px] text-gray-400 font-medium text-center leading-tight">{kpi.label}</p>
@@ -487,18 +474,13 @@ export default function LandingPage() {
                 <div className="px-3 py-2.5 col-span-1">
                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mb-2">Avancement par lot</p>
                   <div className="space-y-1.5">
-                    {[
-                      { label: "Gros œuvre", val: 80 },
-                      { label: "Second œuvre", val: 65 },
-                      { label: "VRD", val: 70 },
-                      { label: "Finitions", val: 60 },
-                    ].map((row) => (
-                      <div key={row.label} className="flex items-center gap-1.5">
-                        <span className="text-[9px] text-gray-500 w-16 truncate">{row.label}</span>
+                    {["Gros œuvre", "Second œuvre", "VRD", "Finitions"].map((label) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <span className="text-[9px] text-gray-400 w-16 truncate">{label}</span>
                         <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#2563EB] rounded-full" style={{ width: `${row.val}%` }} />
+                          <div className="h-full bg-gray-200 rounded-full w-3/4 animate-pulse" />
                         </div>
-                        <span className="text-[9px] font-bold text-gray-600 w-7 text-right">{row.val}%</span>
+                        <span className="text-[9px] font-bold text-gray-300 w-7 text-right">—</span>
                       </div>
                     ))}
                   </div>
@@ -507,17 +489,12 @@ export default function LandingPage() {
                 {/* Activité récente */}
                 <div className="px-3 py-2.5 col-span-1">
                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mb-2">Activité récente</p>
-                  <div className="space-y-1.5">
-                    {[
-                      { icon: "📦", label: "Réception béton – Zone A", time: "il y a 2h" },
-                      { icon: "🚚", label: "Livraison matériaux",      time: "il y a 3h" },
-                      { icon: "✅", label: "Contrôle sécurité",        time: "il y a 4h" },
-                      { icon: "💬", label: "Réunion de chantier",      time: "il y a 5h" },
-                    ].map((a) => (
-                      <div key={a.label} className="flex items-center gap-1.5">
-                        <span className="text-[10px]">{a.icon}</span>
-                        <span className="text-[9px] text-gray-600 flex-1 truncate">{a.label}</span>
-                        <span className="text-[8px] text-gray-400 flex-shrink-0">{a.time}</span>
+                  <div className="space-y-2">
+                    {["📦", "🚚", "✅", "💬"].map((icon, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <span className="text-[10px]">{icon}</span>
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full animate-pulse" />
+                        <div className="w-6 h-1.5 bg-gray-100 rounded-full animate-pulse flex-shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -529,15 +506,9 @@ export default function LandingPage() {
                   <div className="w-full h-16 bg-[#EBF5FF] rounded-lg relative overflow-hidden">
                     <div className="absolute inset-0 opacity-30"
                       style={{ backgroundImage: "linear-gradient(#2563EB22 1px,transparent 1px),linear-gradient(90deg,#2563EB22 1px,transparent 1px)", backgroundSize: "12px 12px" }} />
-                    {[
-                      { top: "20%", left: "30%" },
-                      { top: "50%", left: "60%" },
-                      { top: "65%", left: "25%" },
-                    ].map((p, i) => (
-                      <div key={i} className="absolute" style={{ top: p.top, left: p.left }}>
-                        <div className="w-3 h-3 bg-[#2563EB] rounded-full border-2 border-white shadow-sm" />
-                      </div>
-                    ))}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[9px] text-[#2563EB]/50 font-medium">Vos chantiers ici</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -772,8 +743,9 @@ export default function LandingPage() {
               de l&apos;IA avec une expérience pensée pour le terrain.
             </p>
             <p className="text-[#475569] text-lg leading-relaxed mb-9">
-              Développée par des ingénieurs passionnés, ENGIPILOT accompagne aujourd&apos;hui
-              plus de 2 400 chantiers dans 15 pays.
+              Développée par des ingénieurs passionnés, ENGIPILOT accompagne les équipes
+              de construction dans leur transformation digitale, de la planification
+              à la réception des ouvrages.
             </p>
             <div className="flex gap-3 flex-wrap">
               <button onClick={() => router.push("/login")} className="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1E3A8A] text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
@@ -790,15 +762,15 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { value: "2 400+", label: "Projets supervisés",     icon: "🏗️" },
-              { value: "15",     label: "Pays couverts",           icon: "🌍" },
-              { value: "−34 %",  label: "Réduction des surcoûts", icon: "📉" },
-              { value: "99.9 %", label: "Disponibilité SLA",      icon: "⚡" },
+              { icon: "🔮", title: "IA prédictive",       desc: "Détection des dérives 3 semaines à l'avance" },
+              { icon: "📊", title: "EVM en temps réel",   desc: "SPI, CPI et valeur acquise calculés automatiquement" },
+              { icon: "🦺", title: "HSE intégré",         desc: "Incidents, non-conformités et alertes centralisés" },
+              { icon: "☁️", title: "Cloud sécurisé",      desc: "Données chiffrées, accès multi-sites 24 h/24" },
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl p-7 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-2">{s.icon}</div>
-                <div className="text-3xl font-black text-[#2563EB]">{s.value}</div>
-                <div className="text-[#475569] text-sm mt-1.5 font-medium">{s.label}</div>
+              <div key={s.title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-3xl mb-3">{s.icon}</div>
+                <div className="text-base font-black text-[#0F172A] mb-1.5">{s.title}</div>
+                <div className="text-[#475569] text-sm leading-relaxed">{s.desc}</div>
               </div>
             ))}
           </div>
