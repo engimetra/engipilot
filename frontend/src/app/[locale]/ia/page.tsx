@@ -1,8 +1,12 @@
 "use client"
 import { useState } from "react"
 import dynamic from "next/dynamic"
-import { Brain, Zap, Calendar, Wallet, AlertOctagon, CheckCircle2, Cpu, TrendingUp, TrendingDown, Activity, ArrowUpRight } from "lucide-react"
-import { useRouter } from "@/i18n/navigation"
+import { useQuery } from "@tanstack/react-query"
+import {
+  Brain, Zap, Calendar, Wallet, AlertOctagon, CheckCircle2,
+  Cpu, TrendingUp, Activity, ArrowUpRight, Loader2, WifiOff,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/Skeleton"
 
 const AILivePredictiveSystem = dynamic(
@@ -10,29 +14,30 @@ const AILivePredictiveSystem = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-2xl" /> }
 )
 
-const PREDICTIONS = [
-  {
-    type: "RETARD", chantier: "Projet Démo", flag:"🇲🇦", valeur: "+46j", confiance: 88, niveau: "CRITIQUE",
-    desc: "SPI=0.72 et CPI=0.84 indiquent une trajectoire critique. Fin prédite 15/05/2026.",
-    reco: "Recruter 4 électriciens intérimaires · Renégocier béton · Clôturer NC-047",
-  },
-  {
-    type: "BUDGET", chantier: "Projet Démo", flag:"🇲🇦", valeur: "+34.8%", confiance: 91, niveau: "CRITIQUE",
-    desc: "CPI=0.74 sur 4 semaines. EAC estimé 283M MAD vs BAT 210M.",
-    reco: "Audit matériaux béton Zone C · Réviser BAT avec maître d'ouvrage",
-  },
-  {
-    type: "ANOMALIE", chantier: "Projet Démo", flag:"🇲🇦", valeur: "×1.34 béton", confiance: 84, niveau: "MAJEUR",
-    desc: "Consommation béton Zone C supérieure de 34% à la norme.",
-    reco: "Vérifier coffrage · Contrôler pertes · Audit sous-traitant béton",
-  },
-  {
-    type: "POSITIF", chantier: "Projet Démo", flag:"🇲🇦", valeur: "Livraison OK", confiance: 95, niveau: "OK",
-    desc: "SPI=1.04 et CPI=1.02 — performance excellente. Livraison prédite dans les délais.",
-    reco: "Maintenir le rythme · Partager les bonnes pratiques avec les autres équipes",
-  },
-]
+/* ── Types ── */
+type SignalType = "RETARD" | "BUDGET" | "ANOMALIE" | "POSITIF" | "SYNC"
 
+interface LiveSignal {
+  id: string
+  type: SignalType
+  chantier: string
+  message: string
+  confiance: number
+  ts: string
+}
+
+interface SignalsResponse {
+  signals: LiveSignal[]
+  metrics: {
+    spi: number | null
+    cpi: number | null
+    signals: number
+    uptime: number
+  }
+  isEmpty: boolean
+}
+
+/* ── Static config (règles métier, styles) — ce ne sont pas des données fictives ── */
 const REGLES = [
   { cond: "SPI < 0.80",     action: "Alerte retard critique + notification chef projet" },
   { cond: "CPI < 0.85",     action: "Alerte dépassement + révision EAC automatique" },
@@ -41,30 +46,110 @@ const REGLES = [
   { cond: "Incident HSE",   action: "Arrêt tâches liées + rapport déclaratif automatique" },
 ]
 
-const NIVEAU_CONFIG: Record<string, { wrap:string; badge:string; dot:string }> = {
-  CRITIQUE: { wrap:"border-danger/20 bg-danger/[0.04]",   badge:"bg-danger/10 text-danger",   dot:"bg-danger"  },
-  MAJEUR:   { wrap:"border-warning/20 bg-warning/[0.04]", badge:"bg-warning/10 text-warning", dot:"bg-warning" },
-  OK:       { wrap:"border-success/20 bg-success/[0.04]", badge:"bg-success/10 text-success", dot:"bg-success" },
+const ML_MODULES = [
+  { nom: "Prédiction retards",  type: "Gradient Boosting", color: "#635BFF" },
+  { nom: "Prédiction coûts",    type: "Random Forest",     color: "#00C875" },
+  { nom: "Détection anomalies", type: "Isolation Forest",  color: "#8b5cf6" },
+  { nom: "Clustering perf.",    type: "K-Means",           color: "#FDAB3D" },
+]
+
+const NIVEAU_CONFIG: Record<string, { wrap: string; badge: string; dot: string }> = {
+  CRITIQUE: { wrap: "border-danger/20 bg-danger/[0.04]",   badge: "bg-danger/10 text-danger",   dot: "bg-danger"  },
+  MAJEUR:   { wrap: "border-warning/20 bg-warning/[0.04]", badge: "bg-warning/10 text-warning", dot: "bg-warning" },
+  OK:       { wrap: "border-success/20 bg-success/[0.04]", badge: "bg-success/10 text-success", dot: "bg-success" },
 }
 
 const TYPE_ICON: Record<string, React.ElementType> = {
-  RETARD: Calendar, BUDGET: Wallet, ANOMALIE: AlertOctagon, POSITIF: CheckCircle2,
+  RETARD: Calendar, BUDGET: Wallet, ANOMALIE: AlertOctagon, POSITIF: CheckCircle2, SYNC: Activity,
 }
 const TYPE_COLOR: Record<string, string> = {
-  RETARD: "#E2445C", BUDGET: "#E2445C", ANOMALIE: "#FDAB3D", POSITIF: "#00C875",
+  RETARD: "#E2445C", BUDGET: "#E2445C", ANOMALIE: "#FDAB3D", POSITIF: "#00C875", SYNC: "#635BFF",
 }
 
-const ML_MODELS = [
-  { nom:"Prédiction retards",  type:"Gradient Boosting", acc:88, color:"#635BFF", trend:"+2pts" },
-  { nom:"Prédiction coûts",    type:"Random Forest",     acc:91, color:"#00C875", trend:"+1pt"  },
-  { nom:"Détection anomalies", type:"Isolation Forest",  acc:84, color:"#8b5cf6", trend:"stable" },
-  { nom:"Clustering perf.",    type:"K-Means",           acc:79, color:"#FDAB3D", trend:"-1pt"  },
-]
+function signalNiveau(type: SignalType): "CRITIQUE" | "MAJEUR" | "OK" {
+  if (type === "RETARD" || type === "BUDGET") return "CRITIQUE"
+  if (type === "ANOMALIE") return "MAJEUR"
+  if (type === "POSITIF") return "OK"
+  return "MAJEUR"
+}
+
+/* ── Fetch ── */
+async function fetchSignals(): Promise<SignalsResponse> {
+  const res = await fetch("/api/intelligence/signals", { credentials: "include" })
+  if (!res.ok) throw new Error(`signals ${res.status}`)
+  return res.json() as Promise<SignalsResponse>
+}
+
+/* ── Skeleton card ── */
+function SkeletonCard() {
+  return (
+    <div className="border border-border rounded-2xl p-4 animate-pulse space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 bg-muted rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 bg-muted rounded w-2/3" />
+          <div className="h-4 bg-muted rounded w-1/3" />
+        </div>
+      </div>
+      <div className="h-3 bg-muted rounded w-full" />
+      <div className="h-3 bg-muted rounded w-4/5" />
+    </div>
+  )
+}
 
 export default function IAPage() {
   const router = useRouter()
   const [activeRules, setActiveRules] = useState<boolean[]>(REGLES.map(() => true))
-  const critiques = PREDICTIONS.filter(p => p.niveau === "CRITIQUE").length
+
+  const { data, isLoading, isError } = useQuery<SignalsResponse>({
+    queryKey: ["ia-signals"],
+    queryFn: fetchSignals,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
+    retry: 2,
+  })
+
+  /* Dériver les stats depuis les vraies données */
+  const signals      = data?.signals.filter(s => s.type !== "SYNC") ?? []
+  const critiques    = signals.filter(s => s.type === "RETARD" || s.type === "BUDGET").length
+  const anomalies    = signals.filter(s => s.type === "ANOMALIE").length
+  const positifs     = signals.filter(s => s.type === "POSITIF").length
+  const totalSignals = data?.metrics.signals ?? 0
+  const avgConfiance = signals.length > 0
+    ? Math.round(signals.reduce((s, x) => s + x.confiance, 0) / signals.length)
+    : null
+  const chantiersUniques = new Set(signals.map(s => s.chantier)).size
+
+  const kpiCards = [
+    {
+      icon: Zap,
+      label: "Signaux actifs",
+      sublabel: "Détectés en direct",
+      value: isLoading ? "—" : String(totalSignals),
+      accent: "#635BFF", accentBg: "bg-primary/10", accentText: "text-primary",
+    },
+    {
+      icon: AlertOctagon,
+      label: "Alertes critiques",
+      sublabel: "Action requise",
+      value: isLoading ? "—" : String(critiques),
+      accent: "#E2445C", accentBg: "bg-danger/10", accentText: "text-danger",
+    },
+    {
+      icon: Calendar,
+      label: "Anomalies détectées",
+      sublabel: "HSE + NC + budget",
+      value: isLoading ? "—" : String(anomalies),
+      accent: "#FDAB3D", accentBg: "bg-warning/10", accentText: "text-warning",
+    },
+    {
+      icon: CheckCircle2,
+      label: "Confiance moyenne",
+      sublabel: "Tous signaux",
+      value: isLoading ? "—" : avgConfiance !== null ? `${avgConfiance}%` : "N/A",
+      accent: "#00C875", accentBg: "bg-success/10", accentText: "text-success",
+    },
+  ]
 
   return (
     <div className="space-y-6 page-enter">
@@ -74,24 +159,33 @@ export default function IAPage() {
 
       {/* ══ HEADER ══ */}
       <div className="relative rounded-2xl overflow-hidden border border-border"
-        style={{ background:"linear-gradient(135deg, #8b5cf608 0%, #ffffff 40%, #635BFF08 100%)" }}>
+        style={{ background: "linear-gradient(135deg, #8b5cf608 0%, #ffffff 40%, #635BFF08 100%)" }}>
         <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage:"linear-gradient(#635BFF 1px,transparent 1px),linear-gradient(90deg,#635BFF 1px,transparent 1px)", backgroundSize:"32px 32px" }} />
+          style={{ backgroundImage: "linear-gradient(#635BFF 1px,transparent 1px),linear-gradient(90deg,#635BFF 1px,transparent 1px)", backgroundSize: "32px 32px" }} />
         <div className="relative px-6 py-5 flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full">
-                <Brain className="w-3 h-3" /> 3 modèles actifs
+                <Brain className="w-3 h-3" />
+                {isLoading ? "Chargement…" : `${ML_MODULES.length} modules IA`}
               </span>
-              <span className="flex items-center gap-1.5 text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 px-2.5 py-1 rounded-full">
-                <AlertOctagon className="w-3 h-3" /> {critiques} alertes critiques
-              </span>
+              {critiques > 0 && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 px-2.5 py-1 rounded-full">
+                  <AlertOctagon className="w-3 h-3" /> {critiques} alerte{critiques > 1 ? "s" : ""} critique{critiques > 1 ? "s" : ""}
+                </span>
+              )}
               <span className="flex items-center gap-1.5 text-[10px] font-bold bg-success/10 text-success border border-success/20 px-2.5 py-1 rounded-full">
                 <Activity className="w-3 h-3" /> Live
               </span>
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-foreground tracking-tight">AI Risk Monitor</h1>
-            <p className="text-sm text-muted-fg mt-1">Modèles ML en production · Alertes prédictives · 12 chantiers analysés</p>
+            <p className="text-sm text-muted-fg mt-1">
+              {isLoading
+                ? "Analyse en cours…"
+                : data?.isEmpty
+                ? "Aucun projet actif — connectez un projet pour démarrer l'analyse"
+                : `${chantiersUniques} chantier${chantiersUniques !== 1 ? "s" : ""} analysé${chantiersUniques !== 1 ? "s" : ""} · Alertes prédictives · Modèles ML en production`}
+            </p>
           </div>
           <div className="flex items-center gap-2 self-start lg:self-auto">
             <button
@@ -112,14 +206,8 @@ export default function IAPage() {
 
       {/* ══ KPI CARDS ══ */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {[
-          { icon:Zap,         label:"Prédictions actives", sublabel:"En production", value:"3",    accent:"#635BFF", accentBg:"bg-primary/10", accentText:"text-primary", spark:[5,6,6,7,7,8,8,3] },
-          { icon:AlertOctagon,label:"Alertes critiques",   sublabel:"Action requise", value:"2",   accent:"#E2445C", accentBg:"bg-danger/10",  accentText:"text-danger",  spark:[1,2,1,2,2,3,2,2] },
-          { icon:Calendar,    label:"Retard max prédit",   sublabel:"Projet Démo",value:"+46j", accent:"#FDAB3D", accentBg:"bg-warning/10", accentText:"text-warning", spark:[20,28,32,38,40,44,46,46] },
-          { icon:CheckCircle2,label:"Confiance moyenne",   sublabel:"Tous modèles",   value:"89%", accent:"#00C875", accentBg:"bg-success/10", accentText:"text-success", spark:[82,84,85,86,87,88,89,89] },
-        ].map(k => {
+        {kpiCards.map(k => {
           const Icon = k.icon
-          const max = Math.max(...k.spark)
           return (
             <div key={k.label} className="group relative bg-white border border-border rounded-2xl p-5 hover:shadow-card-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
               <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: k.accent }} />
@@ -127,16 +215,12 @@ export default function IAPage() {
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${k.accentBg}`}>
                   <Icon className={`w-4 h-4 ${k.accentText}`} strokeWidth={2} />
                 </div>
-                <div className="flex items-end gap-[2px] h-7 w-14">
-                  {k.spark.map((v, i) => (
-                    <div key={i} className="flex-1 rounded-sm"
-                      style={{ height:`${(v/max)*100}%`, background:k.accent, opacity: 0.35 + (i/k.spark.length)*0.65 }} />
-                  ))}
-                </div>
               </div>
               <p className="text-[10px] font-semibold text-muted-fg uppercase tracking-wider mb-0.5">{k.label}</p>
               <p className="text-[10px] text-muted-fg/60 mb-2">{k.sublabel}</p>
-              <p className="text-2xl font-black tracking-tight text-foreground">{k.value}</p>
+              {isLoading
+                ? <div className="h-7 w-16 bg-muted animate-pulse rounded" />
+                : <p className="text-2xl font-black tracking-tight text-foreground">{k.value}</p>}
             </div>
           )
         })}
@@ -145,101 +229,145 @@ export default function IAPage() {
       {/* ══ MAIN GRID ══ */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
-        {/* Predictions */}
+        {/* Alertes intelligentes */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 rounded-full bg-danger" />
             <h2 className="text-sm font-bold text-foreground">Alertes intelligentes</h2>
-            <span className="ml-auto text-[10px] text-muted-fg font-medium">{PREDICTIONS.length} prédictions</span>
+            <span className="ml-auto text-[10px] text-muted-fg font-medium">
+              {isLoading ? "…" : `${signals.length} signal${signals.length !== 1 ? "s" : ""}`}
+            </span>
           </div>
-          <div className="space-y-3">
-            {PREDICTIONS.map((p, i) => {
-              const cfg = NIVEAU_CONFIG[p.niveau] ?? { wrap:"border-border bg-white", badge:"bg-muted text-muted-fg", dot:"bg-muted" }
-              const Icon = TYPE_ICON[p.type]
-              const iconColor = TYPE_COLOR[p.type]
-              return (
-                <div key={i} className={`border rounded-2xl p-4 shadow-card transition-all hover:shadow-card-md ${cfg.wrap}`}>
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: iconColor + "15" }}>
-                      <Icon className="w-4 h-4" style={{ color: iconColor }} strokeWidth={2} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 flex-wrap mb-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{p.flag}</span>
-                          <p className="font-bold text-sm text-foreground">{p.chantier}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 ${cfg.badge}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                            {p.niveau}
-                          </span>
-                          <span className="text-[10px] font-mono text-muted-fg">{p.confiance}%</span>
-                        </div>
+
+          {isLoading && (
+            <div className="space-y-3">
+              {[0, 1, 2].map(i => <SkeletonCard key={i} />)}
+            </div>
+          )}
+
+          {isError && (
+            <div className="border border-border rounded-2xl p-8 flex flex-col items-center gap-3 bg-white shadow-card">
+              <WifiOff className="w-8 h-8 text-muted-fg" />
+              <p className="text-sm font-semibold text-foreground">Connexion backend indisponible</p>
+              <p className="text-xs text-muted-fg text-center">Les alertes réapparaîtront dès la reconnexion.</p>
+            </div>
+          )}
+
+          {!isLoading && !isError && signals.length === 0 && (
+            <div className="border border-success/20 bg-success/[0.04] rounded-2xl p-8 flex flex-col items-center gap-3">
+              <CheckCircle2 className="w-8 h-8 text-success" />
+              <p className="text-sm font-semibold text-foreground">Aucune alerte active</p>
+              <p className="text-xs text-muted-fg text-center">
+                {data?.isEmpty
+                  ? "Aucun projet actif dans le système."
+                  : "Tous les projets sont dans les normes."}
+              </p>
+            </div>
+          )}
+
+          {!isLoading && !isError && signals.length > 0 && (
+            <div className="space-y-3">
+              {signals.map(sig => {
+                const niveau = signalNiveau(sig.type)
+                const cfg = NIVEAU_CONFIG[niveau] ?? { wrap: "border-border bg-white", badge: "bg-muted text-muted-fg", dot: "bg-muted" }
+                const Icon = TYPE_ICON[sig.type] ?? Activity
+                const iconColor = TYPE_COLOR[sig.type] ?? "#635BFF"
+                return (
+                  <div key={sig.id} className={`border rounded-2xl p-4 shadow-card transition-all hover:shadow-card-md ${cfg.wrap}`}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: iconColor + "15" }}>
+                        <Icon className="w-4 h-4" style={{ color: iconColor }} strokeWidth={2} />
                       </div>
-                      <p className="text-lg font-black text-foreground tracking-tight">{p.valeur}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                          <p className="font-bold text-sm text-foreground truncate">{sig.chantier}</p>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 ${cfg.badge}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                              {niveau}
+                            </span>
+                            <span className="text-[10px] font-mono text-muted-fg">{sig.confiance}%</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-fg leading-relaxed">{sig.message}</p>
+                        <p className="text-[9px] text-muted-fg/50 mt-1">{sig.ts}</p>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-fg mb-3 leading-relaxed">{p.desc}</p>
-                  <div className="bg-white/80 rounded-xl p-3 border border-border/60">
-                    <p className="text-[10px] font-bold text-foreground mb-1 flex items-center gap-1.5">
-                      <Brain className="w-3 h-3 text-primary" /> Recommandation IA
-                    </p>
-                    <p className="text-[10px] text-muted-fg leading-relaxed">{p.reco}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Right column */}
         <div className="space-y-4">
 
-          {/* ML Models */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-purple" />
-              <h2 className="text-sm font-bold text-foreground">Performance modèles ML</h2>
+              <h2 className="text-sm font-bold text-foreground">Modules ML actifs</h2>
             </div>
             <div className="bg-white border border-border rounded-2xl p-5 shadow-card">
               <div className="space-y-4">
-                {ML_MODELS.map(m => (
-                  <div key={m.nom}>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <div>
-                        <span className="font-semibold text-foreground">{m.nom}</span>
-                        <span className="text-muted-fg ml-2">{m.type}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-fg">{m.trend}</span>
-                        <span className="font-black" style={{ color: m.color }}>{m.acc}%</span>
-                      </div>
+                {ML_MODULES.map(m => (
+                  <div key={m.nom} className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">{m.nom}</p>
+                      <p className="text-[10px] text-muted-fg">{m.type}</p>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-700"
-                        style={{ width:`${m.acc}%`, background: m.color }} />
-                    </div>
+                    <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                      Actif
+                    </span>
                   </div>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 gap-2">
-                {[
-                  { val:"1,847", label:"Signaux/jour",  color:"text-primary" },
-                  { val:"89%",   label:"Précision moy.", color:"text-success" },
-                  { val:"12",    label:"Chantiers",      color:"text-teal"    },
-                ].map(s => (
-                  <div key={s.label} className="text-center bg-muted/50 rounded-xl py-2 px-1">
-                    <p className={`text-sm font-black ${s.color}`}>{s.val}</p>
-                    <p className="text-[9px] text-muted-fg font-medium mt-0.5">{s.label}</p>
-                  </div>
-                ))}
+                <div className="text-center bg-muted/50 rounded-xl py-2 px-1">
+                  {isLoading
+                    ? <div className="h-4 w-8 bg-muted rounded mx-auto animate-pulse" />
+                    : <p className="text-sm font-black text-primary">{totalSignals}</p>}
+                  <p className="text-[9px] text-muted-fg font-medium mt-0.5">Signaux</p>
+                </div>
+                <div className="text-center bg-muted/50 rounded-xl py-2 px-1">
+                  {isLoading
+                    ? <div className="h-4 w-8 bg-muted rounded mx-auto animate-pulse" />
+                    : <p className="text-sm font-black text-success">{avgConfiance !== null ? `${avgConfiance}%` : "—"}</p>}
+                  <p className="text-[9px] text-muted-fg font-medium mt-0.5">Confiance</p>
+                </div>
+                <div className="text-center bg-muted/50 rounded-xl py-2 px-1">
+                  {isLoading
+                    ? <div className="h-4 w-8 bg-muted rounded mx-auto animate-pulse" />
+                    : <p className="text-sm font-black text-teal">{chantiersUniques || "—"}</p>}
+                  <p className="text-[9px] text-muted-fg font-medium mt-0.5">Chantiers</p>
+                </div>
               </div>
+              {data?.metrics && (data.metrics.spi !== null || data.metrics.cpi !== null) && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {data.metrics.spi !== null && (
+                    <div className="bg-primary/5 border border-primary/10 rounded-xl py-2 px-3 text-center">
+                      <p className="text-xs font-black text-primary">SPI {data.metrics.spi.toFixed(2)}</p>
+                      <p className="text-[9px] text-muted-fg">Schedule Perf.</p>
+                    </div>
+                  )}
+                  {data.metrics.cpi !== null && (
+                    <div className="bg-teal/5 border border-teal/10 rounded-xl py-2 px-3 text-center">
+                      <p className="text-xs font-black text-teal">CPI {data.metrics.cpi.toFixed(2)}</p>
+                      <p className="text-[9px] text-muted-fg">Cost Perf.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {isLoading && (
+                <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-fg">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Récupération des métriques…
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Rules */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-teal" />
