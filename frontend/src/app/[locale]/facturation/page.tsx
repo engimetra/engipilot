@@ -108,13 +108,13 @@ interface Facture {
 const ENTREPRISE_DEFAUT: Entreprise = {
   logo: "", cachet: "", signature: "",
   nom: "Mon Cabinet d'Ingénierie", slogan: "L'expertise au service de vos projets",
-  adresse: "12 Boulevard Mohammed V", ville: "Casablanca", pays: "Maroc",
-  telephone: "0522-000-000", mobile: "0600-000-000",
+  adresse: "", ville: "Casablanca", pays: "Maroc",
+  telephone: "", mobile: "",
   email: "contact@cabinet.ma", siteWeb: "www.cabinet.ma",
-  ice: "001234567000001", if_: "12345678", rc: "RC-CAS-00001",
-  cnss: "1234567", patente: "12345678", capital: "100 000 MAD",
-  banque: "Attijariwafa Bank", rib: "007 780 0001234567890012 34",
-  iban: "MA64 0077 8000 0123 4567 8900 1234", swift: "BCMAMAMC",
+  ice: "", if_: "", rc: "",
+  cnss: "", patente: "", capital: "",
+  banque: "", rib: "",
+  iban: "", swift: "",
   couleurPrimaire: "#1e512d", logoPosition: "left",
 }
 
