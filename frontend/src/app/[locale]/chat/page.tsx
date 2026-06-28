@@ -38,13 +38,9 @@ const MODE_SUGGESTIONS: Record<ChatMode, string[]> = {
 const MODE_INIT: Record<ChatMode, string> = {
   chat: `## Bonjour, je suis ENGIPILOT Copilot 👋
 
-J'ai analysé vos **12 chantiers actifs**. Voici un résumé :
+Je suis connecté à vos données de chantiers en temps réel.
 
-🔴 **Projet Démo** — SPI=0.72 · Retard +46j prédit (confiance 88%)
-🟠 **Projet Démo** — CPI=0.74 · Dépassement EAC +34.8%
-✅ **Projet Démo** — SPI=1.04 · Performance excellente
-
-Posez-moi une question sur vos chantiers, KPIs ou plannings.`,
+Posez-moi une question sur vos projets actifs, KPIs EVM, plannings ou alertes en cours.`,
 
   pv: `## Mode Génération de PV activé 📝
 
@@ -78,16 +74,16 @@ Demandez une analyse approfondie d'un risque spécifique.`,
 
 const HISTORY_ITEMS = [
   { id: "h1", title: "Analyse SPI Projet Démo",  time: "Il y a 2h",  mode: "chat"    },
-  { id: "h2", title: "PV réunion 12/05",        time: "Il y a 1j",  mode: "pv"      },
-  { id: "h3", title: "Risques budget Q2",        time: "Il y a 2j",  mode: "risques" },
-  { id: "h4", title: "Rapport avril 2025",       time: "Il y a 3j",  mode: "rapport" },
+  
+  
+  
 ]
 
 const CONTEXT_STATS = [
-  { label: "Chantiers",  value: "12",    color: "text-primary", bg: "bg-primary/10" },
-  { label: "KPIs",       value: "1 847", color: "text-success", bg: "bg-success/10" },
-  { label: "Alertes",    value: "3",     color: "text-danger",  bg: "bg-danger/10"  },
-  { label: "Précision",  value: "88.4%", color: "text-warning", bg: "bg-warning/10" },
+  { label: "Chantiers",  value: "—",  color: "text-primary", bg: "bg-primary/10" },
+  { label: "KPIs",       value: "—",  color: "text-success", bg: "bg-success/10" },
+  { label: "Alertes",    value: "—",  color: "text-danger",  bg: "bg-danger/10"  },
+  { label: "Précision",  value: "—",  color: "text-warning", bg: "bg-warning/10" },
 ]
 
 const HISTORY_ICON: Record<string, React.ElementType> = {

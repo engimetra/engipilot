@@ -14,7 +14,7 @@ const CORPS = [
 
 const ALERTES_RH: { level: string; title: string; action: string }[] = [
   { level:"warning", title:"Taux absentéisme 8.2% semaine 22", action:"Prévoir remplacement lot électricité" },
-  { level:"danger",  title:"Habilitation grue Y. Chraibi expirée", action:"Renouvellement urgent avant reprise" },
+  { level:"danger",  title:"Habilitation grue — Opérateur expirée", action:"Renouvellement urgent avant reprise" },
   { level:"info",    title:"3 contrats CDD expirent fin juin", action:"Décision renouvellement requise" },
 ]
 
